@@ -39,7 +39,7 @@ export default function CaraKerjaSection() {
   ];
 
   return (
-    <section className="py-24 bg-background">
+    <section id="cara-kerja" className="py-24 bg-background">
       <div className="max-w-7xl mx-auto px-4">
         {/* HEADER */}
         <div className="mb-16">

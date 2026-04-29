@@ -17,7 +17,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-screen w-full overflow-hidden">
+    <section id="home" className="relative min-h-screen w-full overflow-hidden">
       {/* Background Gambar */}
       <div 
         className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"

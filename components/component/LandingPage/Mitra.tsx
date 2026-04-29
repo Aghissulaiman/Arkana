@@ -35,7 +35,7 @@ export default function MitraSection() {
   ];
 
   return (
-    <section className="py-24 bg-background">
+    <section id="mitra" className="py-24 bg-background">
       <div className="max-w-7xl mx-auto px-4">
         {/* HEADER */}
         <div className="mb-14">
@@ -43,8 +43,8 @@ export default function MitraSection() {
             <div className="max-w-3xl pl-2 md:pl-4 lg:pl-6">
               <h2 className="text-3xl md:text-5xl font-bold text-foreground leading-tight mb-4">
                 Bangun Usaha
-                <br />
-                <span className="text-primary">Bersama Kami</span>
+            
+                <span className="text-primary"> Bersama Kami</span>
               </h2>
 
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-2xl">

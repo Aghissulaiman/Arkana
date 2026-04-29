@@ -16,8 +16,8 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { name: "Beranda", href: "#" },
-    { name: "Tentang", href: "#tentang" },
+    { name: "Beranda", href: "#home" },
+    { name: "Tentang", href: "#about" },
     { name: "Cara Kerja", href: "#cara-kerja" },
     { name: "Untuk Mitra", href: "#mitra" },
     { name: "Kontak", href: "#kontak" },
