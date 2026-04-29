@@ -1,81 +1,90 @@
-// "use client";
+"use client";
 
-// import { Button } from "@/components/ui/button";
-// import { Card } from "@/components/ui/card";
-// import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
 
-// export default function Hero() {
-//   return (
-//     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-//       {/* Background berbeda: diagonal split */}
-//       <div className="absolute inset-0">
-//         <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-background to-background" />
-//         <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/5 clip-diagonal" />
-//       </div>
+export default function Hero() {
+  const [isMobile, setIsMobile] = useState(false);
 
-//       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
-//         {/* Layout berbeda: stacked dengan floating elements */}
-//         <div className="text-center max-w-4xl mx-auto">
-//           {/* Badge dengan desain berbeda */}
-//           <div className="inline-flex items-center gap-2 bg-primary/10 backdrop-blur-sm px-4 py-2 rounded-full border border-primary/20 mb-8">
-//             <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-//             <span className="text-sm font-medium text-primary">#ZeroWasteMovement</span>
-//           </div>
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
-//           {/* Heading dengan efek berbeda */}
-//           <h1 className="text-6xl lg:text-8xl font-bold mb-8 leading-[1.1]">
-//             <span className="text-foreground">Ubah Sampah</span>
-//             <br />
-//             <span className="bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-//               Jadi Poin & Uang
-//             </span>
-//           </h1>
+  return (
+    <section className="relative min-h-screen w-full overflow-hidden">
+      {/* Background Gambar Sampah Didaur Ulang */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1528323273322-d81458248d40?q=80&w=2070&auto=format&fit=crop')",
+          backgroundPosition: isMobile ? "center 30%" : "center",
+          backgroundSize: "cover"
+        }}
+      />
+      
+      {/* Overlay hitam gelap */}
+      <div className="absolute inset-0 bg-black/70" />
 
-//           {/* Deskripsi dengan width berbeda */}
-//           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-//             Arkana menghubungkan masyarakat, pengepul, dan pabrik daur ulang
-//             dalam satu platform terintegrasi.
-//           </p>
+      {/* Konten */}
+      <div className="relative h-full min-h-screen flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 sm:py-20">
+          <div className={`${isMobile ? "text-center" : "text-left"} max-w-2xl mx-auto lg:mx-0`}>
+            <Badge 
+              variant="secondary" 
+              className={`mb-4 sm:mb-6 bg-primary/20 text-white border-primary/30 backdrop-blur-sm ${isMobile ? "text-xs" : "text-sm"}`}
+            >
+              #ZeroWasteMovement
+            </Badge>
 
-//           {/* CTA dengan layout horizontal */}
-//           <div className="flex flex-wrap gap-4 justify-center mb-16">
-//             <Button size="xl" className="shadow-2xl hover:shadow-primary/25 transition-shadow">
-//               Mulai Jual Sampah
-//             </Button>
-//             <Button size="xl" variant="outline">
-//               Tonton Video
-//             </Button>
-//           </div>
+            <h1 className={`font-bold text-white mb-4 sm:mb-6 leading-tight ${isMobile ? "text-4xl" : "text-5xl lg:text-7xl"}`}>
+              Ubah Sampah Jadi
+              <span className="text-primary block mt-2 sm:mt-0 sm:inline sm:ml-3">
+                Poin & Uang
+              </span>
+            </h1>
 
-//           {/* Stats dengan desain horizontal bar */}
-//           <div className="flex flex-wrap justify-center gap-8 border-t border-border/50 pt-10">
-//             <div className="text-center">
-//               <div className="text-3xl font-bold text-primary">10.000+</div>
-//               <div className="text-sm text-muted-foreground mt-1">User Aktif</div>
-//             </div>
-//             <div className="w-px h-12 bg-border/50 hidden sm:block" />
-//             <div className="text-center">
-//               <div className="text-3xl font-bold text-primary">50+</div>
-//               <div className="text-sm text-muted-foreground mt-1">Mitra Pengepul</div>
-//             </div>
-//             <div className="w-px h-12 bg-border/50 hidden sm:block" />
-//             <div className="text-center">
-//               <div className="text-3xl font-bold text-primary">100+ Ton</div>
-//               <div className="text-sm text-muted-foreground mt-1">Sampah Didaur Ulang</div>
-//             </div>
-//             <div className="w-px h-12 bg-border/50 hidden sm:block" />
-//             <div className="text-center">
-//               <div className="text-3xl font-bold text-primary">Rp 2.5M</div>
-//               <div className="text-sm text-muted-foreground mt-1">Pemasukan Warga</div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
+            <p className={`text-gray-200/90 mb-6 sm:mb-8 mx-auto ${isMobile ? "text-sm max-w-sm" : "text-base lg:text-lg max-w-lg"} ${!isMobile && "mx-0"}`}>
+              Arkana menghubungkan masyarakat, pengepul, dan pabrik daur ulang
+              dalam satu platform. Sampah jadi berkah untuk semua.
+            </p>
 
-//       {/* Decorative elements berbeda: floating circles */}
-//       <div className="absolute bottom-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-//       <div className="absolute top-40 right-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-//       <div className="absolute bottom-1/2 left-1/3 w-48 h-48 bg-primary/15 rounded-full blur-2xl animate-pulse delay-1000" />
-//     </section>
-//   );
-// }
+            <div className={`flex ${isMobile ? "flex-col" : "flex-col sm:flex-row"} gap-3 sm:gap-4 ${isMobile ? "items-center" : "justify-start"}`}>
+              <Button 
+                size={isMobile ? "default" : "lg"} 
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white"
+              >
+                Mulai Jual Sampah
+              </Button>
+              <Button 
+                size={isMobile ? "default" : "lg"} 
+                variant="outline" 
+                className="w-full sm:w-auto border-white text-white hover:bg-white/10 hover:text-white"
+              >
+                Pelajari Lebih Lanjut
+              </Button>
+            </div>
+
+            <div className={`mt-6 sm:mt-8 flex ${isMobile ? "flex-wrap justify-center gap-4" : "items-center gap-4"} text-sm text-gray-300`}>
+              <span className="font-semibold text-primary">2.500+</span>
+              <span>warga sudah bergabung</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {!isMobile && (
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hidden sm:block">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-primary rounded-full mt-2 animate-pulse" />
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
