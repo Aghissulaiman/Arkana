@@ -2,6 +2,7 @@
 import AgentMap from "@/components/component/LandingPage/Agent";
 import CaraKerjaSection from "@/components/component/LandingPage/CaraKerja";
 import Hero from "@/components/component/LandingPage/Hero";
+import MitraSection from "@/components/component/LandingPage/Mitra";
 import Navbar from "@/components/component/LandingPage/Navbar";
 import AboutSection from "@/components/component/LandingPage/Tentang";
 
@@ -13,6 +14,7 @@ export default function arkana(){
   {/* <CTA/> */}
   <AboutSection/>
   <CaraKerjaSection/>
+  <MitraSection/>
   <AgentMap/>
   </>
   )
