@@ -18,6 +18,7 @@ export function LoginForm({
   onRegisterClick,
   ...props
 }: LoginFormProps) {
+
   return (
     <form className={cn("flex flex-col gap-6", className)} {...props}>
       <FieldGroup className="bg-white/50 backdrop-blur-sm p-8 rounded-2xl shadow-sm border border-emerald-100/50">

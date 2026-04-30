@@ -26,7 +26,7 @@ export function RegisterForm({
             Buat Akun
           </h1>
           <p className="text-sm text-balance text-slate-500">
-            Bergabunglah untuk ubah sampahmu menjadi berbagai *reward* menarik.
+            Bergabunglah untuk ubah sampahmu menjadi berbagai reward menarik.
           </p>
         </div>
         
