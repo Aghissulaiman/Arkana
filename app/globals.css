@@ -129,3 +129,40 @@
     scroll-behavior: smooth;
   }
 }
+
+.nprogress {
+  pointer-events: none;
+}
+
+.nprogress .bar {
+  background: #16a34a !important;
+  height: 3px;
+}
+
+.nprogress .peg {
+  box-shadow: 0 0 10px #16a34a, 0 0 5px #16a34a !important;
+}
+
+.nprogress .spinner-icon {
+  border-top-color: #16a34a !important;
+  border-left-color: #16a34a !important;
+}
+
+@keyframes loadingBar {
+  0% {
+    width: 0%;
+    transform: translateX(0);
+  }
+  50% {
+    width: 60%;
+    transform: translateX(20%);
+  }
+  100% {
+    width: 100%;
+    transform: translateX(100%);
+  }
+}
+
+.animate-loading-bar {
+  animation: loadingBar 0.9s ease-in-out forwards;
+}

@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 export default function Hero() {
   const [isMobile, setIsMobile] = useState(false);
@@ -54,19 +55,25 @@ export default function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Link href="/login" passHref>  
             <Button 
               size={isMobile ? "default" : "lg"} 
               className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white px-6 sm:px-8"
-            >
+              >
               Mulai Jual Sampah
             </Button>
+              </Link>
+
+            <Link href="#about" passHref>  x
             <Button 
               size={isMobile ? "default" : "lg"} 
               variant="outline" 
-              className="w-full sm:w-auto border-white text-white hover:bg-white/10 hover:text-white px-6 sm:px-8"
+              className="w-full sm:w-auto border-white text-black hover:bg-white/10 hover:text-white px-6 sm:px-8"
             >
               Pelajari Lebih Lanjut
             </Button>
+              
+            </Link>
           </div>
 
           <div className="mt-7 sm:mt-8 flex flex-wrap justify-center items-center gap-4 text-sm text-gray-300">

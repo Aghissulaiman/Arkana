@@ -47,9 +47,6 @@ export default function CaraKerjaSection() {
             <div className="grid lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-7">
                 <div className="max-w-xl">
-                  <Badge variant="primary" className="mb-4">
-                    Cara Kerja
-                  </Badge>
                   <h2 className="text-3xl md:text-5xl font-bold text-foreground leading-tight">
                     Bagaimana Sampah Anda Kami
                     <span className="text-primary"> Proses</span>
