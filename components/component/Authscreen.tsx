@@ -43,7 +43,7 @@ export function AuthScreen({ initialIsLogin = true }: { initialIsLogin?: boolean
                 <span className="text-emerald-300 font-semibold text-sm uppercase tracking-wider">Langkah Pertama</span>
               </div>
               <h2 className="text-4xl font-bold mb-4 leading-tight">
-                Mulai Jadi <br />
+                Mulai Jadi <br/>
                 <span className="text-emerald-400">Pahlawan Bumi.</span>
               </h2>
               <p className="text-emerald-100/80 text-lg max-w-md">
@@ -85,7 +85,7 @@ export function AuthScreen({ initialIsLogin = true }: { initialIsLogin?: boolean
         isLogin ? "left-0 translate-x-0" : "left-0 lg:translate-x-full"
       )}>
         <div className="flex justify-center gap-2 md:justify-start z-30">
-          <a href="#" className="flex items-center gap-2 font-bold text-xl text-emerald-900 transition-transform hover:scale-105">
+          <a href="/" className="flex items-center gap-2 font-bold text-xl text-emerald-900 transition-transform hover:scale-105">
             <div className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
               <Leaf className="size-5" />
             </div>
