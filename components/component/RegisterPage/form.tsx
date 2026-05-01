@@ -1,4 +1,7 @@
+"use client"
+
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -18,8 +21,15 @@ export function RegisterForm({
   onLoginClick,
   ...props
 }: RegisterFormProps) {
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push("/after-regis");
+  };
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit} {...props}>
       <FieldGroup className="bg-white/50 backdrop-blur-sm p-8 rounded-2xl shadow-sm border border-emerald-100/50">
         <div className="flex flex-col items-center gap-2 text-center mb-4">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
