@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User } from "lucide-react";
+import { Leaf, User } from "lucide-react";
 
 export default function ProfileNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -31,14 +31,14 @@ export default function ProfileNavbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/home" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-emerald-600 rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
-            <span className={`font-bold text-xl ${isScrolled ? "text-slate-900" : "text-slate-900"}`}>
-              Arkana<span className="text-emerald-600">.</span>
-            </span>
-          </Link>
+          <div className="flex justify-center gap-2 md:justify-start z-30">
+            <a href="/home" className="flex items-center gap-2 font-bold text-xl text-emerald-900 transition-transform hover:scale-105">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
+                <Leaf className="size-5" />
+              </div>
+              Arkana.
+            </a>
+          </div>
 
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (

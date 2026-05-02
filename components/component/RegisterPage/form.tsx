@@ -39,7 +39,7 @@ export function RegisterForm({
             Bergabunglah untuk ubah sampahmu menjadi berbagai reward menarik.
           </p>
         </div>
-        
+
         <Field>
           <FieldLabel htmlFor="reg-name" className="text-slate-700 font-medium">Nama Lengkap</FieldLabel>
           <Input id="reg-name" type="text" placeholder="John Doe" required className="focus-visible:ring-emerald-500 border-slate-200" />
@@ -49,20 +49,20 @@ export function RegisterForm({
           <FieldLabel htmlFor="reg-email" className="text-slate-700 font-medium">Email</FieldLabel>
           <Input id="reg-email" type="email" placeholder="nama@email.com" required className="focus-visible:ring-emerald-500 border-slate-200" />
         </Field>
-        
+
         <Field>
           <FieldLabel htmlFor="reg-password" className="text-slate-700 font-medium">Password</FieldLabel>
           <Input id="reg-password" type="password" required className="focus-visible:ring-emerald-500 border-slate-200" />
         </Field>
-        
+
         <Field className="pt-2">
           <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all active:scale-[0.98]">
             Daftar
           </Button>
         </Field>
-        
+
         <FieldSeparator className="text-slate-400">Atau</FieldSeparator>
-        
+
         <Field>
           <Button variant="outline" type="button" className="w-full border-slate-200 hover:bg-slate-50 hover:text-emerald-700 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
@@ -78,9 +78,9 @@ export function RegisterForm({
         <Field>
           <FieldDescription className="text-center mt-2">
             Sudah punya akun?{" "}
-            <button 
-              type="button" 
-              onClick={onLoginClick} 
+            <button
+              type="button"
+              onClick={onLoginClick}
               className="font-semibold text-emerald-600 underline underline-offset-4 hover:text-emerald-700"
             >
               Masuk di sini

@@ -24,9 +24,9 @@ export function AuthScreen({ initialIsLogin = true }: { initialIsLogin?: boolean
 
   return (
     <div className="relative min-h-svh w-full bg-slate-50 overflow-hidden">
-      
+
       <div className="absolute inset-0 hidden lg:flex w-full h-full z-0">
-        
+
         <div className="relative w-1/2 h-full overflow-hidden">
           <div className={cn("absolute inset-0 bg-slate-50 transition-opacity duration-1000 ease-in-out", isLogin ? "opacity-100" : "opacity-0")} />
           <div className={cn("absolute inset-0 bg-emerald-950 transition-opacity duration-1000 ease-in-out", !isLogin ? "opacity-100" : "opacity-0")}>
@@ -36,14 +36,14 @@ export function AuthScreen({ initialIsLogin = true }: { initialIsLogin?: boolean
               className={cn("w-full h-full object-cover transition-transform duration-1000", !isLogin ? "scale-100" : "scale-110")}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-900/40 to-transparent mix-blend-multiply" />
-            
+
             <div className={cn("absolute bottom-0 left-0 right-0 p-16 text-white transition-all duration-700 delay-300", !isLogin ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8")}>
               <div className="flex items-center gap-2 mb-4">
                 <div className="h-1 w-10 bg-emerald-400 rounded-full"></div>
                 <span className="text-emerald-300 font-semibold text-sm uppercase tracking-wider">Langkah Pertama</span>
               </div>
               <h2 className="text-4xl font-bold mb-4 leading-tight">
-                Mulai Jadi <br/>
+                Mulai Jadi <br />
                 <span className="text-emerald-400">Pahlawan Bumi.</span>
               </h2>
               <p className="text-emerald-100/80 text-lg max-w-md">
@@ -61,7 +61,7 @@ export function AuthScreen({ initialIsLogin = true }: { initialIsLogin?: boolean
               className={cn("w-full h-full object-cover transition-transform duration-1000", isLogin ? "scale-100" : "scale-110")}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-900/40 to-transparent mix-blend-multiply" />
-            
+
             <div className={cn("absolute bottom-0 left-0 right-0 p-16 text-white transition-all duration-700 delay-300", isLogin ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8")}>
               <div className="flex items-center gap-2 mb-4">
                 <div className="h-1 w-10 bg-emerald-400 rounded-full"></div>
