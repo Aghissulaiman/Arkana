@@ -17,7 +17,7 @@ import {
   GripVertical,
 } from "lucide-react";
 
-export default function UserLayout({ children }: { children: React.ReactNode }) {
+export default function Sidebar({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
@@ -58,11 +58,11 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   }, [isResizing]);
 
   const menuItems = [
-    { name: "Beranda", href: "/home", icon: Home },
-    { name: "Jual Sampah", href: "/jual-sampah", icon: Trash2 },
-    { name: "Riwayat", href: "/riwayat", icon: History },
-    { name: "Tukar Poin", href: "/tukar-poin", icon: Gift },
-    { name: "Bantuan", href: "/bantuan", icon: HelpCircle },
+    { name: "Beranda", href: "/dashboard", icon: Home },
+    { name: "Jual Sampah", href: "/dashboard/jual-sampah", icon: Trash2 },
+    { name: "Riwayat", href: "/dashboard/riwayat", icon: History },
+    { name: "Tukar Poin", href: "/dashboard/tukar-poin", icon: Gift },
+    { name: "Bantuan", href: "/dashboard/bantuan", icon: HelpCircle },
   ];
 
   return (
@@ -116,7 +116,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       >
         {/* Sidebar Header - Logo */}
         <div className="flex items-center px-3 py-3 border-b border-border h-12 lg:h-14">
-          <Link href="/home" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
               <Leaf className="w-3.5 h-3.5 text-primary-foreground" />
             </div>

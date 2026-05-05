@@ -48,9 +48,9 @@ export default function VerifyOTPPage() {
       setIsVerifying(false)
       setIsSuccess(true)
       
-      // Setelah 2 detik, redirect ke home
+      // Setelah 2 detik, redirect ke dashboard
       setTimeout(() => {
-        router.push("/home")
+        router.push("/dashboard")
       }, 2000)
     }, 1500)
   }

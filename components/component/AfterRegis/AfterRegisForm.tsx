@@ -32,7 +32,7 @@ export function AfterRegisForm() {
     setIsLoading(true)
     await new Promise(resolve => setTimeout(resolve, 1500))
     setIsLoading(false)
-    router.push('/home')
+    router.push('/dashboard')
   }
 
   return (

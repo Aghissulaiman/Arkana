@@ -1,10 +1,10 @@
 "use client";
 
-import Navbar from "@/components/component/ProfilePage/Navbar";
-import Footer from "@/components/component/ProfilePage/Footer";
-import ProfileHeader from "@/components/component/ProfilePage/ProfileHeader";
-import SidebarMenu from "@/components/component/ProfilePage/SidebarMenu";
-import PersonalInfoForm from "@/components/component/ProfilePage/PersonalInfoForm";
+import Navbar from "@/components/Users/ProfilePage/Navbar";
+import Footer from "@/components/Users/ProfilePage/Footer";
+import ProfileHeader from "@/components/Users/ProfilePage/ProfileHeader";
+import SidebarMenu from "@/components/Users/ProfilePage/SidebarMenu";
+import PersonalInfoForm from "@/components/Users/ProfilePage/PersonalInfoForm";
 
 export default function ProfilePage() {
   return (
