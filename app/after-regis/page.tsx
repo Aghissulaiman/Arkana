@@ -1,4 +1,4 @@
-import { AfterRegisForm } from "@/components/component/AfterRegis/AfterRegisForm"
+import { AfterRegisForm } from "@/components/AfterRegis/AfterRegisForm"
 
 export const metadata = {
   title: "Lengkapi Profil | Arkana",

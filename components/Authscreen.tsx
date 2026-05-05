@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Leaf } from "lucide-react"
-import { LoginForm } from "@/components/component/LoginPage/form"
-import { RegisterForm } from "@/components/component/RegisterPage/form"
+import { LoginForm } from "@/components/LoginPage/form"
+import { RegisterForm } from "@/components/RegisterPage/form"
 import { cn } from "@/lib/utils"
 
 export function AuthScreen({ initialIsLogin = true }: { initialIsLogin?: boolean }) {
