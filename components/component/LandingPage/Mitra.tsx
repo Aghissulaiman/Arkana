@@ -43,7 +43,6 @@ export default function MitraSection() {
             <div className="max-w-3xl pl-2 md:pl-4 lg:pl-6">
               <h2 className="text-3xl md:text-5xl font-bold text-foreground leading-tight mb-4">
                 Bangun Usaha
-            
                 <span className="text-primary"> Bersama Kami</span>
               </h2>
 
