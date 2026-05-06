@@ -1,10 +1,11 @@
 import Sidebar from "@/components/NavbarUmum";
+import Riwayat from "@/components/Users/histori/Histori";
 
-export default function Riwayat() {
+export default function RiwayatPage() {
     return (
         <>
         <Sidebar>
-            <h1 className="text-2xl font-bold mb-4">Riwayat Transaksi</h1>
+            <Riwayat/>
         </Sidebar>
         </>
     )

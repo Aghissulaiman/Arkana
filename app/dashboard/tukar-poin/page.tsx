@@ -1,10 +1,11 @@
 import Sidebar from "@/components/NavbarUmum";
+import TukarPoin from "@/components/Users/tukarpoin/TukarPoin";
 
-export default function TukarPoin() {
+export default function TukarPoinPage() {
     return (
         <>
         <Sidebar>
-            <h1 className="text-2xl font-bold mb-4">Tukar Poin</h1>
+            <TukarPoin/>
         </Sidebar>
         </>
     )

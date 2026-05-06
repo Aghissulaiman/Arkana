@@ -1,10 +1,11 @@
 import Sidebar from "@/components/NavbarUmum";
+import Langganan from "@/components/Users/Langganan/Langganan";
 
-export default function Langganan() {
+export default function LanggananPage() {
     return (
         <>
         <Sidebar>
-        <h1 className="text-2xl font-semibold text-foreground">Langganan</h1>
+            <Langganan/>
         </Sidebar>
         </>
     )

@@ -1,10 +1,11 @@
 import Sidebar from "@/components/NavbarUmum";
+import Bantuan from "@/components/Users/Pengaturan/bantuan/Bantuan";
 
 export default function bantuan() {
     return (
         <>
         <Sidebar>
-            <h1 className="text-2xl font-bold mb-4">Bantuan</h1>
+            <Bantuan/>
         </Sidebar>
         </>
     )
