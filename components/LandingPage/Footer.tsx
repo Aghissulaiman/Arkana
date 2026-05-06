@@ -1,82 +1,154 @@
 "use client";
 
 import Link from "next/link";
+import {
+  FaFacebookF,
+  FaTwitter,
+  FaInstagram,
+  FaLinkedinIn,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaMapMarkerAlt,
+  FaClock,
+} from "react-icons/fa";
 
 export default function Footer() {
   return (
     <footer className="mt-20 border-t border-border bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        
-        {/* TOP */}
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
-          
-          {/* BRAND */}
+        {/* MAIN CONTENT - 4 Columns with better spacing */}
+        <div className="grid md:grid-cols-4 gap-12 mb-12">
+          {/* COLUMN 1 - BRAND & DESCRIPTION */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">A</span>
+                <span className="text-primary-foreground font-bold text-sm">
+                  AC
+                </span>
               </div>
-
               <span className="font-semibold text-lg text-foreground">
-                Arkana<span className="text-primary">.</span>
+                Ananta<span className="text-primary">Cycle</span>
               </span>
             </div>
 
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Platform yang membantu mengelola sampah menjadi lebih bernilai
-              dengan sistem yang transparan.
+              dengan sistem yang transparan dan berkelanjutan.
             </p>
-          </div>
 
-          {/* NAV */}
-          <div>
-            <p className="font-medium text-foreground mb-3">Navigasi</p>
-
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <Link href="#AboutSection" className="hover:text-primary transition">
-                Tentang
-              </Link>
-              <Link href="#cara-kerja" className="hover:text-primary transition">
-                Cara Kerja
-              </Link>
-              <Link href="#mitra" className="hover:text-primary transition">
-                Mitra
-              </Link>
-              <Link href="#kontak" className="hover:text-primary transition">
-                Kontak
-              </Link>
+            {/* Social Media Icons */}
+            <div className="flex gap-3 mt-6">
+              <a
+                href="#"
+                className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition"
+              >
+                <FaFacebookF size={14} />
+              </a>
+              <a
+                href="#"
+                className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition"
+              >
+                <FaTwitter size={14} />
+              </a>
+              <a
+                href="#"
+                className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition"
+              >
+                <FaInstagram size={14} />
+              </a>
+              <a
+                href="#"
+                className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition"
+              >
+                <FaLinkedinIn size={14} />
+              </a>
             </div>
           </div>
 
-          {/* CONTACT */}
+          {/* COLUMN 2 - NAVIGASI */}
           <div>
-            <p className="font-medium text-foreground mb-3">Kontak</p>
-
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>support@arkana.id</p>
-              <p>+62 812 3456 7890</p>
-              <p>Bekasi, Indonesia</p>
-            </div>
+            <h4 className="font-semibold text-foreground mb-4">Navigasi</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link
+                  href="#AboutSection"
+                  className="hover:text-primary transition"
+                >
+                  Tentang Kami
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="#cara-kerja"
+                  className="hover:text-primary transition"
+                >
+                  Cara Kerja
+                </Link>
+              </li>
+              <li>
+                <Link href="#mitra" className="hover:text-primary transition">
+                  Mitra
+                </Link>
+              </li>
+              <li>
+                <Link href="#kontak" className="hover:text-primary transition">
+                  Kontak
+                </Link>
+              </li>
+            </ul>
           </div>
 
+          {/* COLUMN 3 - KONTAK */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">Kontak</h4>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              <li className="flex items-center gap-3">
+                <FaEnvelope className="text-primary text-sm" />
+                <span>support@anantacycle.id</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <FaPhoneAlt className="text-primary text-sm" />
+                <span>+62 812 3456 7890</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <FaMapMarkerAlt className="text-primary text-sm" />
+                <span>Bekasi, Indonesia</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* COLUMN 4 - JAM OPERASIONAL */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">
+              Jam Operasional
+            </h4>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              <li className="flex items-center gap-3">
+                <FaClock className="text-primary text-sm" />
+                <div>
+                  <p>Senin - Jumat : 08:00 - 17:00</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">
+                    Sabtu - Minggu : Tutup
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        {/* BOTTOM */}
-        <div className="pt-5 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3">
-          
+        {/* BOTTOM SECTION */}
+        <div className="pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-3">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Arkana. All rights reserved.
+            © {new Date().getFullYear()} AnantaCycle. All rights reserved.
           </p>
-
           <div className="flex gap-5 text-xs text-muted-foreground">
             <Link href="#" className="hover:text-primary transition">
-              Privacy
+              Privacy Policy
             </Link>
             <Link href="#" className="hover:text-primary transition">
-              Terms
+              Terms of Service
             </Link>
           </div>
-
         </div>
       </div>
     </footer>
