@@ -1,5 +1,6 @@
 "use client";
 
+import { Leaf } from "lucide-react";
 import Link from "next/link";
 import {
   FaFacebookF,
@@ -21,13 +22,11 @@ export default function Footer() {
           {/* COLUMN 1 - BRAND & DESCRIPTION */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">
-                  AC
-                </span>
+              <div className="flex size-8 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
+                <Leaf className="size-5" />
               </div>
               <span className="font-semibold text-lg text-foreground">
-                Ananta<span className="text-primary">Cycle</span>
+                Trash<span className="text-primary">Flow</span>
               </span>
             </div>
 

@@ -37,7 +37,7 @@ export default function Navbar({ hideAuthButtons = false }: { hideAuthButtons?: 
 
           <div className="flex justify-center gap-2 md:justify-start z-30">
             <a href="/" className="flex items-center gap-2 font-bold text-xl text-emerald-900 transition-transform hover:scale-105">
-              <div className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
                 <Leaf className="size-5" />
               </div>
               Arkana.

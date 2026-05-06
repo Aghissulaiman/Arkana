@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  Shield, 
-  Eye, 
-  Database, 
-  FileText, 
+import {
+  Shield,
+  Eye,
+  Database,
+  FileText,
   ChevronRight,
   CheckCircle,
   AlertTriangle,
   Download,
-  Trash2
+  Trash2,
 } from "lucide-react";
 
 export default function Privasi() {
@@ -23,7 +23,7 @@ export default function Privasi() {
     profile_visible: true,
     show_poin: true,
     show_history: false,
-    data_analytics: true
+    data_analytics: true,
   });
 
   const handleSave = () => {
@@ -32,14 +32,16 @@ export default function Privasi() {
   };
 
   const toggleSetting = (key: keyof typeof privacySettings) => {
-    setPrivacySettings(prev => ({ ...prev, [key]: !prev[key] }));
+    setPrivacySettings((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-3xl ">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Privasi & Data</h1>
+        <h1 className="text-2xl mt-5 font-bold text-foreground">
+          Privasi & Data
+        </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Kelola privasi akun dan data Anda
         </p>
@@ -55,7 +57,7 @@ export default function Privasi() {
 
       {/* Privasi Data */}
       <div className="mb-4 border border-border rounded-lg overflow-hidden">
-        <div 
+        <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition"
           onClick={() => setShowDataPrivacy(!showDataPrivacy)}
         >
@@ -70,7 +72,9 @@ export default function Privasi() {
               </p>
             </div>
           </div>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showDataPrivacy ? "rotate-90" : ""}`} />
+          <ChevronRight
+            className={`w-4 h-4 text-muted-foreground transition-transform ${showDataPrivacy ? "rotate-90" : ""}`}
+          />
         </div>
 
         {showDataPrivacy && (
@@ -78,49 +82,65 @@ export default function Privasi() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm text-foreground">Profil Terlihat</p>
-                <p className="text-xs text-muted-foreground">Izinkan pengguna lain melihat profil Anda</p>
+                <p className="text-xs text-muted-foreground">
+                  Izinkan pengguna lain melihat profil Anda
+                </p>
               </div>
               <button
                 onClick={() => toggleSetting("profile_visible")}
                 className={`w-10 h-5 rounded-full transition-colors ${privacySettings.profile_visible ? "bg-primary" : "bg-muted"}`}
               >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${privacySettings.profile_visible ? "translate-x-5" : "translate-x-0.5"}`} />
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${privacySettings.profile_visible ? "translate-x-5" : "translate-x-0.5"}`}
+                />
               </button>
             </div>
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm text-foreground">Tampilkan Poin</p>
-                <p className="text-xs text-muted-foreground">Perlihatkan jumlah poin di profil</p>
+                <p className="text-xs text-muted-foreground">
+                  Perlihatkan jumlah poin di profil
+                </p>
               </div>
               <button
                 onClick={() => toggleSetting("show_poin")}
                 className={`w-10 h-5 rounded-full transition-colors ${privacySettings.show_poin ? "bg-primary" : "bg-muted"}`}
               >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${privacySettings.show_poin ? "translate-x-5" : "translate-x-0.5"}`} />
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${privacySettings.show_poin ? "translate-x-5" : "translate-x-0.5"}`}
+                />
               </button>
             </div>
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm text-foreground">Riwayat Transaksi</p>
-                <p className="text-xs text-muted-foreground">Izinkan melihat riwayat transaksi Anda</p>
+                <p className="text-xs text-muted-foreground">
+                  Izinkan melihat riwayat transaksi Anda
+                </p>
               </div>
               <button
                 onClick={() => toggleSetting("show_history")}
                 className={`w-10 h-5 rounded-full transition-colors ${privacySettings.show_history ? "bg-primary" : "bg-muted"}`}
               >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${privacySettings.show_history ? "translate-x-5" : "translate-x-0.5"}`} />
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${privacySettings.show_history ? "translate-x-5" : "translate-x-0.5"}`}
+                />
               </button>
             </div>
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm text-foreground">Data Analitik</p>
-                <p className="text-xs text-muted-foreground">Izinkan pengumpulan data untuk pengembangan</p>
+                <p className="text-xs text-muted-foreground">
+                  Izinkan pengumpulan data untuk pengembangan
+                </p>
               </div>
               <button
                 onClick={() => toggleSetting("data_analytics")}
                 className={`w-10 h-5 rounded-full transition-colors ${privacySettings.data_analytics ? "bg-primary" : "bg-muted"}`}
               >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${privacySettings.data_analytics ? "translate-x-5" : "translate-x-0.5"}`} />
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform mt-0.5 ${privacySettings.data_analytics ? "translate-x-5" : "translate-x-0.5"}`}
+                />
               </button>
             </div>
 
@@ -136,7 +156,7 @@ export default function Privasi() {
 
       {/* Aktivitas Akun */}
       <div className="mb-4 border border-border rounded-lg overflow-hidden">
-        <div 
+        <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition"
           onClick={() => setShowActivity(!showActivity)}
         >
@@ -151,7 +171,9 @@ export default function Privasi() {
               </p>
             </div>
           </div>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showActivity ? "rotate-90" : ""}`} />
+          <ChevronRight
+            className={`w-4 h-4 text-muted-foreground transition-transform ${showActivity ? "rotate-90" : ""}`}
+          />
         </div>
 
         {showActivity && (
@@ -160,20 +182,26 @@ export default function Privasi() {
               <div className="flex items-center justify-between py-2 border-b border-border">
                 <div>
                   <p className="text-sm text-foreground">Login terakhir</p>
-                  <p className="text-xs text-muted-foreground">15 Mei 2026, 09:23 WIB</p>
+                  <p className="text-xs text-muted-foreground">
+                    15 Mei 2026, 09:23 WIB
+                  </p>
                 </div>
                 <span className="text-xs text-green-600">Perangkat ini</span>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-border">
                 <div>
                   <p className="text-sm text-foreground">Login sebelumnya</p>
-                  <p className="text-xs text-muted-foreground">14 Mei 2026, 18:45 WIB - Windows PC</p>
+                  <p className="text-xs text-muted-foreground">
+                    14 Mei 2026, 18:45 WIB - Windows PC
+                  </p>
                 </div>
               </div>
               <div className="flex items-center justify-between py-2">
                 <div>
                   <p className="text-sm text-foreground">Login 2 minggu lalu</p>
-                  <p className="text-xs text-muted-foreground">2 Mei 2026, 07:30 WIB - iPhone</p>
+                  <p className="text-xs text-muted-foreground">
+                    2 Mei 2026, 07:30 WIB - iPhone
+                  </p>
                 </div>
               </div>
             </div>
@@ -190,7 +218,7 @@ export default function Privasi() {
 
       {/* Permintaan Data */}
       <div className="mb-4 border border-border rounded-lg overflow-hidden">
-        <div 
+        <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition"
           onClick={() => setShowDataRequest(!showDataRequest)}
         >
@@ -205,7 +233,9 @@ export default function Privasi() {
               </p>
             </div>
           </div>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showDataRequest ? "rotate-90" : ""}`} />
+          <ChevronRight
+            className={`w-4 h-4 text-muted-foreground transition-transform ${showDataRequest ? "rotate-90" : ""}`}
+          />
         </div>
 
         {showDataRequest && (
@@ -227,7 +257,8 @@ export default function Privasi() {
                 <p className="text-sm font-medium text-red-600">Hapus Akun</p>
               </div>
               <p className="text-xs text-muted-foreground mb-3">
-                Menghapus akun akan menghilangkan semua data Anda secara permanen
+                Menghapus akun akan menghilangkan semua data Anda secara
+                permanen
               </p>
               <button className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-500 rounded-lg text-sm hover:bg-red-500/20 transition">
                 <Trash2 className="w-3.5 h-3.5" />

@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  Lock, 
-  Shield, 
-  Smartphone, 
+import {
+  Lock,
+  Shield,
+  Smartphone,
   ChevronRight,
   CheckCircle,
   Eye,
   EyeOff,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 
 export default function Keamanan() {
@@ -32,7 +32,7 @@ export default function Keamanan() {
     <div className="max-w-3xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Keamanan</h1>
+        <h1 className="text-4xl font-bold text-foreground">Keamanan</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Kelola keamanan akun Anda
         </p>
@@ -48,7 +48,7 @@ export default function Keamanan() {
 
       {/* Ganti Password */}
       <div className="mb-4 border border-border rounded-lg overflow-hidden">
-        <div 
+        <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition"
           onClick={() => setShowPasswordForm(!showPasswordForm)}
         >
@@ -58,14 +58,21 @@ export default function Keamanan() {
             </div>
             <div>
               <h2 className="font-medium text-foreground">Ganti Password</h2>
-              <p className="text-xs text-muted-foreground">Perbarui password akun Anda</p>
+              <p className="text-xs text-muted-foreground">
+                Perbarui password akun Anda
+              </p>
             </div>
           </div>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showPasswordForm ? "rotate-90" : ""}`} />
+          <ChevronRight
+            className={`w-4 h-4 text-muted-foreground transition-transform ${showPasswordForm ? "rotate-90" : ""}`}
+          />
         </div>
 
         {showPasswordForm && (
-          <form onSubmit={handleChangePassword} className="p-4 pt-0 border-t border-border space-y-4">
+          <form
+            onSubmit={handleChangePassword}
+            className="p-4 pt-0 border-t border-border space-y-4"
+          >
             <div>
               <label className="text-sm font-medium text-foreground block mb-1">
                 Password Lama
@@ -162,7 +169,7 @@ export default function Keamanan() {
 
       {/* Verifikasi 2 Langkah */}
       <div className="mb-4 border border-border rounded-lg overflow-hidden">
-        <div 
+        <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition"
           onClick={() => setShowTwoFactor(!showTwoFactor)}
         >
@@ -171,22 +178,30 @@ export default function Keamanan() {
               <Shield className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h2 className="font-medium text-foreground">Verifikasi 2 Langkah</h2>
+              <h2 className="font-medium text-foreground">
+                Verifikasi 2 Langkah
+              </h2>
               <p className="text-xs text-muted-foreground">
-                {twoFactorEnabled ? "Aktif" : "Nonaktif"} • Lapisan keamanan ekstra
+                {twoFactorEnabled ? "Aktif" : "Nonaktif"} • Lapisan keamanan
+                ekstra
               </p>
             </div>
           </div>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showTwoFactor ? "rotate-90" : ""}`} />
+          <ChevronRight
+            className={`w-4 h-4 text-muted-foreground transition-transform ${showTwoFactor ? "rotate-90" : ""}`}
+          />
         </div>
 
         {showTwoFactor && (
           <div className="p-4 pt-0 border-t border-border space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-foreground">Aktifkan Verifikasi 2 Langkah</p>
+                <p className="text-sm text-foreground">
+                  Aktifkan Verifikasi 2 Langkah
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  Anda akan diminta memasukkan kode dari aplikasi authenticator setiap login
+                  Anda akan diminta memasukkan kode dari aplikasi authenticator
+                  setiap login
                 </p>
               </div>
               <button
@@ -238,8 +253,12 @@ export default function Keamanan() {
               <Smartphone className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h2 className="font-medium text-foreground">Perangkat yang Terhubung</h2>
-              <p className="text-xs text-muted-foreground">Kelola perangkat yang pernah mengakses akun Anda</p>
+              <h2 className="font-medium text-foreground">
+                Perangkat yang Terhubung
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Kelola perangkat yang pernah mengakses akun Anda
+              </p>
             </div>
           </div>
 
@@ -247,7 +266,9 @@ export default function Keamanan() {
             <div className="flex items-center justify-between py-3">
               <div>
                 <p className="text-sm text-foreground">Windows PC - Chrome</p>
-                <p className="text-xs text-muted-foreground">Jakarta, Indonesia • Sekarang</p>
+                <p className="text-xs text-muted-foreground">
+                  Jakarta, Indonesia • Sekarang
+                </p>
               </div>
               <button className="text-xs text-red-500 hover:underline">
                 Putuskan
@@ -256,7 +277,9 @@ export default function Keamanan() {
             <div className="flex items-center justify-between py-3">
               <div>
                 <p className="text-sm text-foreground">iPhone 13 - Safari</p>
-                <p className="text-xs text-muted-foreground">Jakarta, Indonesia • 2 hari lalu</p>
+                <p className="text-xs text-muted-foreground">
+                  Jakarta, Indonesia • 2 hari lalu
+                </p>
               </div>
               <button className="text-xs text-red-500 hover:underline">
                 Putuskan
