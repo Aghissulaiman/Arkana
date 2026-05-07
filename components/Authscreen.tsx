@@ -134,17 +134,7 @@ export function AuthScreen({
           isLogin ? "left-0 translate-x-0" : "left-0 lg:translate-x-full",
         )}
       >
-        <div className="flex justify-center gap-2 md:justify-start z-30">
-          <a
-            href="/"
-            className="flex items-center gap-2 font-bold text-xl text-emerald-900 transition-transform hover:scale-105"
-          >
-            <div className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
-              <Leaf className="size-5" />
-            </div>
-            TrashFlow
-          </a>
-        </div>
+   
 
         <div className="flex flex-1 items-center justify-center relative w-full mt-4">
           <div

@@ -1,7 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,11 +12,9 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
 
-interface LoginFormProps extends Omit<
-  React.ComponentProps<"form">,
-  "onSubmit"
-> {
+interface LoginFormProps extends Omit<React.ComponentProps<"form">, "onSubmit"> {
   onRegisterClick?: () => void;
 }
 
@@ -26,11 +24,35 @@ export function LoginForm({
   ...props
 }: LoginFormProps) {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect ke halaman verifikasi OTP
-    router.push("/verify-otp");
+    setLoading(true);
+    setError("");
+
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (loginError) {
+      setError(loginError.message);
+      setLoading(false);
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/dashboard` }
+    });
+    if (error) console.error(error);
   };
 
   return (
@@ -57,30 +79,34 @@ export function LoginForm({
             id="email"
             type="email"
             placeholder="nama@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             className="bg-background border-border"
           />
         </Field>
 
         <Field>
-          <div className="flex items-center justify-between mb-1">
-            <FieldLabel htmlFor="password" className="text-foreground">
-              Password
-            </FieldLabel>
-            <a href="#" className="text-xs text-primary hover:underline">
-              Lupa password?
-            </a>
-          </div>
+          <FieldLabel htmlFor="password" className="text-foreground">
+            Password
+          </FieldLabel>
           <Input
             id="password"
             type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
             className="bg-background border-border"
           />
         </Field>
 
-        <Button type="submit" className="w-full mt-2">
-          Masuk
+        {error && (
+          <p className="text-sm text-red-500 text-center">{error}</p>
+        )}
+
+        <Button type="submit" className="w-full mt-2" disabled={loading}>
+          {loading ? "Memproses..." : "Masuk"}
         </Button>
 
         <FieldSeparator className="text-muted-foreground">Atau</FieldSeparator>
@@ -88,6 +114,7 @@ export function LoginForm({
         <Button
           variant="outline"
           type="button"
+          onClick={handleGoogleLogin}
           className="w-full border-border hover:bg-muted"
         >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
