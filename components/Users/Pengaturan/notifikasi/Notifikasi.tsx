@@ -202,7 +202,7 @@ export default function Notifikasi() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <p className="text-sm text-foreground">Promo Mingguan</p>
-                <p className="text-xs text-muted-foreground">Info promo dari mitra Arkana</p>
+                <p className="text-xs text-muted-foreground">Info promo dari mitra TrashFlow</p>
               </div>
               <button
                 onClick={() => toggleNotif("promo_weekly")}

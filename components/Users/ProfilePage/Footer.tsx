@@ -12,12 +12,12 @@ export default function ProfileFooter() {
               <span className="text-white font-bold text-sm">A</span>
             </div>
             <span className="font-semibold text-slate-800">
-              Arkana<span className="text-emerald-600">.</span>
+              TrashFlow<span className="text-emerald-600">.</span>
             </span>
           </div>
 
           <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()} Arkana. All rights reserved.
+            © {new Date().getFullYear()} TrashFlow. All rights reserved.
           </p>
 
           <div className="flex gap-4 text-sm text-slate-500">

@@ -40,7 +40,7 @@ export default function Navbar({ hideAuthButtons = false }: { hideAuthButtons?: 
               <div className="flex size-8 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
                 <Leaf className="size-5" />
               </div>
-              Arkana.
+              TrashFlow
             </a>
           </div>
 

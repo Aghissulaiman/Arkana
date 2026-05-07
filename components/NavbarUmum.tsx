@@ -37,7 +37,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
   const [points] = useState(1250);
 
   const [messages, setMessages] = useState([
-    { role: "ai", text: "Halo 👋, saya AI Arkana." },
+    { role: "ai", text: "Halo 👋, saya AI TrashFlow." },
   ]);
   const [input, setInput] = useState("");
 
@@ -122,7 +122,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
       >
         <div className="h-14 flex items-center px-4 border-b">
           <Leaf className="w-5 h-5 text-primary" />
-          <span className="ml-2 font-semibold">Arkana</span>
+          <span className="ml-2 font-semibold">TrashFlow</span>
         </div>
 
         <nav className="p-3 space-y-1">
@@ -243,7 +243,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
   <div className="p-4 flex justify-between items-center border-b">
     <div className="flex items-center gap-2">
       <Leaf className="w-5 h-5 text-primary" />
-      <span className="font-semibold">Arkana</span>
+      <span className="font-semibold">TrashFlow</span>
     </div>
 
     <button
@@ -312,7 +312,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
           <div className="w-full max-w-sm h-[500px] bg-background rounded-xl shadow flex flex-col">
 
             <div className="p-3 border-b flex justify-between">
-              <span>AI Arkana</span>
+              <span>AI TrashFlow</span>
               <button onClick={() => setIsAiOpen(false)}>
                 <X />
               </button>
