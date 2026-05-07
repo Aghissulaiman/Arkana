@@ -1,4 +1,4 @@
-// import { SupabaseProvider } from "@/lib/supabase/provider";
+import { SupabaseProvider } from "@/lib/supabase/provider";
 import type { Metadata } from "next";
 import "@/app/globals.css";
 
@@ -15,10 +15,9 @@ export default function RootLayout({
   return (
     <html lang="id" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body suppressHydrationWarning>
-        {/* <SupabaseProvider> */}
+        <SupabaseProvider>
           {children}
-
-        {/* </SupabaseProvider> */}
+        </SupabaseProvider>
       </body>
     </html>
   );
