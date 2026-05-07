@@ -50,7 +50,7 @@ export default function Hero() {
           </h1>
 
           <p className={`text-gray-200/90 mb-7 sm:mb-8 ${isMobile ? "text-sm" : "text-base lg:text-lg"} max-w-2xl mx-auto`}>
-            Arkana menghubungkan masyarakat, pengepul, dan pabrik daur ulang
+            TrashFlow menghubungkan masyarakat, pengepul, dan pabrik daur ulang
             dalam satu platform. Sampah jadi berkah untuk semua.
           </p>
 

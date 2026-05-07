@@ -9,7 +9,7 @@ export default function HowItWorks() {
       title: "Masyarakat",
       time: "5 menit",
       badges: ["Pilah Sampah", "Klik Jual", "Dapat Poin"],
-      description: "Pisahkan sampah di rumah (botol plastik, kertas, dll), lalu klik tombol jual di web Arkana untuk dapat Poin.",
+      description: "Pisahkan sampah di rumah (botol plastik, kertas, dll), lalu klik tombol jual di web TrashFlow untuk dapat Poin.",
     },
     {
       title: "Mitra Pengepul",
@@ -47,7 +47,7 @@ export default function HowItWorks() {
             <span className="text-primary"> Terpadu</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Arkana menghubungkan semua pihak dalam satu platform. 
+            TrashFlow menghubungkan semua pihak dalam satu platform. 
             Setiap aksi tercatat, setiap transaksi transparan.
           </p>
         </div>
@@ -123,7 +123,7 @@ export default function HowItWorks() {
           </div>
         </div>
 
-        {/* Tujuan Arkana */}
+        {/* Tujuan TrashFlow */}
         <Card className="relative overflow-hidden p-10 text-center border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 bg-primary/15 backdrop-blur-sm px-4 py-2 rounded-full mb-6">

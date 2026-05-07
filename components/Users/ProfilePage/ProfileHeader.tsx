@@ -2,7 +2,7 @@ import { User, Camera } from "lucide-react";
 
 export default function ProfileHeader() {
   return (
-    <div className="relative rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white shadow-xl overflow-hidden p-8 sm:p-12">
+    <div className="relative rounded-3xl bg-linear-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white shadow-xl overflow-hidden p-8 sm:p-12">
       <div className="absolute top-0 right-0 -mr-10 -mt-10 w-64 h-64 rounded-full bg-emerald-500/20 blur-3xl" />
       <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 rounded-full bg-teal-500/20 blur-3xl" />
       
