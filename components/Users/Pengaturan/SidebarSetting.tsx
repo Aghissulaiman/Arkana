@@ -36,7 +36,7 @@ export default function SidebarSettings({ children }: { children: React.ReactNod
   const [points] = useState(1250);
 
   const [messages, setMessages] = useState([
-    { role: "ai", text: "Halo 👋, saya AI Arkana." },
+    { role: "ai", text: "Halo 👋, saya AI TrashFlow." },
   ]);
   const [input, setInput] = useState("");
 
@@ -307,7 +307,7 @@ export default function SidebarSettings({ children }: { children: React.ReactNod
         <div className="fixed inset-0 bg-black/30 flex justify-end items-end p-4 z-50">
           <div className="w-full max-w-sm h-[500px] bg-background rounded-xl shadow flex flex-col">
             <div className="p-3 border-b flex justify-between">
-              <span>AI Arkana</span>
+              <span>AI TrashFlow</span>
               <button onClick={() => setIsAiOpen(false)}><X className="w-4 h-4" /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">

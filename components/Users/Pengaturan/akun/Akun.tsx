@@ -22,19 +22,19 @@ export default function AkunSaya() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Akun</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Pilih cara Anda ditampilkan dan konten yang Anda lihat di Arkana
+          Pilih cara Anda ditampilkan dan konten yang Anda lihat di TrashFlow
         </p>
       </div>
 
       {/* Login as */}
       <div className="mb-6 p-4 bg-muted/30 rounded-lg">
         <p className="text-sm text-muted-foreground">Login sebagai</p>
-        <p className="text-base font-medium text-foreground">ecowarrior@arkana.com</p>
+        <p className="text-base font-medium text-foreground">ecowarrior@TrashFlow.com</p>
       </div>
 
-      {/* Akun Arkana Anda */}
+      {/* Akun TrashFlow Anda */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-foreground mb-3">Akun Arkana Anda</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-3">Akun TrashFlow Anda</h2>
         <div className="border border-border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -43,7 +43,7 @@ export default function AkunSaya() {
               </div>
               <div>
                 <p className="font-medium text-foreground">Eco Warrior</p>
-                <p className="text-xs text-muted-foreground">Ini adalah kehadiran publik Anda di Arkana</p>
+                <p className="text-xs text-muted-foreground">Ini adalah kehadiran publik Anda di TrashFlow</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -60,7 +60,7 @@ export default function AkunSaya() {
               <Mail className="w-5 h-5 text-primary" />
               <div>
                 <p className="font-medium text-foreground">Akun Google</p>
-                <p className="text-xs text-muted-foreground">ecowarrior@arkana.com</p>
+                <p className="text-xs text-muted-foreground">ecowarrior@TrashFlow.com</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -85,7 +85,7 @@ export default function AkunSaya() {
         <div className="border border-border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-foreground">Arkana Basic</p>
+              <p className="font-medium text-foreground">TrashFlow Basic</p>
               <p className="text-xs text-muted-foreground">Tanpa langganan</p>
             </div>
             <button className="text-sm text-primary hover:underline">
@@ -94,7 +94,7 @@ export default function AkunSaya() {
           </div>
           <div className="mt-3 pt-3 border-t border-border">
             <p className="text-xs text-muted-foreground">
-              Arkana Premium menawarkan pengalaman tanpa iklan, poin berlipat, dan fitur eksklusif lainnya.
+              TrashFlow Premium menawarkan pengalaman tanpa iklan, poin berlipat, dan fitur eksklusif lainnya.
             </p>
           </div>
         </div>

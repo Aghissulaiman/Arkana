@@ -50,7 +50,7 @@ export default function Bantuan() {
     {
       id: 5,
       question: "Apakah ada biaya untuk penjemputan?",
-      answer: "Tidak ada biaya penjemputan. Layanan penjemputan sampah Arkana GRATIS untuk semua pengguna."
+      answer: "Tidak ada biaya penjemputan. Layanan penjemputan sampah TrashFlow GRATIS untuk semua pengguna."
     }
   ];
 
@@ -67,7 +67,7 @@ export default function Bantuan() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Bantuan</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Pusat bantuan Arkana. Temukan jawaban dan hubungi kami
+          Pusat bantuan TrashFlow. Temukan jawaban dan hubungi kami
         </p>
       </div>
 
@@ -157,7 +157,7 @@ export default function Bantuan() {
                 <Mail className="w-4 h-4 text-primary" />
                 <div>
                   <p className="text-sm font-medium text-foreground">Email</p>
-                  <p className="text-xs text-muted-foreground">support@arkana.com</p>
+                  <p className="text-xs text-muted-foreground">support@TrashFlow.com</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
@@ -289,7 +289,7 @@ export default function Bantuan() {
             <div>
               <h2 className="font-medium text-foreground">Panduan Pengguna</h2>
               <p className="text-xs text-muted-foreground">
-                Pelajari cara menggunakan Arkana
+                Pelajari cara menggunakan TrashFlow
               </p>
             </div>
           </div>

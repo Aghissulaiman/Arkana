@@ -12,8 +12,8 @@ const contactInfo = [
   {
     icon: Mail,
     label: "Email",
-    value: "support@arkana.id",
-    href: "mailto:support@arkana.id",
+    value: "support@TrashFlow.id",
+    href: "mailto:support@TrashFlow.id",
   },
   {
     icon: MapPin,
