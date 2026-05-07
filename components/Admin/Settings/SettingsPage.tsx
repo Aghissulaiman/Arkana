@@ -7,35 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import {
   User,
   Lock,
-  Bell,
-  Globe,
-  Shield,
-  Trash2,
   Save,
-  ChevronRight,
   Mail,
   Phone,
   Building2,
 } from "lucide-react";
-
-const MENU_GROUPS = [
-  {
-    group: "Akun",
-    items: [
-      { icon: User, label: "Profil Admin", active: true },
-      { icon: Lock, label: "Keamanan & Password" },
-      { icon: Mail, label: "Email & Notifikasi" },
-    ],
-  },
-  {
-    group: "Sistem",
-    items: [
-      { icon: Globe, label: "Pengaturan Umum" },
-      { icon: Bell, label: "Notifikasi Sistem" },
-      { icon: Shield, label: "Hak Akses & Role" },
-    ],
-  },
-];
 
 export default function SettingsPage() {
   return (
@@ -47,51 +23,7 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground">Kelola akun, keamanan, dan konfigurasi sistem</p>
       </div>
 
-      <div className="grid lg:grid-cols-4 gap-6">
-
-        {/* Sidebar Menu */}
-        <div className="space-y-2">
-          {MENU_GROUPS.map((g) => (
-            <Card key={g.group}>
-              <CardHeader className="pb-1 pt-3 px-3">
-                <p className="text-[10px] uppercase font-semibold text-muted-foreground">{g.group}</p>
-              </CardHeader>
-              <CardContent className="p-1.5 space-y-0.5">
-                {g.items.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.label}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left ${
-                        item.active
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-muted"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1">{item.label}</span>
-                      <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                    </button>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Danger Zone */}
-          <Card className="border-red-200">
-            <CardContent className="p-3">
-              <p className="text-[10px] uppercase font-semibold text-red-400 mb-2">Bahaya</p>
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors text-left">
-                <Trash2 className="w-4 h-4 shrink-0" />
-                Hapus Data Sistem
-              </button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:col-span-3 space-y-5">
+      <div className="max-w-4xl space-y-5">
 
           {/* Profil Admin */}
           <Card>
@@ -215,6 +147,5 @@ export default function SettingsPage() {
           </Card>
         </div>
       </div>
-    </div>
   );
 }
