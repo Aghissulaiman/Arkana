@@ -56,7 +56,7 @@ export function RegisterForm({
       return;
     }
 
-    // Register ke Supabase Auth
+    // Register ke Supabase Auth (otomatis masuk ke auth.users)
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -72,25 +72,23 @@ export function RegisterForm({
     }
 
     if (data.user) {
-      // Insert ke tabel users
-      await supabase.from("users").insert({
-        id: data.user.id,
-        email,
-        role: "user"
-      });
-
-      // Insert ke user_details
-      await supabase.from("user_details").insert({
+      // Insert ke tabel user_details (data tambahan)
+      // Tabel users sudah otomatis di auth.users, tidak perlu insert lagi
+      const { error: detailsError } = await supabase.from("user_details").insert({
         user_id: data.user.id,
         name,
         balance_points: 0
       });
+
+      if (detailsError) {
+        console.error("Error inserting user_details:", detailsError);
+      }
     }
 
     setLoading(false);
     
-    // Redirect ke halaman OTP verifikasi
-    router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+    // Redirect ke halaman login
+    router.push("/login");
   };
 
   const handleGoogleLogin = async () => {

@@ -25,7 +25,6 @@ export function LoginForm({
 }: LoginFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -34,23 +33,29 @@ export function LoginForm({
     setLoading(true);
     setError("");
 
-    const { error: loginError } = await supabase.auth.signInWithPassword({
+    // Kirim OTP ke email
+    const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
-      password,
     });
 
-    if (loginError) {
-      setError(loginError.message);
+    if (otpError) {
+      setError(otpError.message);
       setLoading(false);
-    } else {
-      router.push("/dashboard");
+      return;
     }
+
+    setLoading(false);
+    
+    // Redirect ke halaman OTP
+    router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
   };
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` }
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`
+      }
     });
     if (error) console.error(error);
   };
@@ -67,7 +72,7 @@ export function LoginForm({
             Selamat Datang
           </h1>
           <p className="text-sm text-muted-foreground">
-            Masuk ke akun Anda untuk mulai menukar sampah jadi poin.
+            Masukkan email untuk mendapatkan kode verifikasi
           </p>
         </div>
 
@@ -86,27 +91,12 @@ export function LoginForm({
           />
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="password" className="text-foreground">
-            Password
-          </FieldLabel>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="bg-background border-border"
-          />
-        </Field>
-
         {error && (
           <p className="text-sm text-red-500 text-center">{error}</p>
         )}
 
         <Button type="submit" className="w-full mt-2" disabled={loading}>
-          {loading ? "Memproses..." : "Masuk"}
+          {loading ? "Memproses..." : "Kirim OTP"}
         </Button>
 
         <FieldSeparator className="text-muted-foreground">Atau</FieldSeparator>

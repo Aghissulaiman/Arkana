@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Field,
@@ -12,42 +12,37 @@ import { Input } from "@/components/ui/input";
 import { CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+const OTP_LENGTH = 8;
+
 export default function VerifyOTPPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [timeLeft, setTimeLeft] = useState(60);
-  const [canResend, setCanResend] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const canResend = timeLeft === 0;
+  const hasAutoVerified = useRef(false); // 🔥 Cegah auto-verify ganda
 
-  useEffect(() => {
-    if (timeLeft > 0 && !canResend) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
+  const handleVerify = useCallback(async () => {
+    if (!email) {
+      setError("Email tidak ditemukan.");
+      return;
     }
-    if (timeLeft === 0) {
-      setCanResend(true);
-    }
-  }, [timeLeft, canResend]);
 
-  useEffect(() => {
-    const isComplete = otp.every((digit) => digit !== "");
-    if (isComplete && !isVerifying && !isSuccess) {
-      handleVerify();
-    }
-  }, [otp]);
-
-  const handleVerify = async () => {
     const otpCode = otp.join("");
+    if (otpCode.length !== OTP_LENGTH) {
+      setError(`Masukkan ${OTP_LENGTH} digit OTP`);
+      return;
+    }
+
     setIsVerifying(true);
     setError("");
 
-    // Verifikasi OTP dengan Supabase
     const { error: verifyError } = await supabase.auth.verifyOtp({
       email,
       token: otpCode,
@@ -60,12 +55,80 @@ export default function VerifyOTPPage() {
       return;
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      const { data: existingDetails } = await supabase
+        .from("user_details")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!existingDetails) {
+        const pendingData = localStorage.getItem("pendingRegistration");
+        const userName = pendingData 
+          ? JSON.parse(pendingData).name 
+          : user.user_metadata?.name || "User";
+
+        await supabase.from("user_details").insert({
+          user_id: user.id,
+          name: userName,
+          balance_points: 0
+        });
+
+        if (pendingData) {
+          localStorage.removeItem("pendingRegistration");
+        }
+      }
+    }
+
     setIsVerifying(false);
     setIsSuccess(true);
 
     setTimeout(() => {
-      router.push("/dashboard");
+      router.push("/user/home");
     }, 2000);
+  }, [email, otp, router]);
+
+  // 🔥 Auto-verify ketika semua digit terisi
+  useEffect(() => {
+    const isComplete = otp.every((digit) => digit !== "");
+    if (isComplete && !isVerifying && !isSuccess && !hasAutoVerified.current) {
+      hasAutoVerified.current = true;
+      handleVerify();
+    }
+  }, [otp, isVerifying, isSuccess, handleVerify]);
+
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeLeft]);
+
+  // Reset auto-verify flag ketika OTP berubah
+  useEffect(() => {
+    if (!otp.every((digit) => digit !== "")) {
+      hasAutoVerified.current = false;
+    }
+  }, [otp]);
+
+  // Handle paste
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData("text");
+    const digits = pastedText.replace(/\D/g, "").slice(0, OTP_LENGTH);
+    
+    const newOtp = [...otp];
+    for (let i = 0; i < digits.length; i++) {
+      newOtp[i] = digits[i];
+    }
+    setOtp(newOtp);
+    
+    if (digits.length > 0) {
+      const focusIndex = Math.min(digits.length, OTP_LENGTH - 1);
+      inputRefs.current[focusIndex]?.focus();
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -76,7 +139,8 @@ export default function VerifyOTPPage() {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    if (value && index < 5) {
+    // Auto focus ke input berikutnya
+    if (value && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -89,9 +153,9 @@ export default function VerifyOTPPage() {
 
   const handleResend = async () => {
     setTimeLeft(60);
-    setCanResend(false);
-    setOtp(["", "", "", "", "", ""]);
+    setOtp(Array(OTP_LENGTH).fill(""));
     setError("");
+    hasAutoVerified.current = false;
     
     const { error: resendError } = await supabase.auth.resend({
       type: "signup",
@@ -147,8 +211,8 @@ export default function VerifyOTPPage() {
           {error && <p className="text-sm text-red-500 text-center mb-4">{error}</p>}
 
           <Field>
-            <FieldLabel className="text-foreground text-center block">Kode Verifikasi</FieldLabel>
-            <div className="flex justify-center gap-2 mt-2">
+            <FieldLabel className="text-foreground text-center block">Kode Verifikasi ({OTP_LENGTH} digit)</FieldLabel>
+            <div className="flex justify-center gap-2 mt-2 flex-wrap" onPaste={handlePaste}>
               {otp.map((digit, index) => (
                 <Input
                   key={index}
@@ -159,7 +223,7 @@ export default function VerifyOTPPage() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-12 text-center text-lg font-semibold bg-background border-border focus-visible:ring-primary"
+                  className="w-10 h-12 text-center text-lg font-semibold bg-background border-border focus-visible:ring-primary"
                   autoFocus={index === 0}
                 />
               ))}
