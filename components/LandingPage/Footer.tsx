@@ -103,7 +103,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-center gap-3">
                 <FaEnvelope className="text-primary text-sm" />
-                <span>support@anantacycle.id</span>
+                <span>support@TrashFlow.id</span>
               </li>
               <li className="flex items-center gap-3">
                 <FaPhoneAlt className="text-primary text-sm" />
@@ -138,7 +138,7 @@ export default function Footer() {
         {/* BOTTOM SECTION */}
         <div className="pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-3">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} AnantaCycle. All rights reserved.
+            © {new Date().getFullYear()} TrashFlow. All rights reserved.
           </p>
           <div className="flex gap-5 text-xs text-muted-foreground">
             <Link href="#" className="hover:text-primary transition">

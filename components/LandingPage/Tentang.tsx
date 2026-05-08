@@ -30,11 +30,9 @@ export default function AboutSection() {
 
   return (
     <section id="about" className="py-20 bg-background">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-14">
-          
-
           <h2 className="text-3xl md:text-5xl font-bold text-foreground leading-tight mb-4">
             Solusi Digital Untuk
             <span className="text-primary"> Bank Sampah Modern</span>
@@ -47,30 +45,32 @@ export default function AboutSection() {
           </p>
         </div>
 
-        {/* Content */}
-        <div className="grid lg:grid-cols-12 gap-8 items-center">
-          {/* Left */}
-          <div className="lg:col-span-6">
+        {/* Content - PAKAI FLEX DENGAN items-stretch */}
+        <div className="flex flex-col lg:flex-row gap-8 items-stretch">
+          {/* Left - akan otomatis setinggi sibling-nya */}
+          <div className="lg:w-1/2">
             <div className="relative rounded-3xl border border-border bg-card p-8 h-full overflow-hidden">
               <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl" />
 
-              <div className="relative z-10">
-                <p className="text-sm font-medium text-primary mb-3">
-                  VISI KAMI
-                </p>
+              <div className="relative z-10 flex flex-col h-full">
+                <div>
+                  <p className="text-sm font-medium text-primary mb-3">
+                    VISI KAMI
+                  </p>
 
-                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                  Menjadikan Sampah Memiliki Nilai Lebih
-                </h3>
+                  <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+                    Menjadikan Sampah Memiliki Nilai Lebih
+                  </h3>
 
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  Dengan sistem digital, masyarakat dapat mengelola sampah
-                  rumah tangga dengan lebih mudah sambil mendapatkan manfaat
-                  ekonomi dan membantu menjaga lingkungan sekitar.
-                </p>
+                  <p className="text-muted-foreground leading-relaxed mb-6">
+                    Dengan sistem digital, masyarakat dapat mengelola sampah
+                    rumah tangga dengan lebih mudah sambil mendapatkan manfaat
+                    ekonomi dan membantu menjaga lingkungan sekitar.
+                  </p>
+                </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 mt-auto">
                   <div className="rounded-2xl bg-muted p-4">
                     <p className="text-2xl font-bold text-primary">1000+</p>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -103,30 +103,32 @@ export default function AboutSection() {
             </div>
           </div>
 
-          {/* Right */}
-          <div className="lg:col-span-6 grid sm:grid-cols-2 gap-5">
-            {values.map((item, index) => {
-              const Icon = item.icon;
+          {/* Right - akan otomatis setinggi sibling-nya */}
+          <div className="lg:w-1/2">
+            <div className="grid sm:grid-cols-2 gap-5 h-full">
+              {values.map((item, index) => {
+                const Icon = item.icon;
 
-              return (
-                <Card
-                  key={index}
-                  className="p-6 rounded-3xl border border-border bg-card hover:border-primary/30 transition-all"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                    <Icon className="w-5 h-5 text-primary" />
-                  </div>
+                return (
+                  <Card
+                    key={index}
+                    className="p-6 rounded-3xl border border-border bg-card hover:border-primary/30 transition-all"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
 
-                  <h4 className="font-semibold text-foreground mb-2">
-                    {item.title}
-                  </h4>
+                    <h4 className="font-semibold text-foreground mb-2">
+                      {item.title}
+                    </h4>
 
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {item.desc}
-                  </p>
-                </Card>
-              );
-            })}
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

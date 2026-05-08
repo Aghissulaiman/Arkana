@@ -35,11 +35,11 @@ export default function MitraSection() {
   ];
 
   return (
-    <section id="mitra" className="py-24 bg-background">
-      <div className="max-w-7xl mx-auto px-4">
+    <section id="mitra" className="py-14 bg-background">
+      <div className="max-w-6xl mx-auto px-4">
         {/* HEADER */}
         <div className="mb-14">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="max-w-3xl pl-2 md:pl-4 lg:pl-6">
               <h2 className="text-3xl md:text-5xl font-bold text-foreground leading-tight mb-4">
                 Bangun Usaha

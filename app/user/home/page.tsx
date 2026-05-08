@@ -1,6 +1,7 @@
-import Sidebar from "@/components/NavbarUmum";
+import Sidebar from "@/components/Users/NavbarUser";
 import UserDashboard from "@/components/Users/HomePage/Dashboard";
 import Recommendations from "@/components/Users/HomePage/Rekomendasi";
+import Langganan from "@/components/Users/Langganan/Langganan"
 
 export default function HomePage() {
   return (
@@ -8,6 +9,7 @@ export default function HomePage() {
       <Sidebar>
         <UserDashboard />
         <Recommendations />
+        <Langganan />
       </Sidebar>
     </>
   );

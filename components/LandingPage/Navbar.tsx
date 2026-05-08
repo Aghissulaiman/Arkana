@@ -4,7 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Leaf } from "lucide-react";
 
-export default function Navbar({ hideAuthButtons = false }: { hideAuthButtons?: boolean }) {
+export default function Navbar({
+  hideAuthButtons = false,
+}: {
+  hideAuthButtons?: boolean;
+}) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -29,14 +33,16 @@ export default function Navbar({ hideAuthButtons = false }: { hideAuthButtons?: 
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         isScrolled
           ? "bg-white/20 backdrop-blur-lg border-b border-white/30 shadow-sm"
-          : "bg-transparent"
+          : "bg-white/05 backdrop-blur-xs shadow-xl"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-
           <div className="flex justify-center gap-2 md:justify-start z-30">
-            <a href="/" className="flex items-center gap-2 font-bold text-xl text-emerald-900 transition-transform hover:scale-105">
+            <a
+              href="/"
+              className="flex items-center gap-2 font-bold text-xlc text-emerald-900 transition-transform hover:scale-105"
+            >
               <div className="flex size-8 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
                 <Leaf className="size-5" />
               </div>
@@ -98,9 +104,19 @@ export default function Navbar({ hideAuthButtons = false }: { hideAuthButtons?: 
               viewBox="0 0 24 24"
             >
               {isMobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               )}
             </svg>
           </button>

@@ -66,7 +66,7 @@ export default function AgentMap() {
 
   return (
     <section className="py-16 md:py-24 bg-white">
-      <div className="max-w-5xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-6">
         <div className="mb-8">
           <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight">
             Temukan <span className="text-green-600">Agen Terdekat</span> Anda.

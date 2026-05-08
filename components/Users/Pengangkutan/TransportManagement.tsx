@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Package, 
-  Calendar, 
-  Clock, 
+import {
+  Package,
+  Calendar,
+  Clock,
   ClipboardList,
   Send,
-  MapPin
+  MapPin,
 } from "lucide-react";
 
 interface PickupFormData {
@@ -23,7 +23,8 @@ interface PickupFormData {
 // Data user (nanti dari API/session)
 const USER_DATA = {
   name: "Eco Warrior",
-  address: "Jl. Contoh No. 123, RT 01/RW 02, Kelurahan Sukamaju, Kecamatan Sukamakmur, Kota Jakarta Selatan"
+  address:
+    "Jl. Contoh No. 123, RT 01/RW 02, Kelurahan Sukamaju, Kecamatan Sukamakmur, Kota Jakarta Selatan",
 };
 
 export default function PickupRequestForm() {
@@ -44,21 +45,22 @@ export default function PickupRequestForm() {
     { id: "metal", name: "Logam", unit: "kg" },
     { id: "battery", name: "Baterai", unit: "kg" },
     { id: "electronic", name: "Elektronik", unit: "kg" },
+    { id: "aluminium", name: "Aluminium", unit: "kg" },
     { id: "mixed", name: "Campuran", unit: "kg" },
   ];
 
   const handleChange = (field: keyof PickupFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
-      
+
       setTimeout(() => {
         setIsSuccess(false);
         setFormData({
@@ -78,7 +80,9 @@ export default function PickupRequestForm() {
         <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
           <Send className="w-8 h-8 text-green-500" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">Pengajuan Berhasil!</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">
+          Pengajuan Berhasil!
+        </h3>
         <p className="text-sm text-muted-foreground">
           Petugas kami akan segera memproses penjemputan sampah Anda
         </p>
@@ -90,8 +94,12 @@ export default function PickupRequestForm() {
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Ajukan Penjemputan</h1>
-        <p className="text-sm text-muted-foreground">Isi form berikut untuk menjemput sampah Anda</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Ajukan Penjemputan
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Isi form berikut untuk menjemput sampah Anda
+        </p>
       </div>
 
       <Card className="p-5 space-y-5">
@@ -99,7 +107,9 @@ export default function PickupRequestForm() {
         <div className="bg-muted/30 rounded-lg p-3 border border-border">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-foreground">Alamat Penjemputan</span>
+            <span className="text-xs font-medium text-foreground">
+              Alamat Penjemputan
+            </span>
           </div>
           <p className="text-sm text-foreground">{USER_DATA.address}</p>
           <button className="text-[10px] text-primary mt-2 hover:underline">
@@ -143,7 +153,9 @@ export default function PickupRequestForm() {
               onChange={(e) => handleChange("estimatedWeight", e.target.value)}
               className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <span className="px-3 py-2 text-sm bg-muted rounded-lg text-muted-foreground">kg</span>
+            <span className="px-3 py-2 text-sm bg-muted rounded-lg text-muted-foreground">
+              kg
+            </span>
           </div>
         </div>
 

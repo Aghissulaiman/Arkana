@@ -75,11 +75,11 @@ export default function KontakSection() {
 
   return (
     <section id="kontak" className="py-12 sm:py-16 md:py-20 lg:py-24 bg-white">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-12">
           <div className="space-y-5 md:space-y-6">
             <div className="space-y-2 md:space-y-3">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+              <h2 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
                 Ada pertanyaan?{" "}
                 <span className="text-green-600 block sm:inline">
                   Hubungi Kami.
