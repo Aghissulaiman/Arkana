@@ -211,7 +211,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-background border rounded-lg shadow p-1">
                   <Link
-                    href="/user/profil"
+                    href="/user/profile"
                     className="block px-3 py-2 hover:bg-muted rounded"
                   >
                     Profile

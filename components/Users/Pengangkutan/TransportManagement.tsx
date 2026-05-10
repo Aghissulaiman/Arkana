@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,11 @@ import {
   ClipboardList,
   Send,
   MapPin,
+  Loader2,
+  UserCheck,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 interface PickupFormData {
   wasteType: string;
@@ -18,61 +22,314 @@ interface PickupFormData {
   notes: string;
   pickupDate: string;
   pickupTime: string;
+  agentId: string;
 }
 
-// Data user (nanti dari API/session)
-const USER_DATA = {
-  name: "Eco Warrior",
-  address:
-    "Jl. Contoh No. 123, RT 01/RW 02, Kelurahan Sukamaju, Kecamatan Sukamakmur, Kota Jakarta Selatan",
-};
+interface WasteType {
+  id: string;
+  name: string;
+  unit: string;
+  price_per_kg: number;
+}
+
+interface Agent {
+  id: string;
+  user_id: string;
+  name: string;
+  phone: string;
+  address: string;
+}
 
 export default function PickupRequestForm() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userAddress, setUserAddress] = useState("");
+  const [userName, setUserName] = useState("");
+  const [wasteTypes, setWasteTypes] = useState<WasteType[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState("");
+  const [selectedAgentUserId, setSelectedAgentUserId] = useState("");
+  const [mitraId, setMitraId] = useState<string | null>(null);
   const [formData, setFormData] = useState<PickupFormData>({
     wasteType: "",
     estimatedWeight: "",
     notes: "",
     pickupDate: "",
     pickupTime: "",
+    agentId: "",
   });
 
-  const wasteTypes = [
-    { id: "plastic", name: "Plastik", unit: "kg" },
-    { id: "paper", name: "Kertas", unit: "kg" },
-    { id: "glass", name: "Kaca", unit: "kg" },
-    { id: "metal", name: "Logam", unit: "kg" },
-    { id: "battery", name: "Baterai", unit: "kg" },
-    { id: "electronic", name: "Elektronik", unit: "kg" },
-    { id: "aluminium", name: "Aluminium", unit: "kg" },
-    { id: "mixed", name: "Campuran", unit: "kg" },
-  ];
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  // Ketika agent dipilih, otomatis cari mitra yang terkait
+  useEffect(() => {
+    if (selectedAgentUserId) {
+      fetchMitraByAgent(selectedAgentUserId);
+    }
+  }, [selectedAgentUserId]);
+
+  const fetchMitraByAgent = async (agentUserId: string) => {
+    console.log("🔍 Mencari mitra untuk agent user_id:", agentUserId);
+    
+    const { data: mitraData, error } = await supabase
+      .from("mitra_details")
+      .select("user_id, name, phone")
+      .eq("agent_id", agentUserId)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching mitra:", error);
+      setMitraId(null);
+      return;
+    }
+
+    if (mitraData) {
+      setMitraId(mitraData.user_id);
+      console.log("✅ Mitra ditemukan:", mitraData.user_id);
+    } else {
+      console.log("❌ Tidak ada mitra untuk agent ini");
+      setMitraId(null);
+    }
+  };
+
+  const fetchInitialData = async () => {
+    setLoading(true);
+    try {
+      // 1. Ambil user yang login dari AUTH
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.error("User not logged in");
+        router.push("/login");
+        return;
+      }
+      setUserId(user.id);
+      console.log("✅ User ID:", user.id);
+
+      // 2. Ambil data user_details (nama & alamat)
+      const { data: userData, error: userDetailsError } = await supabase
+        .from("user_details")
+        .select("name, address")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (userDetailsError) {
+        console.error("Error fetching user details:", userDetailsError);
+      }
+
+      if (userData) {
+        setUserName(userData.name || "");
+        setUserAddress(userData.address || "");
+        console.log("✅ User address:", userData.address);
+      } else {
+        console.log("⚠️ User details not found, please update profile");
+      }
+
+      // 3. Ambil data price_catalog (jenis sampah)
+      const { data: priceData, error: priceError } = await supabase
+        .from("price_catalog")
+        .select("waste_type, price_per_kg")
+        .order("price_per_kg", { ascending: false });
+
+      if (priceError) {
+        console.error("Error fetching price catalog:", priceError);
+      }
+
+      if (priceData && priceData.length > 0) {
+        const types = priceData.map((item) => ({
+          id: item.waste_type,
+          name: getWasteTypeName(item.waste_type),
+          unit: "kg",
+          price_per_kg: item.price_per_kg,
+        }));
+        setWasteTypes(types);
+        console.log("✅ Waste types loaded:", types.length);
+      }
+
+      // 4. Ambil semua AGENT dari agent_details (LANGSUNG, tanpa join)
+      const { data: agentsData, error: agentsError } = await supabase
+        .from("agent_details")
+        .select("*");
+
+      if (agentsError) {
+        console.error("Error fetching agents:", agentsError);
+      }
+
+      if (agentsData && agentsData.length > 0) {
+        const formattedAgents = agentsData.map((agent) => ({
+          id: agent.id,
+          user_id: agent.user_id,
+          name: agent.name,
+          phone: agent.phone || "-",
+          address: agent.address || "-",
+        }));
+        setAgents(formattedAgents);
+        console.log("✅ Agents loaded:", formattedAgents.length);
+        console.log("Agent list:", formattedAgents);
+      } else {
+        console.warn("⚠️ No agents found in agent_details");
+      }
+
+    } catch (error) {
+      console.error("❌ Error fetching initial data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getWasteTypeName = (type: string): string => {
+    const names: Record<string, string> = {
+      plastic: "Plastik",
+      cardboard: "Kardus",
+      glass: "Kaca",
+      aluminium: "Aluminium",
+      paper: "Kertas",
+      metal: "Logam",
+      electronic: "Elektronik",
+      mixed: "Campuran",
+    };
+    return names[type] || type;
+  };
+
+  const handleAgentSelect = (agentId: string, agentUserId: string) => {
+    setSelectedAgentId(agentId);
+    setSelectedAgentUserId(agentUserId);
+    setFormData({ ...formData, agentId: agentId });
+  };
 
   const handleChange = (field: keyof PickupFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log("=== SUBMITTING REQUEST ===");
+    console.log("userId:", userId);
+    console.log("selectedAgentUserId:", selectedAgentUserId);
+    console.log("mitraId:", mitraId);
+
+    // Validasi
+    if (!userId) {
+      alert("User tidak ditemukan. Silakan login ulang.");
+      router.push("/login");
+      return;
+    }
+
+    if (!selectedAgentUserId) {
+      alert("Silakan pilih agent terlebih dahulu.");
+      return;
+    }
+
+    if (!mitraId) {
+      alert("Agent yang dipilih tidak memiliki mitra. Silakan pilih agent lain.");
+      return;
+    }
+
+    if (!userAddress) {
+      alert("Silakan lengkapi alamat terlebih dahulu di halaman profil.");
+      router.push("/profile");
+      return;
+    }
+
+    if (!formData.wasteType) {
+      alert("Silakan pilih jenis sampah.");
+      return;
+    }
+
+    if (!formData.estimatedWeight || parseFloat(formData.estimatedWeight) <= 0) {
+      alert("Silakan isi estimasi berat yang valid.");
+      return;
+    }
+
+    if (!formData.pickupDate) {
+      alert("Silakan pilih tanggal penjemputan.");
+      return;
+    }
+
+    if (!formData.pickupTime) {
+      alert("Silakan pilih jam penjemputan.");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const estimatedWeights: Record<string, number> = {};
+      const weight = parseFloat(formData.estimatedWeight);
+      estimatedWeights[formData.wasteType] = weight;
+
+      let pickupDateTime = new Date(formData.pickupDate);
+      if (formData.pickupTime) {
+        const timeRange = formData.pickupTime.split(" - ")[0];
+        const [hour] = timeRange.split(":");
+        pickupDateTime.setHours(parseInt(hour), 0, 0);
+      }
+
+      const { data: newRequest, error } = await supabase
+        .from("requests")
+        .insert({
+          user_id: userId,
+          mitra_id: mitraId,
+          agent_id: selectedAgentUserId,
+          status: "pending",
+          pickup_address: userAddress,
+          estimated_weights: estimatedWeights,
+          created_at: pickupDateTime.toISOString(),
+        })
+        .select();
+
+      if (error) {
+        console.error("Supabase insert error:", error);
+        throw error;
+      }
+
+      console.log("✅ Request created:", newRequest);
+
       setIsSuccess(true);
+      setFormData({
+        wasteType: "",
+        estimatedWeight: "",
+        notes: "",
+        pickupDate: "",
+        pickupTime: "",
+        agentId: "",
+      });
+      setSelectedAgentId("");
+      setSelectedAgentUserId("");
+      setMitraId(null);
 
       setTimeout(() => {
         setIsSuccess(false);
-        setFormData({
-          wasteType: "",
-          estimatedWeight: "",
-          notes: "",
-          pickupDate: "",
-          pickupTime: "",
-        });
       }, 3000);
-    }, 1500);
+
+    } catch (error) {
+      console.error("❌ Error:", error);
+      alert("Gagal mengajukan penjemputan. Silakan coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const getMinDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split("T")[0];
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
@@ -86,13 +343,19 @@ export default function PickupRequestForm() {
         <p className="text-sm text-muted-foreground">
           Petugas kami akan segera memproses penjemputan sampah Anda
         </p>
+        <Button 
+          className="mt-4" 
+          variant="outline"
+          onClick={() => router.push("/dashboard")}
+        >
+          Kembali ke Dashboard
+        </Button>
       </Card>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Ajukan Penjemputan
@@ -103,7 +366,7 @@ export default function PickupRequestForm() {
       </div>
 
       <Card className="p-5 space-y-5">
-        {/* Alamat Terdaftar (Read Only) */}
+        {/* Alamat */}
         <div className="bg-muted/30 rounded-lg p-3 border border-border">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="w-4 h-4 text-primary" />
@@ -111,10 +374,57 @@ export default function PickupRequestForm() {
               Alamat Penjemputan
             </span>
           </div>
-          <p className="text-sm text-foreground">{USER_DATA.address}</p>
-          <button className="text-[10px] text-primary mt-2 hover:underline">
+          <p className="text-sm text-foreground">
+            {userAddress || "Belum diisi"}
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/profile")}
+            className="text-[10px] text-primary mt-2 hover:underline"
+          >
             Ubah alamat di profil
           </button>
+        </div>
+
+        {/* Pilih AGENT */}
+        <div>
+          <label className="text-sm font-medium text-foreground block mb-2">
+            <UserCheck className="w-4 h-4 inline mr-2 text-primary" />
+            Pilih Agent
+          </label>
+          <select
+            required
+            value={selectedAgentId}
+            onChange={(e) => {
+              const selected = agents.find(a => a.id === e.target.value);
+              if (selected) {
+                handleAgentSelect(selected.id, selected.user_id);
+              }
+            }}
+            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            <option value="">-- Pilih Agent --</option>
+            {agents.map((agent) => (
+              <option key={agent.id} value={agent.id}>
+                {agent.name} - {agent.phone} ({agent.address})
+              </option>
+            ))}
+          </select>
+          {selectedAgentId && mitraId && (
+            <p className="text-xs text-green-600 mt-1">
+              ✓ Mitra otomatis dipilih berdasarkan agent ini
+            </p>
+          )}
+          {selectedAgentId && !mitraId && (
+            <p className="text-xs text-red-500 mt-1">
+              ✗ Agent ini belum memiliki mitra. Pilih agent lain.
+            </p>
+          )}
+          {agents.length === 0 && (
+            <p className="text-xs text-red-500 mt-1">
+              ✗ Belum ada agent. Silakan hubungi admin.
+            </p>
+          )}
         </div>
 
         {/* Jenis Sampah */}
@@ -131,8 +441,8 @@ export default function PickupRequestForm() {
           >
             <option value="">Pilih jenis sampah</option>
             {wasteTypes.map((type) => (
-              <option key={type.id} value={type.name}>
-                {type.name} ({type.unit})
+              <option key={type.id} value={type.id}>
+                {type.name} - {type.price_per_kg.toLocaleString("id-ID")} poin/kg
               </option>
             ))}
           </select>
@@ -141,7 +451,7 @@ export default function PickupRequestForm() {
         {/* Estimasi Berat */}
         <div>
           <label className="text-sm font-medium text-foreground block mb-2">
-            Estimasi Berat
+            Estimasi Berat (kg)
           </label>
           <div className="flex gap-2">
             <input
@@ -153,9 +463,6 @@ export default function PickupRequestForm() {
               onChange={(e) => handleChange("estimatedWeight", e.target.value)}
               className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <span className="px-3 py-2 text-sm bg-muted rounded-lg text-muted-foreground">
-              kg
-            </span>
           </div>
         </div>
 
@@ -169,6 +476,7 @@ export default function PickupRequestForm() {
             <input
               type="date"
               required
+              min={getMinDate()}
               value={formData.pickupDate}
               onChange={(e) => handleChange("pickupDate", e.target.value)}
               className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
@@ -203,17 +511,24 @@ export default function PickupRequestForm() {
           </label>
           <textarea
             rows={2}
-            placeholder="Contoh: Sampah sudah dipilah dalam karung, letakkan di depan pagar"
+            placeholder="Contoh: Sampah sudah dipilah dalam karung"
             value={formData.notes}
-            onChange={(e) => handleChange("notes", e.target.value)}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
           />
         </div>
 
-        {/* Submit Button */}
-        <Button type="submit" disabled={isSubmitting} className="w-full gap-2">
+        {/* Submit */}
+        <Button 
+          type="submit" 
+          disabled={isSubmitting || !userAddress || !selectedAgentId || !mitraId || agents.length === 0} 
+          className="w-full gap-2"
+        >
           {isSubmitting ? (
-            <>Memproses...</>
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Memproses...
+            </>
           ) : (
             <>
               <Send className="w-4 h-4" />
@@ -222,9 +537,11 @@ export default function PickupRequestForm() {
           )}
         </Button>
 
-        <p className="text-[11px] text-muted-foreground text-center">
-          *Berat aktual akan ditimbang oleh petugas saat penjemputan
-        </p>
+        {!userAddress && (
+          <p className="text-xs text-red-500 text-center">
+            *Silakan lengkapi alamat di halaman profil terlebih dahulu
+          </p>
+        )}
       </Card>
     </form>
   );
