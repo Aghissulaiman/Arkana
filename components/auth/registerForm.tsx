@@ -12,7 +12,7 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
 
 interface RegisterFormProps extends React.ComponentProps<"form"> {
   onLoginClick?: () => void;
@@ -24,7 +24,9 @@ export function RegisterForm({
   ...props
 }: RegisterFormProps) {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const supabase = createClientSupabaseClient();
+  
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -49,19 +51,18 @@ export function RegisterForm({
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Format email tidak valid");
+    if (!fullName.trim()) {
+      setError("Nama lengkap wajib diisi");
       setLoading(false);
       return;
     }
 
-    // Register ke Supabase Auth (otomatis masuk ke auth.users)
+    // Register ke Supabase Auth
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name }
+        data: { full_name: fullName },
       }
     });
 
@@ -72,23 +73,36 @@ export function RegisterForm({
     }
 
     if (data.user) {
-      // Insert ke tabel user_details (data tambahan)
-      // Tabel users sudah otomatis di auth.users, tidak perlu insert lagi
-      const { error: detailsError } = await supabase.from("user_details").insert({
-        user_id: data.user.id,
-        name,
-        balance_points: 0
+      // Insert ke tabel users
+      await supabase.from("users").insert({
+        id: data.user.id,
+        email: email,
+        role: "user"
       });
 
-      if (detailsError) {
-        console.error("Error inserting user_details:", detailsError);
-      }
+      // Insert ke tabel profiles
+      await supabase.from("profiles").insert({
+        user_id: data.user.id,
+        full_name: fullName,
+        phone: null,
+        address: null,
+        balance_points: 0
+      });
     }
 
     setLoading(false);
     
-    // Redirect ke halaman login
-    router.push("/login");
+    // Langsung login setelah register
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      router.push("/login?registered=true");
+    } else {
+      router.push("/complete-profile");
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -112,20 +126,24 @@ export function RegisterForm({
         </div>
 
         <Field>
-          <FieldLabel htmlFor="name" className="text-foreground">Nama Lengkap</FieldLabel>
+          <FieldLabel htmlFor="fullName" className="text-foreground">
+            Nama Lengkap <span className="text-red-500">*</span>
+          </FieldLabel>
           <Input
-            id="name"
+            id="fullName"
             type="text"
             placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
             required
             className="bg-background border-border"
           />
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="email" className="text-foreground">Email</FieldLabel>
+          <FieldLabel htmlFor="email" className="text-foreground">
+            Email <span className="text-red-500">*</span>
+          </FieldLabel>
           <Input
             id="email"
             type="email"
@@ -138,7 +156,9 @@ export function RegisterForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="password" className="text-foreground">Password</FieldLabel>
+          <FieldLabel htmlFor="password" className="text-foreground">
+            Password <span className="text-red-500">*</span>
+          </FieldLabel>
           <Input
             id="password"
             type="password"
@@ -151,7 +171,9 @@ export function RegisterForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="confirmPassword" className="text-foreground">Konfirmasi Password</FieldLabel>
+          <FieldLabel htmlFor="confirmPassword" className="text-foreground">
+            Konfirmasi Password <span className="text-red-500">*</span>
+          </FieldLabel>
           <Input
             id="confirmPassword"
             type="password"
@@ -163,7 +185,11 @@ export function RegisterForm({
           />
         </Field>
 
-        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+        {error && (
+          <p className="text-sm text-red-500 text-center bg-red-50 p-2 rounded-lg">
+            {error}
+          </p>
+        )}
 
         <Button type="submit" className="w-full mt-2" disabled={loading}>
           {loading ? "Memproses..." : "Daftar"}

@@ -12,7 +12,7 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
 
 interface LoginFormProps extends Omit<React.ComponentProps<"form">, "onSubmit"> {
   onRegisterClick?: () => void;
@@ -24,6 +24,7 @@ export function LoginForm({
   ...props
 }: LoginFormProps) {
   const router = useRouter();
+  const supabase = createClientSupabaseClient();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,7 +34,21 @@ export function LoginForm({
     setLoading(true);
     setError("");
 
-    // Kirim OTP ke email
+    // 1. Cek apakah user sudah ada di tabel USERS kita (bukan auth)
+    const { data: existingUser, error: checkError } = await supabase
+      .from("users")
+      .select("id, email")
+      .eq("email", email)
+      .maybeSingle();
+
+    // Jika user tidak ada di tabel users kita
+    if (!existingUser) {
+      setError("Email tidak terdaftar. Silakan daftar terlebih dahulu.");
+      setLoading(false);
+      return;
+    }
+
+    // 2. Kirim OTP (tanpa shouldCreateUser)
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
     });
@@ -45,8 +60,6 @@ export function LoginForm({
     }
 
     setLoading(false);
-    
-    // Redirect ke halaman OTP
     router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
   };
 
