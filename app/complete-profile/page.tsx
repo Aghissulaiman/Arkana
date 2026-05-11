@@ -90,11 +90,11 @@ export default function CompleteProfilePage() {
     }
 
     setLoading(false);
-    router.push("/dashboard");
+    router.push("/login");
   };
 
   const handleSkip = () => {
-    router.push("/dashboard");
+    router.push("/login");
   };
 
   return (
