@@ -115,7 +115,15 @@ const MOCK_AGENTS: Agent[] = [
   },
 ];
 
-const WASTE_CHIPS = ["Semua", "Terdekat", "Plastik", "Kertas", "Elektronik", "Logam", "Kaca"];
+const WASTE_CHIPS = [
+  "Semua",
+  "Terdekat",
+  "Plastik",
+  "Kertas",
+  "Elektronik",
+  "Logam",
+  "Kaca",
+];
 
 const TAG_COLORS: Record<string, string> = {
   Organik: "bg-emerald-100/80 text-emerald-800",
@@ -140,7 +148,9 @@ export default function HomeDashboard() {
     const matchChip =
       activeChip === "Semua" ||
       activeChip === "Terdekat" ||
-      a.waste_types.some((w) => w.toLowerCase().includes(activeChip.toLowerCase()));
+      a.waste_types.some((w) =>
+        w.toLowerCase().includes(activeChip.toLowerCase()),
+      );
     return matchSearch && matchChip;
   });
 
@@ -152,15 +162,25 @@ export default function HomeDashboard() {
         {/* HEADING & NOTIFICATION */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-primary mb-1 uppercase tracking-wider">Lokasi Saat Ini</p>
+            <p className="text-sm font-semibold text-primary mb-1 uppercase tracking-wider">
+              Lokasi Saat Ini
+            </p>
             <div className="flex items-center gap-2">
               <MapPin className="w-7 h-7 text-slate-800" />
-              <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Depok</h1>
+              <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                Depok
+              </h1>
             </div>
           </div>
-          <Button variant="outline" size="icon" className="w-12 h-12 rounded-full shadow-sm bg-white border-slate-200 text-slate-600 hover:bg-slate-100 transition-all">
-            <Bell className="w-5 h-5" />
-          </Button>
+          <Link href="/user/notification">
+            <Button
+              variant="outline"
+              size="icon"
+              className="w-12 h-12 rounded-full shadow-sm bg-white border-slate-200 text-slate-600 hover:bg-slate-100 transition-all"
+            >
+              <Bell className="w-5 h-5" />
+            </Button>
+          </Link>
         </div>
 
         {/* HERO SEARCH SECTION */}
@@ -209,15 +229,23 @@ export default function HomeDashboard() {
         {featuredAgents.length > 0 && (
           <section className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Agen Unggulan</h2>
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                Agen Unggulan
+              </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredAgents.map((agent) => {
                 const { Icon } = agent;
                 return (
-                  <Link key={agent.id} href={`/dashboard/agen/${agent.id}`} className="block group">
+                  <Link
+                    key={agent.id}
+                    href={`/dashboard/agen/${agent.id}`}
+                    className="block group"
+                  >
                     <Card className="overflow-hidden rounded-[2rem] border-0 shadow-md bg-white hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 h-full flex flex-col">
-                      <div className={`${agent.banner_bg} h-36 flex items-center justify-center relative p-6 transition-colors duration-500 group-hover:opacity-90`}>
+                      <div
+                        className={`${agent.banner_bg} h-36 flex items-center justify-center relative p-6 transition-colors duration-500 group-hover:opacity-90`}
+                      >
                         <div className="absolute top-4 right-4">
                           {agent.is_verified && (
                             <div className="bg-white/95 backdrop-blur-md text-emerald-600 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold shadow-sm">
@@ -226,19 +254,23 @@ export default function HomeDashboard() {
                             </div>
                           )}
                         </div>
-                        <div className={`${agent.icon_bg} w-20 h-20 rounded-[1.5rem] flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-500`}>
+                        <div
+                          className={`${agent.icon_bg} w-20 h-20 rounded-[1.5rem] flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-500`}
+                        >
                           <Icon className={`w-10 h-10 ${agent.icon_color}`} />
                         </div>
                       </div>
                       <CardContent className="p-7 flex flex-col flex-1">
                         <div className="mb-4">
-                          <h3 className="font-extrabold text-xl text-slate-900 mb-1 line-clamp-1">{agent.name}</h3>
+                          <h3 className="font-extrabold text-xl text-slate-900 mb-1 line-clamp-1">
+                            {agent.name}
+                          </h3>
                           <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
                             <MapPin className="w-4 h-4 text-primary" />
                             {agent.distance_km} km dari lokasi Anda
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-wrap gap-2 mb-6">
                           {agent.waste_types.map((w) => (
                             <span
@@ -249,20 +281,30 @@ export default function HomeDashboard() {
                             </span>
                           ))}
                         </div>
-                        
+
                         <div className="mt-auto pt-5 border-t border-slate-100 flex items-center justify-between">
                           <div className="flex flex-col">
-                            <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-0.5">Harga Tukar</span>
+                            <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
+                              Harga Tukar
+                            </span>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-2xl font-black text-primary">{agent.points_per_kg}</span>
-                              <span className="text-sm font-semibold text-slate-500">poin/kg</span>
+                              <span className="text-2xl font-black text-primary">
+                                {agent.points_per_kg}
+                              </span>
+                              <span className="text-sm font-semibold text-slate-500">
+                                poin/kg
+                              </span>
                             </div>
                           </div>
                           <div className="flex flex-col items-end">
-                            <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-0.5">Rating</span>
+                            <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
+                              Rating
+                            </span>
                             <div className="flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-lg">
                               <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                              <span className="text-sm font-bold text-amber-700">{agent.rating}</span>
+                              <span className="text-sm font-bold text-amber-700">
+                                {agent.rating}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -278,8 +320,13 @@ export default function HomeDashboard() {
         {/* ALL AGENTS */}
         <section className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Semua Agen Terdekat</h2>
-            <Button variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 font-bold text-sm px-4 h-10 rounded-xl transition-colors">
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              Semua Agen Terdekat
+            </h2>
+            <Button
+              variant="ghost"
+              className="text-primary hover:text-primary hover:bg-primary/10 font-bold text-sm px-4 h-10 rounded-xl transition-colors"
+            >
               Lihat Semua <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
@@ -289,9 +336,12 @@ export default function HomeDashboard() {
               <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Search className="w-10 h-10 text-slate-300" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 mb-3">Tidak Ada Agen Ditemukan</h3>
+              <h3 className="text-2xl font-bold text-slate-800 mb-3">
+                Tidak Ada Agen Ditemukan
+              </h3>
               <p className="text-slate-500 max-w-md mx-auto text-lg">
-                Coba sesuaikan kata kunci pencarian atau ubah filter untuk menemukan agen yang tepat.
+                Coba sesuaikan kata kunci pencarian atau ubah filter untuk
+                menemukan agen yang tepat.
               </p>
             </div>
           ) : (
@@ -299,14 +349,22 @@ export default function HomeDashboard() {
               {filteredAgents.map((agent) => {
                 const { Icon } = agent;
                 return (
-                  <Link key={agent.id} href={`/dashboard/agen/${agent.id}`} className="block group">
+                  <Link
+                    key={agent.id}
+                    href={`/dashboard/agen/${agent.id}`}
+                    className="block group"
+                  >
                     <Card className="p-5 rounded-3xl border border-slate-100 shadow-sm bg-white hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex items-center gap-5">
-                      <div className={`${agent.icon_bg} w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300`}>
+                      <div
+                        className={`${agent.icon_bg} w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300`}
+                      >
                         <Icon className={`w-7 h-7 ${agent.icon_color}`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start mb-1">
-                          <h3 className="font-extrabold text-lg text-slate-900 truncate pr-2">{agent.name}</h3>
+                          <h3 className="font-extrabold text-lg text-slate-900 truncate pr-2">
+                            {agent.name}
+                          </h3>
                           <Badge
                             variant="outline"
                             className={`px-3 py-1 text-xs font-bold border-0 rounded-lg shrink-0 ${
@@ -320,11 +378,13 @@ export default function HomeDashboard() {
                         </div>
                         <div className="flex items-center gap-3 text-sm text-slate-500 font-medium mb-2">
                           <span className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4 text-primary/70" /> {agent.distance_km} km
+                            <MapPin className="w-4 h-4 text-primary/70" />{" "}
+                            {agent.distance_km} km
                           </span>
                           <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
                           <span className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-amber-400 text-amber-400" /> {agent.rating}
+                            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />{" "}
+                            {agent.rating}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -332,7 +392,10 @@ export default function HomeDashboard() {
                             {agent.waste_types.slice(0, 2).join(", ")}
                           </div>
                           <span className="text-sm font-black text-primary">
-                            {agent.points_per_kg} <span className="text-xs font-semibold text-slate-400">poin/kg</span>
+                            {agent.points_per_kg}{" "}
+                            <span className="text-xs font-semibold text-slate-400">
+                              poin/kg
+                            </span>
                           </span>
                         </div>
                       </div>
