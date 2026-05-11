@@ -7,6 +7,8 @@ import {
   Truck,
   Recycle,
   WalletCards,
+  Leaf,
+  ArrowRight,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -16,25 +18,29 @@ export default function CaraKerjaSection() {
       icon: PackageCheck,
       title: "Sampah Dikumpulkan",
       desc: "Setelah pengguna membuat request, agen akan mengambil sampah dari lokasi dan melakukan pengecekan awal.",
-      image: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=800&auto=format",
+      image:
+        "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=800&auto=format",
     },
     {
       icon: Truck,
       title: "Masuk ke Mitra Pengelola",
       desc: "Sampah dikirim ke agen atau mitra resmi untuk proses pencatatan dan penimbangan.",
-      image: "https://images.unsplash.com/photo-1604186837874-2e8e7f82c5e0?q=80&w=800&auto=format",
+      image:
+        "https://images.unsplash.com/photo-1604186837874-2e8e7f82c5e0?q=80&w=800&auto=format",
     },
     {
       icon: Recycle,
       title: "Dipilah & Didaur Ulang",
       desc: "Material bernilai seperti plastik, kertas, logam, dan kardus dipisahkan lalu disalurkan kembali.",
-      image: "https://images.unsplash.com/photo-1528323273322-d81458248d40?q=80&w=800&auto=format",
+      image:
+        "https://images.unsplash.com/photo-1528323273322-d81458248d40?q=80&w=800&auto=format",
     },
     {
       icon: WalletCards,
       title: "Nilai Masuk ke Akun",
       desc: "Hasil transaksi tercatat transparan dan saldo pengguna bertambah sesuai nilai sampah.",
-      image: "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?q=80&w=800&auto=format",
+      image:
+        "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?q=80&w=800&auto=format",
     },
   ];
 
@@ -57,9 +63,9 @@ export default function CaraKerjaSection() {
               <div className="lg:col-span-5">
                 <div className="max-w-sm lg:ml-auto">
                   <p className="text-muted-foreground leading-relaxed text-base md:text-lg">
-                    Kami menunjukkan alur jelas bagaimana sampah diproses setelah
-                    dijemput, mulai dari pencatatan hingga menghasilkan manfaat ekonomi
-                    bagi pengguna.
+                    Kami menunjukkan alur jelas bagaimana sampah diproses
+                    setelah dijemput, mulai dari pencatatan hingga menghasilkan
+                    manfaat ekonomi bagi pengguna.
                   </p>
                 </div>
               </div>
@@ -186,15 +192,36 @@ export default function CaraKerjaSection() {
         </div>
 
         {/* FOOTER */}
-        <div className="mt-14 max-w-4xl mx-auto">
-          <div className="rounded-3xl border border-border bg-card p-8 text-center">
+        <div className="mt-20 max-w-5xl mx-auto">
+          <div className="rounded-3xl border border-border bg-card p-10 md:p-14 text-center">
+            <Badge
+              variant="secondary"
+              className="mb-4 sm:mb-6 bg-primary/20 text-gray-600 border-primary/30 backdrop-blur-sm inline-flex"
+            >
+              #StartCotribute
+            </Badge>
             <h3 className="text-xl font-semibold text-foreground mb-3">
-              Setiap Sampah Memiliki Nilai
+              Setiap Sampah<span className="text-primary"> Memiliki Nilai</span>
             </h3>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed mx-auto">
               Dengan sistem transparan, pengguna dapat mengetahui bahwa sampah
               benar-benar dikelola dan memberi manfaat nyata.
             </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+              <a
+                href="/login"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                Mulai Kelola Sampah
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <a
+                href="#cara-kerja"
+                className="inline-flex items-center px-6 py-3 border border-border hover:bg-muted text-foreground text-sm font-semibold rounded-xl transition-colors"
+              >
+                Pelajari Cara Kerja
+              </a>
+            </div>
           </div>
         </div>
       </div>

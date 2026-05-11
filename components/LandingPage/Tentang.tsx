@@ -3,6 +3,7 @@
 import { Leaf, Recycle, Truck, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Span } from "next/dist/trace";
 
 export default function AboutSection() {
   const values = [
@@ -39,9 +40,9 @@ export default function AboutSection() {
           </h2>
 
           <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-            Kami menghadirkan platform yang menghubungkan masyarakat dengan agen
-            pengelola sampah terdekat. Proses setor, jemput, hingga transaksi
-            dibuat lebih mudah dalam satu sistem terintegrasi.
+            Kami menghadirkan platform yang menghubungkan masyarakat kota Depok
+            dengan agen pengelola sampah terdekat. Proses setor, jemput, hingga
+            transaksi dibuat lebih mudah dalam satu sistem terintegrasi.
           </p>
         </div>
 
