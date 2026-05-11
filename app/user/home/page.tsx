@@ -7,9 +7,9 @@ export default function HomePage() {
   return (
     <>
       <Sidebar>
-        <UserDashboard />
-        <Recommendations />
-        <Langganan />
+      <UserDashboard />
+      <Recommendations />
+      <Langganan />
       </Sidebar>
     </>
   );

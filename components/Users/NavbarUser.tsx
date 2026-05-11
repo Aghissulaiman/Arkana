@@ -7,15 +7,9 @@ import {
   Leaf,
   User,
   Coins,
-  Home,
-  Trash2,
   History,
-  Gift,
   HelpCircle,
   LogOut,
-  Menu,
-  Truck,
-  Repeat,
   X,
   Bell,
   Settings,
@@ -23,40 +17,30 @@ import {
   Send,
 } from "lucide-react";
 
-export default function Sidebar({ children }: { children: React.ReactNode }) {
+export default function NavbarUser({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
-
-  const [sidebarWidth, setSidebarWidth] = useState(240);
-  const [isResizing, setIsResizing] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const [points] = useState(1250);
 
   const [messages, setMessages] = useState([
-    { role: "ai", text: "Halo 👋, saya AI TrashFlow." },
+    { role: "ai", text: "Halo, saya AI TrashFlow. Ada yang bisa dibantu hari ini?" },
   ]);
   const [input, setInput] = useState("");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // detect screen
+  // handle scroll
   useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
     };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  // lock scroll mobile
-  useEffect(() => {
-    document.body.style.overflow = isSidebarOpen ? "hidden" : "auto";
-  }, [isSidebarOpen]);
 
   // close dropdown
   useEffect(() => {
@@ -72,27 +56,6 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // resize sidebar
-  useEffect(() => {
-    const move = (e: MouseEvent) => {
-      if (isResizing) {
-        const w = Math.min(Math.max(e.clientX, 200), 320);
-        setSidebarWidth(w);
-      }
-    };
-    const up = () => setIsResizing(false);
-
-    if (isResizing) {
-      window.addEventListener("mousemove", move);
-      window.addEventListener("mouseup", up);
-    }
-
-    return () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
-    };
-  }, [isResizing]);
-
   const handleSend = () => {
     if (!input.trim()) return;
 
@@ -105,231 +68,134 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
     setInput("");
   };
 
-  const menu = [
-    { name: "Beranda", href: "/user/home", icon: Home },
-    { name: "Jual Sampah", href: "/user/request", icon: Trash2 },
-    { name: "Tukar Poin", href: "/user/transactions", icon: Gift },
-    { name: "Riwayat", href: "/user/history", icon: History },
-    { name: "bantuan", href: "/user/help", icon: HelpCircle },
-  ];
-
   return (
-    <div className="min-h-screen flex bg-background overflow-x-hidden">
-      {/* DESKTOP SIDEBAR */}
-      <aside
-        className="hidden lg:block fixed top-0 left-0 h-full border-r bg-background z-50"
-        style={{ width: sidebarWidth }}
-      >
-        <div className="h-14 flex items-center px-4 border-b">
-          <Leaf className="w-5 h-5 text-primary" />
-          <span className="ml-2 font-semibold">TrashFlow</span>
+    <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
+      {/* TOP NAVBAR */}
+      <nav className={`sticky top-0 z-50 w-full transition-all duration-300 h-16 sm:h-20 flex items-center justify-between px-4 md:px-8 lg:px-12 border-b ${
+        isScrolled 
+          ? "bg-white/40 backdrop-blur-xl border-slate-200/50 shadow-md" 
+          : "bg-white border-slate-100 shadow-sm"
+      }`}>
+        {/* LEFT: LOGO */}
+        <div className="flex items-center gap-3 lg:gap-6">
+          <Link href="/user/home" className="flex items-center gap-2.5 group">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105">
+              <Leaf className="w-6 h-6 text-primary" />
+            </div>
+            <span className="font-black text-xl tracking-tight text-slate-900">TrashFlow</span>
+          </Link>
         </div>
 
-        <nav className="p-3 space-y-1">
-          {menu.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
+        {/* CENTER: EMPTY SPACER */}
+        <div className="flex-1" />
 
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
-                  active
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
+        {/* RIGHT: ACTIONS */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* POINT */}
+          <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-100 rounded-full">
+            <div className="bg-amber-100 p-1 rounded-full">
+              <Coins className="w-4 h-4 text-amber-600" />
+            </div>
+            <span className="text-sm font-black text-amber-700">{points}</span>
+          </div>
 
-      {/* RESIZE */}
-      {isDesktop && (
-        <div
-          className="fixed top-0 bottom-0 w-1 cursor-ew-resize hidden lg:block"
-          style={{ left: sidebarWidth }}
-          onMouseDown={() => setIsResizing(true)}
-        />
-      )}
-
-      {/* MAIN */}
-      <div
-        className="flex-1 min-w-0 w-full"
-        style={{ marginLeft: isDesktop ? sidebarWidth : 0 }}
-      >
-        {/* NAVBAR */}
-        <div
-          className="fixed top-0 left-0 right-0 z-40 h-14 border-b bg-background flex items-center px-4 sm:px-6"
-          style={{ left: isDesktop ? sidebarWidth : 0 }}
-        >
-          {/* HAMBURGER */}
+          {/* AI BOT */}
           <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-lg hover:bg-muted"
+            onClick={() => setIsAiOpen(true)}
+            className="w-10 h-10 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-full flex items-center justify-center transition-colors shadow-sm"
           >
-            <Menu className="w-5 h-5" />
+            <Bot className="w-5 h-5" />
           </button>
 
-          <div className="flex-1" />
-
-          {/* RIGHT */}
-          <div className="flex items-center gap-3">
-            {/* AI */}
+          {/* PROFILE */}
+          <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setIsAiOpen(true)}
-              className="w-9 h-9 bg-primary text-white rounded-lg flex items-center justify-center"
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className="w-10 h-10 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-full flex items-center justify-center transition-colors border border-slate-200 shadow-sm overflow-hidden"
             >
-              <Bot className="w-4 h-4" />
+              <User className="w-5 h-5" />
             </button>
 
-            {/* POINT */}
-            <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-lg text-sm">
-              <Coins className="w-4 h-4 text-primary" />
-              {points}
-            </div>
-
-            {/* NOTIF */}
-            <button className="relative w-9 h-9 bg-muted rounded-lg flex items-center justify-center">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
-
-            {/* PROFILE */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center"
-              >
-                <User className="w-4 h-4" />
-              </button>
-
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-background border rounded-lg shadow p-1">
-                  <Link
-                    href="/user/profile"
-                    className="block px-3 py-2 hover:bg-muted rounded"
-                  >
-                    Profile
-                  </Link>
-                  <Link
-                    href="/dashboard/tracking"
-                    className="block px-3 py-2 hover:bg-muted rounded"
-                  >
-                    Tracking
-                  </Link>
-                  <Link
-                    href="/user/settings/akun"
-                    className="block px-3 py-2 hover:bg-muted rounded"
-                  >
-                    Pengaturan
-                  </Link>
-                  <div className="border-t my-1" />
-                  <button className="px-3 py-2 text-red-500 w-full text-left hover:bg-muted rounded">
-                    Logout
-                  </button>
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-3 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="px-3 py-3 border-b border-slate-100 mb-2">
+                  <p className="text-sm font-bold text-slate-900">John Doe</p>
+                  <p className="text-xs font-medium text-slate-500">john@example.com</p>
                 </div>
-              )}
-            </div>
+
+                <Link
+                  href="/user/profile"
+                  onClick={() => setIsProfileOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl transition-colors"
+                >
+                  <User className="w-4 h-4" /> Profile
+                </Link>
+                <Link
+                  href="/user/history"
+                  onClick={() => setIsProfileOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl transition-colors ${pathname === "/user/history" ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-50 hover:text-primary"}`}
+                >
+                  <History className="w-4 h-4" /> Riwayat
+                </Link>
+                <Link
+                  href="/user/help"
+                  onClick={() => setIsProfileOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl transition-colors ${pathname === "/user/help" ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-50 hover:text-primary"}`}
+                >
+                  <HelpCircle className="w-4 h-4" /> Bantuan
+                </Link>
+                <Link
+                  href="/user/settings/akun"
+                  onClick={() => setIsProfileOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-primary rounded-xl transition-colors"
+                >
+                  <Settings className="w-4 h-4" /> Pengaturan
+                </Link>
+
+                <div className="h-px bg-slate-100 my-2" />
+                
+                <button 
+                  onClick={() => setIsProfileOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-rose-500 w-full text-left hover:bg-rose-50 rounded-xl transition-colors"
+                >
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
+      </nav>
 
-        {/* MOBILE SIDEBAR */}
-        <aside
-          className={`fixed top-0 left-0 h-full w-[260px] bg-background z-50 transform transition duration-300 lg:hidden shadow-lg ${
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          {/* HEADER */}
-          <div className="p-4 flex justify-between items-center border-b">
-            <div className="flex items-center gap-2">
-              <Leaf className="w-5 h-5 text-primary" />
-              <span className="font-semibold">TrashFlow</span>
-            </div>
-
-            <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="p-1 rounded hover:bg-muted"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* POINTS */}
-          <div className="p-4 border-b">
-            <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg w-fit text-sm">
-              <Coins className="w-4 h-4 text-primary" />
-              {points} poin
-            </div>
-          </div>
-
-          {/* MENU */}
-          <nav className="p-3 space-y-1">
-            {menu.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.href;
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
-                    active
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* BOTTOM */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 border-t">
-            <button className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-red-500 hover:bg-muted text-sm">
-              <LogOut className="w-4 h-4" />
-              Keluar
-            </button>
-          </div>
-        </aside>
-        {/* OVERLAY */}
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/40 z-40 lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
-
-        {/* CONTENT */}
-        <main className="pt-14 p-6 min-w-0">{children}</main>
-      </div>
+      {/* CONTENT */}
+      <main className="flex-1 w-full max-w-none">{children}</main>
 
       {/* AI CHAT */}
       {isAiOpen && (
-        <div className="fixed inset-0 bg-black/30 flex justify-end items-end p-4 z-50">
-          <div className="w-full max-w-sm h-[500px] bg-background rounded-xl shadow flex flex-col">
-            <div className="p-3 border-b flex justify-between">
-              <span>AI TrashFlow</span>
-              <button onClick={() => setIsAiOpen(false)}>
-                <X />
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-end items-end p-4 sm:p-6 z-[60] transition-opacity">
+          <div className="w-full max-w-sm h-[500px] bg-white rounded-[2rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom-10 fade-in">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-[2rem]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-bold text-slate-800">AI TrashFlow</span>
+              </div>
+              <button 
+                onClick={() => setIsAiOpen(false)}
+                className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((m, i) => (
                 <div
                   key={i}
-                  className={`p-2 rounded text-sm max-w-[80%] ${
+                  className={`p-3 rounded-2xl text-sm max-w-[85%] ${
                     m.role === "user"
-                      ? "bg-primary text-white ml-auto"
-                      : "bg-muted"
+                      ? "bg-primary text-white ml-auto rounded-tr-none shadow-md shadow-primary/20"
+                      : "bg-slate-100 text-slate-800 rounded-tl-none"
                   }`}
                 >
                   {m.text}
@@ -337,18 +203,22 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
               ))}
             </div>
 
-            <div className="p-3 border-t flex gap-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="flex-1 border px-2 rounded text-sm"
-              />
-              <button
-                onClick={handleSend}
-                className="bg-primary text-white px-3 rounded"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-[2rem]">
+              <div className="flex gap-2 relative">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder="Ketik pertanyaan Anda..."
+                  className="flex-1 border-0 bg-white py-3 pl-4 pr-12 rounded-full text-sm shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                />
+                <button
+                  onClick={handleSend}
+                  className="absolute right-1 top-1 bottom-1 w-10 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
