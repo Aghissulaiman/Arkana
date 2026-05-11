@@ -77,7 +77,7 @@ function VerifyOTPContent() {
           value={otp}
           onChange={(e) => setOtp(e.target.value)}
           className="text-center text-2xl tracking-widest mb-4"
-          maxLength={6}
+          maxLength={8}
           autoFocus
           required
         />
