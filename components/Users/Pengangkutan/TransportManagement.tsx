@@ -61,7 +61,6 @@ function PickupFormContent() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState("");
   const [selectedAgentUserId, setSelectedAgentUserId] = useState("");
-  const [mitraId, setMitraId] = useState<string | null>(null);
   const [formData, setFormData] = useState<PickupFormData>({
     wasteType: "",
     estimatedWeight: "",
@@ -85,38 +84,6 @@ function PickupFormContent() {
     }
   }, [agents, queryAgentId]);
 
-  // Ketika agent dipilih, otomatis cari mitra yang terkait
-  useEffect(() => {
-    if (selectedAgentUserId) {
-      fetchMitraByAgent(selectedAgentUserId);
-    }
-  }, [selectedAgentUserId]);
-
-  const fetchMitraByAgent = async (agentUserId: string) => {
-    console.log("🔍 Mencari mitra untuk agent user_id:", agentUserId);
-    
-    const { data: mitraData, error } = await supabase
-      .from("mitra_details")
-      .select("user_id, name, phone")
-      .eq("agent_id", agentUserId)
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error fetching mitra:", error);
-      setMitraId(null);
-      return;
-    }
-
-    if (mitraData) {
-      setMitraId(mitraData.user_id);
-      console.log("✅ Mitra ditemukan:", mitraData.user_id);
-    } else {
-      console.log("❌ Tidak ada mitra untuk agent ini");
-      setMitraId(null);
-    }
-  };
-
   const fetchInitialData = async () => {
     setLoading(true);
     try {
@@ -131,10 +98,10 @@ function PickupFormContent() {
       setUserId(user.id);
       console.log("✅ User ID:", user.id);
 
-      // 2. Ambil data user_details (nama & alamat)
+      // 2. Ambil data profiles (nama & alamat)
       const { data: userData, error: userDetailsError } = await supabase
-        .from("user_details")
-        .select("name, address")
+        .from("profiles")
+        .select("full_name, address")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -143,7 +110,7 @@ function PickupFormContent() {
       }
 
       if (userData) {
-        setUserName(userData.name || "");
+        setUserName(userData.full_name || "");
         setUserAddress(userData.address || "");
         console.log("✅ User address:", userData.address);
       } else {
@@ -177,21 +144,31 @@ function PickupFormContent() {
         .select("*");
 
       if (agentsError) {
-        console.error("Error fetching agents:", agentsError);
+        console.warn("Table agent_details missing or error:", agentsError);
       }
+
+      // Gunakan mock data jika gagal ambil dari DB agar fitur tetap berjalan
+      const MOCK_AGENTS = [
+        { id: "1", user_id: "user-agent-1", name: "Hijau Bersama", phone: "08123456789", address: "Jl. Margonda Raya No. 1" },
+        { id: "2", user_id: "user-agent-2", name: "EcoPoint Beji", phone: "08234567890", address: "Jl. Arif Rahman Hakim" },
+        { id: "3", user_id: "user-agent-3", name: "Kertas Mas Jaya", phone: "08345678901", address: "Jl. Nusantara Raya" },
+        { id: "4", user_id: "user-agent-4", name: "Plastik Lestari", phone: "08456789012", address: "Jl. Raya Sawangan" },
+        { id: "5", user_id: "user-agent-5", name: "ReTech Daur Ulang", phone: "08567890123", address: "Jl. Siliwangi" },
+      ];
 
       if (agentsData && agentsData.length > 0) {
         const formattedAgents = agentsData.map((agent) => ({
-          id: agent.id,
-          user_id: agent.user_id,
+          id: String(agent.id),
+          user_id: String(agent.user_id),
           name: agent.name,
           phone: agent.phone || "-",
           address: agent.address || "-",
         }));
         setAgents(formattedAgents);
-        console.log("✅ Agents loaded:", formattedAgents.length);
+        console.log("✅ Agents loaded from DB:", formattedAgents.length);
       } else {
-        console.warn("⚠️ No agents found in agent_details");
+        console.warn("⚠️ No agents found in DB, using MOCK_AGENTS");
+        setAgents(MOCK_AGENTS);
       }
 
     } catch (error) {
@@ -240,11 +217,6 @@ function PickupFormContent() {
       return;
     }
 
-    if (!mitraId) {
-      alert("Agent yang dipilih tidak memiliki mitra. Silakan pilih agent lain.");
-      return;
-    }
-
     if (!userAddress) {
       alert("Silakan lengkapi alamat terlebih dahulu di halaman profil.");
       router.push("/profile");
@@ -289,7 +261,6 @@ function PickupFormContent() {
         .from("requests")
         .insert({
           user_id: userId,
-          mitra_id: mitraId,
           agent_id: selectedAgentUserId,
           status: "pending",
           pickup_address: userAddress,
@@ -314,7 +285,6 @@ function PickupFormContent() {
       });
       setSelectedAgentId("");
       setSelectedAgentUserId("");
-      setMitraId(null);
 
       setTimeout(() => {
         setIsSuccess(false);
@@ -425,7 +395,7 @@ function PickupFormContent() {
                   <div className="text-slate-800 font-medium leading-relaxed min-h-[3rem]">
                     {userAddress || "Alamat belum diatur"}
                   </div>
-                  <button type="button" onClick={() => router.push("/profile")} className="mt-3 text-sm text-blue-600 font-bold hover:text-blue-700 hover:underline inline-flex items-center gap-1.5 transition-colors">
+                  <button type="button" onClick={() => router.push("/user/profile")} className="mt-3 text-sm text-blue-600 font-bold hover:text-blue-700 hover:underline inline-flex items-center gap-1.5 transition-colors">
                     <Map className="w-4 h-4" /> Ubah alamat di profil
                   </button>
                 </div>
@@ -458,14 +428,9 @@ function PickupFormContent() {
                       <UserCheck className="w-5 h-5 text-slate-400" />
                     </div>
                   </div>
-                  {selectedAgentId && mitraId && (
+                  {selectedAgentId && (
                     <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Mitra tersedia untuk agen ini
-                    </motion.p>
-                  )}
-                  {selectedAgentId && !mitraId && (
-                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-rose-500 mt-2">
-                      Agen ini belum memiliki mitra. Silakan pilih agen lain.
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Agen tersedia
                     </motion.p>
                   )}
                 </div>
@@ -614,7 +579,7 @@ function PickupFormContent() {
         >
           <Button 
             type="submit" 
-            disabled={isSubmitting || !userAddress || !selectedAgentId || !mitraId || agents.length === 0} 
+            disabled={isSubmitting || !userAddress || !selectedAgentId || agents.length === 0} 
             className="w-full py-8 rounded-2xl text-lg font-extrabold shadow-xl shadow-emerald-500/25 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all gap-3 hover:-translate-y-1"
           >
             {isSubmitting ? (

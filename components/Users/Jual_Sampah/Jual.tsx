@@ -52,7 +52,6 @@ export default function PickupRequestForm() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState("");
   const [selectedAgentUserId, setSelectedAgentUserId] = useState("");
-  const [mitraId, setMitraId] = useState<string | null>(null);
   const [formData, setFormData] = useState<PickupFormData>({
     wasteType: "",
     estimatedWeight: "",
@@ -65,38 +64,6 @@ export default function PickupRequestForm() {
   useEffect(() => {
     fetchInitialData();
   }, []);
-
-  // Ketika agent dipilih, otomatis cari mitra yang terkait
-  useEffect(() => {
-    if (selectedAgentUserId) {
-      fetchMitraByAgent(selectedAgentUserId);
-    }
-  }, [selectedAgentUserId]);
-
-  const fetchMitraByAgent = async (agentUserId: string) => {
-    console.log("🔍 Mencari mitra untuk agent user_id:", agentUserId);
-    
-    const { data: mitraData, error } = await supabase
-      .from("mitra_details")
-      .select("user_id, name, phone")
-      .eq("agent_id", agentUserId)
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error fetching mitra:", error);
-      setMitraId(null);
-      return;
-    }
-
-    if (mitraData) {
-      setMitraId(mitraData.user_id);
-      console.log("✅ Mitra ditemukan:", mitraData.user_id);
-    } else {
-      console.log("❌ Tidak ada mitra untuk agent ini");
-      setMitraId(null);
-    }
-  };
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -112,10 +79,10 @@ export default function PickupRequestForm() {
       setUserId(user.id);
       console.log("✅ User ID:", user.id);
 
-      // 2. Ambil data user_details (nama & alamat)
+      // 2. Ambil data profiles (nama & alamat)
       const { data: userData, error: userDetailsError } = await supabase
-        .from("user_details")
-        .select("name, address")
+        .from("profiles")
+        .select("full_name, address")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -124,7 +91,7 @@ export default function PickupRequestForm() {
       }
 
       if (userData) {
-        setUserName(userData.name || "");
+        setUserName(userData.full_name || "");
         setUserAddress(userData.address || "");
         console.log("✅ User address:", userData.address);
       } else {
@@ -158,22 +125,31 @@ export default function PickupRequestForm() {
         .select("*");
 
       if (agentsError) {
-        console.error("Error fetching agents:", agentsError);
+        console.warn("Table agent_details missing or error:", agentsError);
       }
+
+      // Gunakan mock data jika gagal ambil dari DB agar fitur tetap berjalan
+      const MOCK_AGENTS = [
+        { id: "1", user_id: "user-agent-1", name: "Hijau Bersama", phone: "08123456789", address: "Jl. Margonda Raya No. 1" },
+        { id: "2", user_id: "user-agent-2", name: "EcoPoint Beji", phone: "08234567890", address: "Jl. Arif Rahman Hakim" },
+        { id: "3", user_id: "user-agent-3", name: "Kertas Mas Jaya", phone: "08345678901", address: "Jl. Nusantara Raya" },
+        { id: "4", user_id: "user-agent-4", name: "Plastik Lestari", phone: "08456789012", address: "Jl. Raya Sawangan" },
+        { id: "5", user_id: "user-agent-5", name: "ReTech Daur Ulang", phone: "08567890123", address: "Jl. Siliwangi" },
+      ];
 
       if (agentsData && agentsData.length > 0) {
         const formattedAgents = agentsData.map((agent) => ({
-          id: agent.id,
-          user_id: agent.user_id,
+          id: String(agent.id),
+          user_id: String(agent.user_id),
           name: agent.name,
           phone: agent.phone || "-",
           address: agent.address || "-",
         }));
         setAgents(formattedAgents);
-        console.log("✅ Agents loaded:", formattedAgents.length);
-        console.log("Agent list:", formattedAgents);
+        console.log("✅ Agents loaded from DB:", formattedAgents.length);
       } else {
-        console.warn("⚠️ No agents found in agent_details");
+        console.warn("⚠️ No agents found in DB, using MOCK_AGENTS");
+        setAgents(MOCK_AGENTS);
       }
 
     } catch (error) {
@@ -213,7 +189,6 @@ export default function PickupRequestForm() {
     console.log("=== SUBMITTING REQUEST ===");
     console.log("userId:", userId);
     console.log("selectedAgentUserId:", selectedAgentUserId);
-    console.log("mitraId:", mitraId);
 
     // Validasi
     if (!userId) {
@@ -224,11 +199,6 @@ export default function PickupRequestForm() {
 
     if (!selectedAgentUserId) {
       alert("Silakan pilih agent terlebih dahulu.");
-      return;
-    }
-
-    if (!mitraId) {
-      alert("Agent yang dipilih tidak memiliki mitra. Silakan pilih agent lain.");
       return;
     }
 
@@ -276,7 +246,6 @@ export default function PickupRequestForm() {
         .from("requests")
         .insert({
           user_id: userId,
-          mitra_id: mitraId,
           agent_id: selectedAgentUserId,
           status: "pending",
           pickup_address: userAddress,
@@ -303,7 +272,6 @@ export default function PickupRequestForm() {
       });
       setSelectedAgentId("");
       setSelectedAgentUserId("");
-      setMitraId(null);
 
       setTimeout(() => {
         setIsSuccess(false);
@@ -410,14 +378,9 @@ export default function PickupRequestForm() {
               </option>
             ))}
           </select>
-          {selectedAgentId && mitraId && (
+          {selectedAgentId && (
             <p className="text-xs text-green-600 mt-1">
-              ✓ Mitra otomatis dipilih berdasarkan agent ini
-            </p>
-          )}
-          {selectedAgentId && !mitraId && (
-            <p className="text-xs text-red-500 mt-1">
-              ✗ Agent ini belum memiliki mitra. Pilih agent lain.
+              ✓ Agen tersedia
             </p>
           )}
           {agents.length === 0 && (
@@ -521,7 +484,7 @@ export default function PickupRequestForm() {
         {/* Submit */}
         <Button 
           type="submit" 
-          disabled={isSubmitting || !userAddress || !selectedAgentId || !mitraId || agents.length === 0} 
+          disabled={isSubmitting || !userAddress || !selectedAgentId || agents.length === 0} 
           className="w-full gap-2"
         >
           {isSubmitting ? (

@@ -105,6 +105,15 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
     searchInputRef.current?.blur();
   };
 
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    if (val.trim() === "") {
+      router.push(pathname);
+    } else {
+      router.push(`${pathname}?q=${encodeURIComponent(val)}`);
+    }
+  };
+
   // Handle logout
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -155,7 +164,7 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
                 type="text"
                 placeholder="Cari artikel, panduan, atau bantuan..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
                 className="w-full pl-11 pr-4 py-2.5 bg-slate-100 border border-transparent rounded-2xl text-sm text-slate-700 placeholder:text-slate-400 focus:bg-white focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
@@ -193,7 +202,7 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
                   type="text"
                   placeholder="Cari..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit(e)}
                   className="flex-1 text-lg bg-transparent focus:outline-none"
                 />
@@ -296,7 +305,7 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
             type="text"
             placeholder="Cari artikel atau bantuan..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-100 rounded-xl text-sm focus:bg-white focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </form>
