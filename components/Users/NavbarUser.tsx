@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Leaf,
+  Search,
   User,
   Coins,
   History,
@@ -19,10 +20,12 @@ import {
 
 export default function NavbarUser({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [points] = useState(1250);
 
@@ -68,6 +71,15 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
     setInput("");
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/user/home?q=${encodeURIComponent(searchQuery)}`);
+    } else {
+      router.push(`/user/home`);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
       {/* TOP NAVBAR */}
@@ -82,12 +94,9 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105">
               <Leaf className="w-6 h-6 text-primary" />
             </div>
-            <span className="font-black text-xl tracking-tight text-slate-900">TrashFlow</span>
+            <span className="font-black text-xl tracking-tight text-slate-900 hidden sm:block">TrashFlow</span>
           </Link>
         </div>
-
-        {/* CENTER: EMPTY SPACER */}
-        <div className="flex-1" />
 
         {/* RIGHT: ACTIONS */}
         <div className="flex items-center gap-2 sm:gap-4">

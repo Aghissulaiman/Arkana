@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,9 +12,14 @@ import {
   MapPin,
   Loader2,
   UserCheck,
+  CheckCircle2,
+  Truck,
+  Leaf,
+  Map
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface PickupFormData {
   wasteType: string;
@@ -40,8 +45,12 @@ interface Agent {
   address: string;
 }
 
-export default function PickupRequestForm() {
+function PickupFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const supabase = createClientSupabaseClient();
+  const queryAgentId = searchParams.get("agentId");
+  
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -65,6 +74,16 @@ export default function PickupRequestForm() {
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  // Set agent from query parameter once agents are loaded
+  useEffect(() => {
+    if (agents.length > 0 && queryAgentId) {
+      const agent = agents.find(a => a.id === queryAgentId);
+      if (agent) {
+        handleAgentSelect(agent.id, agent.user_id);
+      }
+    }
+  }, [agents, queryAgentId]);
 
   // Ketika agent dipilih, otomatis cari mitra yang terkait
   useEffect(() => {
@@ -171,7 +190,6 @@ export default function PickupRequestForm() {
         }));
         setAgents(formattedAgents);
         console.log("✅ Agents loaded:", formattedAgents.length);
-        console.log("Agent list:", formattedAgents);
       } else {
         console.warn("⚠️ No agents found in agent_details");
       }
@@ -200,7 +218,7 @@ export default function PickupRequestForm() {
   const handleAgentSelect = (agentId: string, agentUserId: string) => {
     setSelectedAgentId(agentId);
     setSelectedAgentUserId(agentUserId);
-    setFormData({ ...formData, agentId: agentId });
+    setFormData((prev) => ({ ...prev, agentId: agentId }));
   };
 
   const handleChange = (field: keyof PickupFormData, value: string) => {
@@ -210,11 +228,6 @@ export default function PickupRequestForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log("=== SUBMITTING REQUEST ===");
-    console.log("userId:", userId);
-    console.log("selectedAgentUserId:", selectedAgentUserId);
-    console.log("mitraId:", mitraId);
-
     // Validasi
     if (!userId) {
       alert("User tidak ditemukan. Silakan login ulang.");
@@ -290,8 +303,6 @@ export default function PickupRequestForm() {
         throw error;
       }
 
-      console.log("✅ Request created:", newRequest);
-
       setIsSuccess(true);
       setFormData({
         wasteType: "",
@@ -307,6 +318,7 @@ export default function PickupRequestForm() {
 
       setTimeout(() => {
         setIsSuccess(false);
+        router.push("/user/home");
       }, 3000);
 
     } catch (error) {
@@ -326,223 +338,318 @@ export default function PickupRequestForm() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
       </div>
     );
   }
 
   if (isSuccess) {
     return (
-      <Card className="p-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-          <Send className="w-8 h-8 text-green-500" />
-        </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Pengajuan Berhasil!
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Petugas kami akan segera memproses penjemputan sampah Anda
-        </p>
-        <Button 
-          className="mt-4" 
-          variant="outline"
-          onClick={() => router.push("/dashboard")}
-        >
-          Kembali ke Dashboard
-        </Button>
-      </Card>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-md mx-auto mt-20"
+      >
+        <Card className="p-10 text-center rounded-[2rem] border-slate-100 shadow-xl shadow-emerald-500/10">
+          <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6 relative">
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+            >
+              <CheckCircle2 className="w-12 h-12 text-emerald-600" />
+            </motion.div>
+            <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20 animate-ping" />
+          </div>
+          <h3 className="text-2xl font-extrabold text-slate-800 mb-3">
+            Hore! Permintaan Berhasil
+          </h3>
+          <p className="text-slate-500 mb-8">
+            Mitra kami akan segera memproses penjemputan sampah Anda sesuai jadwal.
+          </p>
+          <Button 
+            className="w-full h-14 rounded-2xl text-lg font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all"
+            onClick={() => router.push("/user/home")}
+          >
+            Kembali ke Beranda
+          </Button>
+        </Card>
+      </motion.div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Ajukan Penjemputan
+    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8 text-center"
+      >
+        <div className="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-2xl mb-5 shadow-sm transform -rotate-6">
+          <Truck className="w-8 h-8 text-emerald-600 transform rotate-6" />
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+          Ajukan Penjemputan <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-600">Sampah</span>
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Isi form berikut untuk menjemput sampah Anda
+        <p className="text-slate-500 max-w-lg mx-auto text-lg">
+          Pilah sampahmu, pilih agen terdekat, dan kami akan datang menjemput.
         </p>
-      </div>
+      </motion.div>
 
-      <Card className="p-5 space-y-5">
-        {/* Alamat */}
-        <div className="bg-muted/30 rounded-lg p-3 border border-border">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-foreground">
-              Alamat Penjemputan
-            </span>
-          </div>
-          <p className="text-sm text-foreground">
-            {userAddress || "Belum diisi"}
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push("/profile")}
-            className="text-[10px] text-primary mt-2 hover:underline"
-          >
-            Ubah alamat di profil
-          </button>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Section 1: Lokasi & Agen */}
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card className="p-6 sm:p-8 rounded-[2rem] border-slate-100 shadow-xl shadow-slate-200/50 bg-white/80 backdrop-blur-xl">
+             <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center border border-blue-100">
+                  <MapPin className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Lokasi & Agen</h2>
+                  <p className="text-sm text-slate-500">Tentukan alamat dan agen tujuan</p>
+                </div>
+             </div>
 
-        {/* Pilih AGENT */}
-        <div>
-          <label className="text-sm font-medium text-foreground block mb-2">
-            <UserCheck className="w-4 h-4 inline mr-2 text-primary" />
-            Pilih Agent
-          </label>
-          <select
-            required
-            value={selectedAgentId}
-            onChange={(e) => {
-              const selected = agents.find(a => a.id === e.target.value);
-              if (selected) {
-                handleAgentSelect(selected.id, selected.user_id);
-              }
-            }}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option value="">-- Pilih Agent --</option>
-            {agents.map((agent) => (
-              <option key={agent.id} value={agent.id}>
-                {agent.name} - {agent.phone} ({agent.address})
-              </option>
-            ))}
-          </select>
-          {selectedAgentId && mitraId && (
-            <p className="text-xs text-green-600 mt-1">
-              ✓ Mitra otomatis dipilih berdasarkan agent ini
-            </p>
-          )}
-          {selectedAgentId && !mitraId && (
-            <p className="text-xs text-red-500 mt-1">
-              ✗ Agent ini belum memiliki mitra. Pilih agent lain.
-            </p>
-          )}
-          {agents.length === 0 && (
-            <p className="text-xs text-red-500 mt-1">
-              ✗ Belum ada agent. Silakan hubungi admin.
-            </p>
-          )}
-        </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Lokasi */}
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 relative group overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
+                  <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">
+                    Alamat Penjemputan
+                  </label>
+                  <div className="text-slate-800 font-medium leading-relaxed min-h-[3rem]">
+                    {userAddress || "Alamat belum diatur"}
+                  </div>
+                  <button type="button" onClick={() => router.push("/profile")} className="mt-3 text-sm text-blue-600 font-bold hover:text-blue-700 hover:underline inline-flex items-center gap-1.5 transition-colors">
+                    <Map className="w-4 h-4" /> Ubah alamat di profil
+                  </button>
+                </div>
 
-        {/* Jenis Sampah */}
-        <div>
-          <label className="text-sm font-medium text-foreground block mb-2">
-            <Package className="w-4 h-4 inline mr-2 text-primary" />
-            Jenis Sampah
-          </label>
-          <select
-            required
-            value={formData.wasteType}
-            onChange={(e) => handleChange("wasteType", e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option value="">Pilih jenis sampah</option>
-            {wasteTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name} - {type.price_per_kg.toLocaleString("id-ID")} poin/kg
-              </option>
-            ))}
-          </select>
-        </div>
+                {/* Agen */}
+                <div className="flex flex-col justify-center">
+                  <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">
+                    Pilih Agen Mitra
+                  </label>
+                  <div className="relative">
+                    <select
+                      required
+                      value={selectedAgentId}
+                      onChange={(e) => {
+                        const selected = agents.find(a => a.id === e.target.value);
+                        if (selected) {
+                          handleAgentSelect(selected.id, selected.user_id);
+                        }
+                      }}
+                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 appearance-none shadow-sm transition-all cursor-pointer hover:border-slate-300"
+                    >
+                      <option value="">-- Pilih Agen Terdekat --</option>
+                      {agents.map((agent) => (
+                        <option key={agent.id} value={agent.id}>
+                          {agent.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-white pl-2">
+                      <UserCheck className="w-5 h-5 text-slate-400" />
+                    </div>
+                  </div>
+                  {selectedAgentId && mitraId && (
+                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Mitra tersedia untuk agen ini
+                    </motion.p>
+                  )}
+                  {selectedAgentId && !mitraId && (
+                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-rose-500 mt-2">
+                      Agen ini belum memiliki mitra. Silakan pilih agen lain.
+                    </motion.p>
+                  )}
+                </div>
+             </div>
+          </Card>
+        </motion.div>
 
-        {/* Estimasi Berat */}
-        <div>
-          <label className="text-sm font-medium text-foreground block mb-2">
-            Estimasi Berat (kg)
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              step="0.1"
-              required
-              placeholder="0"
-              value={formData.estimatedWeight}
-              onChange={(e) => handleChange("estimatedWeight", e.target.value)}
-              className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-        </div>
+        {/* Section 2: Detail Sampah */}
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card className="p-6 sm:p-8 rounded-[2rem] border-slate-100 shadow-xl shadow-slate-200/50 bg-white/80 backdrop-blur-xl">
+             <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center border border-amber-100">
+                  <Package className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Detail Sampah</h2>
+                  <p className="text-sm text-slate-500">Informasi sampah yang akan dijemput</p>
+                </div>
+             </div>
 
-        {/* Jadwal */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-sm font-medium text-foreground block mb-2">
-              <Calendar className="w-4 h-4 inline mr-2 text-primary" />
-              Tanggal
-            </label>
-            <input
-              type="date"
-              required
-              min={getMinDate()}
-              value={formData.pickupDate}
-              onChange={(e) => handleChange("pickupDate", e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-foreground block mb-2">
-              <Clock className="w-4 h-4 inline mr-2 text-primary" />
-              Jam
-            </label>
-            <select
-              required
-              value={formData.pickupTime}
-              onChange={(e) => handleChange("pickupTime", e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="">Pilih jam</option>
-              <option value="08:00 - 10:00">08:00 - 10:00</option>
-              <option value="10:00 - 12:00">10:00 - 12:00</option>
-              <option value="12:00 - 14:00">12:00 - 14:00</option>
-              <option value="14:00 - 16:00">14:00 - 16:00</option>
-              <option value="16:00 - 18:00">16:00 - 18:00</option>
-            </select>
-          </div>
-        </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Jenis Sampah */}
+                <div>
+                  <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">Jenis Sampah</label>
+                  <div className="relative">
+                    <select
+                      required
+                      value={formData.wasteType}
+                      onChange={(e) => handleChange("wasteType", e.target.value)}
+                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 appearance-none shadow-sm transition-all cursor-pointer hover:border-slate-300"
+                    >
+                      <option value="">-- Pilih Jenis --</option>
+                      {wasteTypes.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name} - {type.price_per_kg.toLocaleString("id-ID")} poin/kg
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-white pl-2">
+                      <Leaf className="w-5 h-5 text-slate-400" />
+                    </div>
+                  </div>
+                </div>
 
-        {/* Catatan */}
-        <div>
-          <label className="text-sm font-medium text-foreground block mb-2">
-            <ClipboardList className="w-4 h-4 inline mr-2 text-primary" />
-            Catatan (opsional)
-          </label>
-          <textarea
-            rows={2}
-            placeholder="Contoh: Sampah sudah dipilah dalam karung"
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-          />
-        </div>
+                {/* Estimasi Berat */}
+                <div>
+                  <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">Estimasi Berat</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      required
+                      placeholder="0.0"
+                      value={formData.estimatedWeight}
+                      onChange={(e) => handleChange("estimatedWeight", e.target.value)}
+                      className="w-full pl-5 pr-16 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm transition-all hover:border-slate-300"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 font-bold bg-slate-100 px-3 py-1.5 rounded-xl">
+                      kg
+                    </div>
+                  </div>
+                </div>
+             </div>
+          </Card>
+        </motion.div>
+
+        {/* Section 3: Jadwal & Catatan */}
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <Card className="p-6 sm:p-8 rounded-[2rem] border-slate-100 shadow-xl shadow-slate-200/50 bg-white/80 backdrop-blur-xl">
+             <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center border border-violet-100">
+                  <Calendar className="w-6 h-6 text-violet-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Jadwal & Catatan</h2>
+                  <p className="text-sm text-slate-500">Tentukan waktu penjemputan</p>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="text-sm font-semibold text-slate-500 block mb-3">Tanggal Penjemputan</label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      required
+                      min={getMinDate()}
+                      value={formData.pickupDate}
+                      onChange={(e) => handleChange("pickupDate", e.target.value)}
+                      className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm transition-all appearance-none cursor-text hover:border-slate-300"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-500 block mb-3">Waktu Penjemputan</label>
+                  <div className="relative">
+                    <select
+                      required
+                      value={formData.pickupTime}
+                      onChange={(e) => handleChange("pickupTime", e.target.value)}
+                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 appearance-none shadow-sm transition-all cursor-pointer hover:border-slate-300"
+                    >
+                      <option value="">-- Pilih Jam --</option>
+                      <option value="08:00 - 10:00">08:00 - 10:00</option>
+                      <option value="10:00 - 12:00">10:00 - 12:00</option>
+                      <option value="12:00 - 14:00">12:00 - 14:00</option>
+                      <option value="14:00 - 16:00">14:00 - 16:00</option>
+                      <option value="16:00 - 18:00">16:00 - 18:00</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-white pl-2">
+                      <Clock className="w-5 h-5 text-slate-400" />
+                    </div>
+                  </div>
+                </div>
+             </div>
+
+             <div>
+               <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 text-slate-400" /> Catatan Tambahan (Opsional)
+               </label>
+               <textarea
+                 rows={3}
+                 placeholder="Contoh: Tolong hubungi nomor saya jika sudah di depan rumah atau sampah sudah dipisahkan dalam kardus..."
+                 value={formData.notes}
+                 onChange={(e) => handleChange("notes", e.target.value)}
+                 className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm transition-all resize-none hover:border-slate-300"
+               />
+             </div>
+          </Card>
+        </motion.div>
 
         {/* Submit */}
-        <Button 
-          type="submit" 
-          disabled={isSubmitting || !userAddress || !selectedAgentId || !mitraId || agents.length === 0} 
-          className="w-full gap-2"
+        <motion.div 
+           initial={{ opacity: 0, y: 20 }} 
+           animate={{ opacity: 1, y: 0 }} 
+           transition={{ duration: 0.5, delay: 0.4 }} 
+           className="mt-8"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Memproses...
-            </>
-          ) : (
-            <>
-              <Send className="w-4 h-4" />
-              Ajukan Penjemputan
-            </>
+          <Button 
+            type="submit" 
+            disabled={isSubmitting || !userAddress || !selectedAgentId || !mitraId || agents.length === 0} 
+            className="w-full py-8 rounded-2xl text-lg font-extrabold shadow-xl shadow-emerald-500/25 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all gap-3 hover:-translate-y-1"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-6 h-6 animate-spin" />
+                Memproses Permintaan...
+              </>
+            ) : (
+              <>
+                <Send className="w-6 h-6" />
+                Kirim Permintaan Penjemputan
+              </>
+            )}
+          </Button>
+          
+          {!userAddress && (
+            <p className="text-sm text-rose-500 text-center mt-5 font-bold flex items-center justify-center gap-2 bg-rose-50 py-3 rounded-xl">
+               <MapPin className="w-4 h-4" />
+               Silakan lengkapi alamat di halaman profil terlebih dahulu
+            </p>
           )}
-        </Button>
+        </motion.div>
+      </form>
+    </div>
+  );
+}
 
-        {!userAddress && (
-          <p className="text-xs text-red-500 text-center">
-            *Silakan lengkapi alamat di halaman profil terlebih dahulu
-          </p>
-        )}
-      </Card>
-    </form>
+export default function PickupRequestForm() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="w-12 h-12 animate-spin text-emerald-500" />
+      </div>
+    }>
+      <PickupFormContent />
+    </Suspense>
   );
 }

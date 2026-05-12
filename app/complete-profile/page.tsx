@@ -38,7 +38,7 @@ export default function CompleteProfilePage() {
           setProfileExists(false);
         }
       } else {
-        router.push("/login");
+        router.push("/user/home");
       }
     };
     
@@ -90,11 +90,11 @@ export default function CompleteProfilePage() {
     }
 
     setLoading(false);
-    router.push("/login");
+    router.push("/user/home");
   };
 
   const handleSkip = () => {
-    router.push("/login");
+    router.push("/user/home");
   };
 
   return (
