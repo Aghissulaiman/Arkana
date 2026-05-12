@@ -235,10 +235,12 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
           )}
 
           {/* NOTIFICATION */}
-          <button className="relative w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center hover:bg-slate-200 transition-colors">
-            <Bell className="w-5 h-5 text-slate-600" />
-            <span className="absolute top-2 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white" />
-          </button>
+          <Link href="/user/notifications">
+            <button className="relative w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center hover:bg-slate-200 transition-colors">
+              <Bell className="w-5 h-5 text-slate-600" />
+              <span className="absolute top-2 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white" />
+            </button>
+          </Link>
 
           {/* PROFILE DROPDOWN */}
           <div className="relative" ref={dropdownRef}>

@@ -172,15 +172,6 @@ function DashboardContent() {
               </h1>
             </div>
           </div>
-          <Link href="/user/notification">
-            <Button
-              variant="outline"
-              size="icon"
-              className="w-10 h-10 rounded-full shadow-sm bg-white border-slate-200 text-slate-600 hover:bg-slate-100 transition-all"
-            >
-              <Bell className="w-4 h-4" />
-            </Button>
-          </Link>
         </div>
 
         {/* CATEGORY CHIPS */}
