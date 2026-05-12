@@ -64,7 +64,7 @@ export function RegisterForm({
       return;
     }
 
-    // Cek email sudah terdaftar di tabel users
+    // Cek email sudah terdaftar
     const { data: existingUser } = await supabase
       .from("users")
       .select("email")
@@ -87,11 +87,7 @@ export function RegisterForm({
     });
 
     if (signUpError) {
-      if (signUpError.message.includes("already registered")) {
-        setError("Email sudah terdaftar. Silakan login.");
-      } else {
-        setError(signUpError.message);
-      }
+      setError(signUpError.message);
       setLoading(false);
       return;
     }
@@ -102,7 +98,7 @@ export function RegisterForm({
         id: data.user.id,
         email: email,
         role: "user",
-        provider: "credentials" // Tandai ini user manual
+        provider: "credentials"
       });
 
       // Insert ke tabel profiles
@@ -117,17 +113,8 @@ export function RegisterForm({
 
     setLoading(false);
     
-    // Langsung login setelah register
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (signInError) {
-      router.push("/login?registered=true");
-    } else {
-      router.push("/complete-profile");
-    }
+    // LANGSUNG REDIRECT KE COMPLETE PROFILE (tanpa login ulang)
+    router.push("/complete-profile");
   };
 
   // Register dengan Google
@@ -202,7 +189,7 @@ export function RegisterForm({
             className="bg-background border-border"
           />
           <FieldDescription className="text-xs text-muted-foreground">
-            Kosongkan jika akan daftar dengan Google (tidak perlu isi)
+            Kosongkan jika akan daftar dengan Google
           </FieldDescription>
         </Field>
 
