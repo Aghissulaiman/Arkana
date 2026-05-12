@@ -35,21 +35,11 @@ const STATS = [
     color: "text-orange-500",
     bg: "bg-orange-50",
   },
-  {
-    label: "Total Poin Ditukar",
-    value: "89.500",
-    change: "-1.200",
-    changeLabel: "vs bulan lalu",
-    trend: "down",
-    icon: Coins,
-    color: "text-yellow-500",
-    bg: "bg-yellow-50",
-  },
 ];
 
 export default function StatCards() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {STATS.map((stat, i) => {
         const Icon = stat.icon;
         const isUp = stat.trend === "up";
