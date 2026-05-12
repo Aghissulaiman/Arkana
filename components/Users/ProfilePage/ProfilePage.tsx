@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ import { useRouter } from "next/navigation";
 type UserProfile = {
   id: string;
   email: string;
-  name: string;
+  full_name: string;
   phone: string;
   address: string;
   balance_points: number;
@@ -39,12 +39,14 @@ type UserProfile = {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const supabase = createClientSupabaseClient();
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editForm, setEditForm] = useState({
-    name: "",
+    full_name: "",
     phone: "",
     address: "",
   });
@@ -64,65 +66,45 @@ export default function ProfilePage() {
         return;
       }
 
-      console.log("User ID:", user.id);
+      // Ambil data dari tabel users (role)
+      const { data: userData } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
 
-      // Cek apakah user_details sudah ada
-      let { data: userDetails, error: detailsError } = await supabase
-        .from("user_details")
+      // Ambil data dari tabel profiles
+      let { data: profileData, error: profileError } = await supabase
+        .from("profiles")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      console.log("User details:", userDetails);
-      console.log("Details error:", detailsError);
-
-      // Jika user_details belum ada, buat baru dengan cara manual
-      if (!userDetails) {
-        console.log("Creating new user_details...");
-        
-        // Insert menggunakan rest call langsung
-        const { data: newDetails, error: insertError } = await supabase
-          .from("user_details")
+      // Jika profile belum ada, buat baru
+      if (!profileData) {
+        const { data: newProfile, error: insertError } = await supabase
+          .from("profiles")
           .insert({
             user_id: user.id,
-            name: user.email?.split("@")[0] || "User",
-            phone: "",
-            address: "",
+            full_name: user.email?.split("@")[0] || "User",
+            phone: null,
+            address: null,
             balance_points: 0,
           })
           .select()
           .single();
 
         if (insertError) {
-          console.error("Insert error details:", insertError);
-          
-          // Coba dengan upsert
-          const { data: upsertData, error: upsertError } = await supabase
-            .from("user_details")
-            .upsert({
-              user_id: user.id,
-              name: user.email?.split("@")[0] || "User",
-              phone: "",
-              address: "",
-              balance_points: 0,
-            })
-            .select()
-            .single();
-            
-          if (upsertError) {
-            console.error("Upsert error:", upsertError);
-          } else {
-            userDetails = upsertData;
-          }
+          console.error("Error creating profile:", insertError);
         } else {
-          userDetails = newDetails;
+          profileData = newProfile;
         }
       }
 
-      // Ambil statistik dari requests
+      // Ambil statistik dari pickup_requests
       const { data: requests, error: requestsError } = await supabase
-        .from("requests")
-        .select("total_points, actual_weights, status")
+        .from("pickup_requests")
+        .select("points_earned, actual_weight, status")
         .eq("user_id", user.id)
         .eq("status", "completed");
 
@@ -131,39 +113,35 @@ export default function ProfilePage() {
 
       if (requests && !requestsError) {
         requests.forEach(req => {
-          totalPoints += req.total_points || 0;
-          if (req.actual_weights) {
-            Object.values(req.actual_weights).forEach((weight: any) => {
-              totalWaste += parseFloat(weight) || 0;
-            });
-          }
+          totalPoints += req.points_earned || 0;
+          totalWaste += req.actual_weight || 0;
         });
       }
 
       // Total requests
       const { count: totalRequests, error: countError } = await supabase
-        .from("requests")
+        .from("pickup_requests")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id);
 
       setProfile({
         id: user.id,
         email: user.email || "",
-        name: userDetails?.name || "",
-        phone: userDetails?.phone || "",
-        address: userDetails?.address || "",
-        balance_points: userDetails?.balance_points || 0,
-        role: user?.user_metadata?.role || "user",
-        joined_date: user?.created_at ? new Date(user.created_at).toLocaleDateString("id-ID") : "-",
+        full_name: profileData?.full_name || "",
+        phone: profileData?.phone || "",
+        address: profileData?.address || "",
+        balance_points: profileData?.balance_points || 0,
+        role: userData?.role || "user",
+        joined_date: user.created_at ? new Date(user.created_at).toLocaleDateString("id-ID") : "-",
         total_requests: totalRequests || 0,
         total_waste_collected: totalWaste,
         total_points_earned: totalPoints,
       });
 
       setEditForm({
-        name: userDetails?.name || "",
-        phone: userDetails?.phone || "",
-        address: userDetails?.address || "",
+        full_name: profileData?.full_name || "",
+        phone: profileData?.phone || "",
+        address: profileData?.address || "",
       });
 
     } catch (error) {
@@ -173,52 +151,51 @@ export default function ProfilePage() {
     }
   };
 
- const handleSave = async () => {
-  setSaving(true);
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      alert("User tidak ditemukan");
-      return;
-    }
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert("User tidak ditemukan");
+        return;
+      }
 
-    const { error } = await supabase
-      .from("user_details")
-      .upsert({
-        user_id: user.id,
-        name: editForm.name,
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          user_id: user.id,
+          full_name: editForm.full_name,
+          phone: editForm.phone || null,
+          address: editForm.address || null,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id',
+        });
+
+      if (error) throw error;
+
+      setProfile(prev => prev ? {
+        ...prev,
+        full_name: editForm.full_name,
         phone: editForm.phone,
         address: editForm.address,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id',
-        ignoreDuplicates: false
-      });
+      } : null);
 
-    if (error) throw error;
-
-    setProfile(prev => prev ? {
-      ...prev,
-      name: editForm.name,
-      phone: editForm.phone,
-      address: editForm.address,
-    } : null);
-
-    setIsEditing(false);
-    alert("Profil berhasil disimpan!");
-    
-  } catch (error: any) {
-    console.error("Error:", error);
-    alert("Error: " + error?.message);
-  } finally {
-    setSaving(false);
-  }
-};
+      setIsEditing(false);
+      alert("Profil berhasil disimpan!");
+      
+    } catch (error: any) {
+      console.error("Error:", error);
+      alert("Error: " + error?.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleCancel = () => {
     if (profile) {
       setEditForm({
-        name: profile.name,
+        full_name: profile.full_name,
         phone: profile.phone,
         address: profile.address,
       });
@@ -294,12 +271,12 @@ export default function ProfilePage() {
             <CardContent className="p-6 text-center">
               <Avatar className="w-24 h-24 mx-auto mb-4">
                 <AvatarFallback className="text-2xl bg-primary text-white">
-                  {profile.name?.charAt(0) || profile.email?.charAt(0) || "U"}
+                  {profile.full_name?.charAt(0) || profile.email?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
               {!isEditing ? (
                 <>
-                  <h2 className="text-xl font-semibold">{profile.name || "Belum diisi"}</h2>
+                  <h2 className="text-xl font-semibold">{profile.full_name || "Belum diisi"}</h2>
                   <p className="text-sm text-muted-foreground">{profile.email}</p>
                   <div className="mt-4 p-3 bg-primary/10 rounded-lg">
                     <p className="text-sm text-muted-foreground">Total Poin</p>
@@ -313,8 +290,8 @@ export default function ProfilePage() {
                   <div>
                     <Label>Nama Lengkap</Label>
                     <Input
-                      value={editForm.name}
-                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      value={editForm.full_name}
+                      onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
                       placeholder="Masukkan nama lengkap"
                     />
                   </div>
@@ -452,10 +429,10 @@ export default function ProfilePage() {
               <CardTitle className="text-lg">Aksi Cepat</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-3">
-              <Button variant="outline" onClick={() => router.push("/dashboard/request")}>
-                Request Penjemputan
+              <Button variant="outline" onClick={() => router.push("/dashboard/jual-sampah")}>
+                Jual Sampah
               </Button>
-              <Button variant="outline" onClick={() => router.push("/dashboard/history")}>
+              <Button variant="outline" onClick={() => router.push("/dashboard/riwayat")}>
                 Lihat Riwayat
               </Button>
             </CardContent>
