@@ -33,12 +33,19 @@ export function RegisterForm({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Register manual dengan email & password
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Validasi
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Format email tidak valid");
+      setLoading(false);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Password tidak cocok");
       setLoading(false);
@@ -57,6 +64,19 @@ export function RegisterForm({
       return;
     }
 
+    // Cek email sudah terdaftar di tabel users
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("email")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingUser) {
+      setError("Email sudah terdaftar. Silakan login.");
+      setLoading(false);
+      return;
+    }
+
     // Register ke Supabase Auth
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -67,7 +87,11 @@ export function RegisterForm({
     });
 
     if (signUpError) {
-      setError(signUpError.message);
+      if (signUpError.message.includes("already registered")) {
+        setError("Email sudah terdaftar. Silakan login.");
+      } else {
+        setError(signUpError.message);
+      }
       setLoading(false);
       return;
     }
@@ -77,7 +101,8 @@ export function RegisterForm({
       await supabase.from("users").insert({
         id: data.user.id,
         email: email,
-        role: "user"
+        role: "user",
+        provider: "credentials" // Tandai ini user manual
       });
 
       // Insert ke tabel profiles
@@ -105,14 +130,22 @@ export function RegisterForm({
     }
   };
 
-  const handleGoogleLogin = async () => {
+  // Register dengan Google
+  const handleGoogleRegister = async () => {
+    setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`
-      }
+        redirectTo: `${window.location.origin}/auth/callback?from=register`,
+        queryParams: {
+          prompt: 'select_account',
+        },
+      },
     });
-    if (error) console.error(error);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    }
   };
 
   return (
@@ -121,7 +154,7 @@ export function RegisterForm({
         <div className="flex flex-col items-center gap-2 text-center mb-4">
           <h1 className="text-2xl font-semibold text-foreground">Buat Akun</h1>
           <p className="text-sm text-muted-foreground">
-            Bergabunglah untuk ubah sampahmu menjadi reward menarik.
+            Daftar dengan email atau Google
           </p>
         </div>
 
@@ -168,11 +201,14 @@ export function RegisterForm({
             required
             className="bg-background border-border"
           />
+          <FieldDescription className="text-xs text-muted-foreground">
+            Kosongkan jika akan daftar dengan Google (tidak perlu isi)
+          </FieldDescription>
         </Field>
 
         <Field>
           <FieldLabel htmlFor="confirmPassword" className="text-foreground">
-            Konfirmasi Password <span className="text-red-500">*</span>
+            Konfirmasi Password
           </FieldLabel>
           <Input
             id="confirmPassword"
@@ -180,7 +216,6 @@ export function RegisterForm({
             placeholder="Masukkan ulang password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            required
             className="bg-background border-border"
           />
         </Field>
@@ -192,12 +227,18 @@ export function RegisterForm({
         )}
 
         <Button type="submit" className="w-full mt-2" disabled={loading}>
-          {loading ? "Memproses..." : "Daftar"}
+          {loading ? "Memproses..." : "Daftar dengan Email"}
         </Button>
 
         <FieldSeparator className="text-muted-foreground">Atau</FieldSeparator>
 
-        <Button variant="outline" type="button" onClick={handleGoogleLogin} className="w-full border-border hover:bg-muted">
+        <Button
+          variant="outline"
+          type="button"
+          onClick={handleGoogleRegister}
+          disabled={loading}
+          className="w-full border-border hover:bg-muted"
+        >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -209,7 +250,11 @@ export function RegisterForm({
 
         <FieldDescription className="text-center mt-4 text-muted-foreground">
           Sudah punya akun?{" "}
-          <button type="button" onClick={onLoginClick} className="font-semibold text-primary hover:underline">
+          <button
+            type="button"
+            onClick={onLoginClick}
+            className="font-semibold text-primary hover:underline"
+          >
             Masuk di sini
           </button>
         </FieldDescription>
