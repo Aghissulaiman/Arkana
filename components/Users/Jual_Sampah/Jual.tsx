@@ -38,6 +38,7 @@ interface Agent {
   name: string;
   phone: string;
   address: string;
+  waste_types?: string[];
 }
 
 export default function PickupRequestForm() {
@@ -129,12 +130,12 @@ export default function PickupRequestForm() {
       }
 
       // Gunakan mock data jika gagal ambil dari DB agar fitur tetap berjalan
-      const MOCK_AGENTS = [
-        { id: "1", user_id: "user-agent-1", name: "Hijau Bersama", phone: "08123456789", address: "Jl. Margonda Raya No. 1" },
-        { id: "2", user_id: "user-agent-2", name: "EcoPoint Beji", phone: "08234567890", address: "Jl. Arif Rahman Hakim" },
-        { id: "3", user_id: "user-agent-3", name: "Kertas Mas Jaya", phone: "08345678901", address: "Jl. Nusantara Raya" },
-        { id: "4", user_id: "user-agent-4", name: "Plastik Lestari", phone: "08456789012", address: "Jl. Raya Sawangan" },
-        { id: "5", user_id: "user-agent-5", name: "ReTech Daur Ulang", phone: "08567890123", address: "Jl. Siliwangi" },
+      const MOCK_AGENTS: Agent[] = [
+        { id: "1", user_id: "user-agent-1", name: "Hijau Bersama", phone: "08123456789", address: "Jl. Margonda Raya No. 1", waste_types: ["Organik", "Plastik", "Kertas", "Campuran"] },
+        { id: "2", user_id: "user-agent-2", name: "EcoPoint Beji", phone: "08234567890", address: "Jl. Arif Rahman Hakim", waste_types: ["Elektronik", "Logam"] },
+        { id: "3", user_id: "user-agent-3", name: "Kertas Mas Jaya", phone: "08345678901", address: "Jl. Nusantara Raya", waste_types: ["Kertas", "Kardus"] },
+        { id: "4", user_id: "user-agent-4", name: "Plastik Lestari", phone: "08456789012", address: "Jl. Raya Sawangan", waste_types: ["Plastik", "PET"] },
+        { id: "5", user_id: "user-agent-5", name: "ReTech Daur Ulang", phone: "08567890123", address: "Jl. Siliwangi", waste_types: ["Elektronik", "Baterai"] },
       ];
 
       if (agentsData && agentsData.length > 0) {
@@ -182,6 +183,15 @@ export default function PickupRequestForm() {
   const handleChange = (field: keyof PickupFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  const selectedAgent = agents.find(a => a.id === selectedAgentId);
+  const availableWasteTypes = wasteTypes.filter(type => {
+    if (!selectedAgent || !selectedAgent.waste_types) return true;
+    return selectedAgent.waste_types.some(w => 
+      type.name.toLowerCase().includes(w.toLowerCase()) || 
+      w.toLowerCase().includes(type.name.toLowerCase())
+    );
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -355,37 +365,32 @@ export default function PickupRequestForm() {
         </div>
 
         {/* Pilih AGENT */}
-        <div>
-          <label className="text-sm font-medium text-foreground block mb-2">
-            <UserCheck className="w-4 h-4 inline mr-2 text-primary" />
-            Pilih Agent
-          </label>
-          <select
-            required
-            value={selectedAgentId}
-            onChange={(e) => {
-              const selected = agents.find(a => a.id === e.target.value);
-              if (selected) {
-                handleAgentSelect(selected.id, selected.user_id);
-              }
-            }}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option value="">-- Pilih Agent --</option>
-            {agents.map((agent) => (
-              <option key={agent.id} value={agent.id}>
-                {agent.name} - {agent.phone} ({agent.address})
-              </option>
-            ))}
-          </select>
+        <div className="bg-muted/30 rounded-lg p-3 border border-border">
+          <div className="flex items-center gap-2 mb-2">
+            <UserCheck className="w-4 h-4 text-primary" />
+            <span className="text-xs font-medium text-foreground">
+              Agen Penjemput
+            </span>
+          </div>
+          <div className="text-sm text-foreground">
+            {selectedAgent ? (
+              <div>
+                <p className="font-semibold">{selectedAgent.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">{selectedAgent.phone}</p>
+                <p className="text-xs text-muted-foreground mt-1">{selectedAgent.address}</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-red-500 font-medium">Agen belum dipilih</p>
+                <button type="button" onClick={() => router.push("/user/home")} className="text-[10px] text-primary mt-2 hover:underline">
+                  Pilih Agen dari Dashboard
+                </button>
+              </div>
+            )}
+          </div>
           {selectedAgentId && (
-            <p className="text-xs text-green-600 mt-1">
-              ✓ Agen tersedia
-            </p>
-          )}
-          {agents.length === 0 && (
-            <p className="text-xs text-red-500 mt-1">
-              ✗ Belum ada agent. Silakan hubungi admin.
+            <p className="text-xs text-green-600 mt-2">
+              ✓ Agen tersedia dan dipilih
             </p>
           )}
         </div>
@@ -403,11 +408,14 @@ export default function PickupRequestForm() {
             className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="">Pilih jenis sampah</option>
-            {wasteTypes.map((type) => (
+            {availableWasteTypes.map((type) => (
               <option key={type.id} value={type.id}>
                 {type.name} - {type.price_per_kg.toLocaleString("id-ID")} poin/kg
               </option>
             ))}
+            {availableWasteTypes.length === 0 && selectedAgent && (
+              <option value="" disabled>Agen ini tidak menerima jenis sampah dari katalog</option>
+            )}
           </select>
         </div>
 

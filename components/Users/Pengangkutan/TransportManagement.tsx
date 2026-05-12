@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   Truck,
   Leaf,
-  Map
+  Map,
+  Phone
 } from "lucide-react";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -43,6 +44,7 @@ interface Agent {
   name: string;
   phone: string;
   address: string;
+  waste_types?: string[];
 }
 
 function PickupFormContent() {
@@ -148,12 +150,12 @@ function PickupFormContent() {
       }
 
       // Gunakan mock data jika gagal ambil dari DB agar fitur tetap berjalan
-      const MOCK_AGENTS = [
-        { id: "1", user_id: "user-agent-1", name: "Hijau Bersama", phone: "08123456789", address: "Jl. Margonda Raya No. 1" },
-        { id: "2", user_id: "user-agent-2", name: "EcoPoint Beji", phone: "08234567890", address: "Jl. Arif Rahman Hakim" },
-        { id: "3", user_id: "user-agent-3", name: "Kertas Mas Jaya", phone: "08345678901", address: "Jl. Nusantara Raya" },
-        { id: "4", user_id: "user-agent-4", name: "Plastik Lestari", phone: "08456789012", address: "Jl. Raya Sawangan" },
-        { id: "5", user_id: "user-agent-5", name: "ReTech Daur Ulang", phone: "08567890123", address: "Jl. Siliwangi" },
+      const MOCK_AGENTS: Agent[] = [
+        { id: "1", user_id: "user-agent-1", name: "Hijau Bersama", phone: "08123456789", address: "Jl. Margonda Raya No. 1", waste_types: ["Organik", "Plastik", "Kertas", "Campuran"] },
+        { id: "2", user_id: "user-agent-2", name: "EcoPoint Beji", phone: "08234567890", address: "Jl. Arif Rahman Hakim", waste_types: ["Elektronik", "Logam"] },
+        { id: "3", user_id: "user-agent-3", name: "Kertas Mas Jaya", phone: "08345678901", address: "Jl. Nusantara Raya", waste_types: ["Kertas", "Kardus"] },
+        { id: "4", user_id: "user-agent-4", name: "Plastik Lestari", phone: "08456789012", address: "Jl. Raya Sawangan", waste_types: ["Plastik", "PET"] },
+        { id: "5", user_id: "user-agent-5", name: "ReTech Daur Ulang", phone: "08567890123", address: "Jl. Siliwangi", waste_types: ["Elektronik", "Baterai"] },
       ];
 
       if (agentsData && agentsData.length > 0) {
@@ -201,6 +203,15 @@ function PickupFormContent() {
   const handleChange = (field: keyof PickupFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  const selectedAgent = agents.find(a => a.id === selectedAgentId);
+  const availableWasteTypes = wasteTypes.filter(type => {
+    if (!selectedAgent || !selectedAgent.waste_types) return true;
+    return selectedAgent.waste_types.some(w => 
+      type.name.toLowerCase().includes(w.toLowerCase()) || 
+      w.toLowerCase().includes(type.name.toLowerCase())
+    );
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -401,36 +412,31 @@ function PickupFormContent() {
                 </div>
 
                 {/* Agen */}
-                <div className="flex flex-col justify-center">
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 relative group overflow-hidden flex flex-col justify-center">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
                   <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">
-                    Pilih Agen Mitra
+                    Agen Penjemput
                   </label>
-                  <div className="relative">
-                    <select
-                      required
-                      value={selectedAgentId}
-                      onChange={(e) => {
-                        const selected = agents.find(a => a.id === e.target.value);
-                        if (selected) {
-                          handleAgentSelect(selected.id, selected.user_id);
-                        }
-                      }}
-                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 appearance-none shadow-sm transition-all cursor-pointer hover:border-slate-300"
-                    >
-                      <option value="">-- Pilih Agen Terdekat --</option>
-                      {agents.map((agent) => (
-                        <option key={agent.id} value={agent.id}>
-                          {agent.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-white pl-2">
-                      <UserCheck className="w-5 h-5 text-slate-400" />
-                    </div>
+                  <div className="text-slate-800 font-medium leading-relaxed">
+                    {selectedAgent ? (
+                      <div>
+                        <p className="font-bold text-lg">{selectedAgent.name}</p>
+                        <p className="text-sm text-slate-500 mt-1 flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {selectedAgent.phone}</p>
+                        <p className="text-sm text-slate-500 mt-0.5 flex items-start gap-1"><MapPin className="w-3.5 h-3.5 mt-0.5" /> {selectedAgent.address}</p>
+                      </div>
+                    ) : (
+                      <div className="py-2">
+                        <span className="text-rose-500 font-semibold">Agen belum dipilih</span>
+                        <br />
+                        <button type="button" onClick={() => router.push("/user/home")} className="mt-2 text-sm text-blue-600 font-bold hover:text-blue-700 hover:underline">
+                          Pilih Agen dari Dashboard
+                        </button>
+                      </div>
+                    )}
                   </div>
                   {selectedAgentId && (
-                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Agen tersedia
+                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-emerald-600 mt-3 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Agen tersedia dan dipilih
                     </motion.p>
                   )}
                 </div>
@@ -467,11 +473,14 @@ function PickupFormContent() {
                       className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 appearance-none shadow-sm transition-all cursor-pointer hover:border-slate-300"
                     >
                       <option value="">-- Pilih Jenis --</option>
-                      {wasteTypes.map((type) => (
+                      {availableWasteTypes.map((type) => (
                         <option key={type.id} value={type.id}>
                           {type.name} - {type.price_per_kg.toLocaleString("id-ID")} poin/kg
                         </option>
                       ))}
+                      {availableWasteTypes.length === 0 && selectedAgent && (
+                        <option value="" disabled>Agen ini tidak menerima jenis sampah dari katalog</option>
+                      )}
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-white pl-2">
                       <Leaf className="w-5 h-5 text-slate-400" />
