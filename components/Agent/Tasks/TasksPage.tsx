@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Navigation, Clock, CheckCircle2, Search, Filter, XCircle } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { MapPin, Navigation, Clock, CheckCircle2, Filter, XCircle } from "lucide-react";
 
 export default function TasksPage() {
   const [filter, setFilter] = useState("Semua");
@@ -18,7 +18,6 @@ export default function TasksPage() {
       distance: "2.4 km",
       time: "10:00 - 12:00",
       status: "pending",
-      type: "Organik & Anorganik",
       weight_est: "5-10 kg",
     },
     {
@@ -28,7 +27,6 @@ export default function TasksPage() {
       distance: "5.1 km",
       time: "13:00 - 15:00",
       status: "pending",
-      type: "Anorganik",
       weight_est: "> 10 kg",
     },
     {
@@ -37,44 +35,42 @@ export default function TasksPage() {
       address: "Jl. Sudirman No. 88, Jakarta Pusat",
       distance: "7.2 km",
       time: "15:30 - 17:00",
-      status: "progress",
-      type: "Organik",
+      status: "progress", 
       weight_est: "< 5 kg",
     },
   ];
 
-  const filteredTasks = filter === "Semua" 
-    ? tasks 
-    : tasks.filter(t => filter === "Berjalan" ? t.status === "progress" : t.status === "pending");
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams?.get("q")?.toLowerCase() || "";
+
+  const filteredTasks = useMemo(() => {
+    let tasksToFilter = tasks;
+    
+    if (searchQuery) {
+      tasksToFilter = tasksToFilter.filter(t => 
+        t.customer.toLowerCase().includes(searchQuery) || 
+        t.id.toLowerCase().includes(searchQuery) ||
+        t.address.toLowerCase().includes(searchQuery)
+      );
+    }
+    
+    return filter === "Semua" 
+      ? tasksToFilter 
+      : tasksToFilter.filter(t => filter === "Berjalan" ? t.status === "progress" : t.status === "pending");
+  }, [filter, searchQuery]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between sm:items-end">
-        <div>
-          <h1 className="text-2xl font-semibold">Tugas Penjemputan</h1>
-          <p className="text-sm text-muted-foreground">Kelola jadwal dan rute penjemputan Anda</p>
-        </div>
-        <div className="flex gap-2">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Cari ID atau Nama..." className="pl-9 h-9" />
-          </div>
-          <Button variant="outline" size="sm" className="h-9 shrink-0">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
-        </div>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-8 pt-8">
 
-      <div className="flex gap-2 border-b overflow-x-auto pb-px">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {["Semua", "Berjalan", "Menunggu"].map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+            className={`px-4 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all duration-300 ${
               filter === tab
-                ? "border-green-600 text-green-600"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-105"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
           >
             {tab}
@@ -84,61 +80,64 @@ export default function TasksPage() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTasks.map((task) => (
-          <Card key={task.id} className={`overflow-hidden ${task.status === "progress" ? "border-green-500 shadow-sm" : ""}`}>
+          <Card key={task.id} className={`overflow-hidden border-0 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${task.status === "progress" ? "ring-2 ring-primary shadow-primary/10 bg-gradient-to-b from-primary/5 to-background" : "shadow-sm bg-background"}`}>
             {task.status === "progress" && (
-              <div className="bg-green-600 text-white text-[10px] uppercase font-bold text-center py-1 tracking-wider">
-                Sedang Berjalan
-              </div>
+              <div className="bg-primary text-primary-foreground text-[10px] uppercase font-bold text-center py-1.5 tracking-widest flex items-center justify-center gap-1.5 shadow-sm">Sedang Berjalan</div>
             )}
             <CardContent className="p-5 space-y-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-sm">{task.id}</span>
-                    <Badge variant="secondary" className="text-[10px] bg-green-50 text-green-700 hover:bg-green-100 border-none">{task.type}</Badge>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="font-bold text-muted-foreground/70 text-xs tracking-wider">{task.id}</span>
                   </div>
-                  <h3 className="font-medium text-lg leading-tight">{task.customer}</h3>
+                  <h3 className="font-bold text-lg text-foreground leading-tight">{task.customer}</h3>
                 </div>
               </div>
 
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-foreground/70" />
-                  <span className="line-clamp-2">{task.address}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-foreground/70" />
-                    {task.time}
+              <div className="space-y-3">
+                <div className="flex items-start gap-2.5 bg-muted/30 p-2.5 rounded-xl border border-border/50">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <MapPin className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Navigation className="w-4 h-4 text-foreground/70" />
-                    {task.distance}
+                  <span className="text-xs font-medium text-muted-foreground leading-relaxed pt-1">{task.address}</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-xl border border-border/50">
+                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                    </div>
+                    <span className="text-xs font-bold text-muted-foreground">{task.time}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-xl border border-border/50">
+                    <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                      <Navigation className="w-3.5 h-3.5 text-secondary-foreground" />
+                    </div>
+                    <span className="text-xs font-bold text-muted-foreground">{task.distance}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-2 flex flex-col gap-2">
+              <div className="pt-3 flex flex-col gap-2">
                 <div className="flex gap-2">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
-                    <Navigation className="w-4 h-4 mr-2" />
+                  <Button className="flex-1 rounded-lg h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm shadow-primary/20 text-xs">
+                    <Navigation className="w-3.5 h-3.5 mr-1.5" />
                     Rute
                   </Button>
                   {task.status === "progress" ? (
-                    <Button variant="outline" className="w-full border-green-600 text-green-600 hover:bg-green-50">
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                    <Button variant="outline" className="flex-1 rounded-lg h-9 border-primary text-primary font-bold hover:bg-primary/5 hover:text-primary text-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                       Selesai
                     </Button>
                   ) : (
-                    <Button variant="outline" className="w-full">
-                      Mulai
+                    <Button variant="outline" className="flex-1 rounded-lg h-9 font-bold border-border text-foreground hover:bg-muted/50 text-xs">
+                      Terima Penjemputan
                     </Button>
                   )}
                 </div>
                 {task.status === "pending" && (
-                  <Button variant="outline" className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200">
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Tolak Penjemputan
+                  <Button variant="outline" className="w-full h-9 text-destructive font-bold hover:text-destructive hover:bg-destructive/10 rounded-lg text-xs">
+                    <XCircle className="w-3.5 h-3.5 mr-1.5" /> Tolak Penjemputan
                   </Button>
                 )}
               </div>

@@ -17,13 +17,7 @@ export default function StatCardsAgent() {
       icon: Weight,
       trend: "up",
     },
-    {
-      title: "Pendapatan Poin",
-      value: "12.500",
-      change: "+1.200 bulan ini",
-      icon: Coins,
-      trend: "up",
-    },
+
     {
       title: "Tugas Hari Ini",
       value: "5",
@@ -34,7 +28,7 @@ export default function StatCardsAgent() {
   ];
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {stats.map((stat, i) => {
         const Icon = stat.icon;
         return (

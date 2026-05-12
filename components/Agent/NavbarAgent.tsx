@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Leaf,
   User,
@@ -16,13 +16,31 @@ import {
   Settings,
   ShieldCheck,
   CheckCircle2,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function AgentSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(searchParams?.get("q") || "");
+  
+  useEffect(() => {
+    setSearchQuery(searchParams?.get("q") || "");
+  }, [searchParams]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`${pathname}?q=${encodeURIComponent(searchQuery)}`);
+    } else {
+      router.push(pathname);
+    }
+  };
   const [sidebarWidth, setSidebarWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -72,7 +90,6 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
     { name: "Dashboard", href: "/agent", icon: Home },
     { name: "Tugas Penjemputan", href: "/agent/tasks", icon: MapPin },
     { name: "Riwayat", href: "/agent/history", icon: History },
-    { name: "Pengaturan", href: "/agent/settings", icon: Settings },
   ];
 
   return (
@@ -87,11 +104,7 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
           </div>
           <div>
             <span className="font-semibold text-sm leading-none block">Arkana</span>
-            <span className="text-[10px] text-muted-foreground leading-none">Agent Portal</span>
           </div>
-          <span className="ml-auto">
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-          </span>
         </div>
 
         <nav className="p-3 space-y-0.5 flex-1 overflow-y-auto">
@@ -149,10 +162,17 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground">
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-            <span className="text-foreground font-medium">Agent Portal</span>
-          </div>
+          {(pathname === "/agent/tasks" || pathname === "/agent/history") && (
+            <form onSubmit={handleSearchSubmit} className="hidden sm:flex relative ml-4 max-w-sm w-full">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={`Cari di ${pathname === "/agent/tasks" ? "tugas" : "riwayat"}...`} 
+                className="pl-9 bg-muted/50 border-none h-9 focus-visible:ring-1 focus-visible:ring-primary/50" 
+              />
+            </form>
+          )}
 
           <div className="flex-1" />
 
@@ -177,13 +197,16 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
               </button>
 
               {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-background border rounded-xl shadow-lg p-1 z-50">
-                  <Link href="/agent/settings" className="flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-lg text-sm">
-                    <Settings className="w-3.5 h-3.5" /> Pengaturan
+                <div className="absolute right-0 mt-2 w-44 bg-background border rounded-xl shadow-lg p-1 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <Link href="/agent/profile" className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted hover:text-primary rounded-lg text-sm transition-colors">
+                    <User className="w-4 h-4" /> Profil
                   </Link>
-                  <div className="border-t my-1" />
-                  <button className="flex items-center gap-2 px-3 py-2 text-red-500 w-full text-left hover:bg-red-50 rounded-lg text-sm">
-                    <LogOut className="w-3.5 h-3.5" /> Logout
+                  <Link href="/agent/settings" className="flex items-center gap-2 px-3 py-2 text-foreground hover:bg-muted hover:text-primary rounded-lg text-sm transition-colors">
+                    <Settings className="w-4 h-4" /> Pengaturan
+                  </Link>
+                  <div className="border-t border-border my-1" />
+                  <button className="flex items-center gap-2 px-3 py-2 text-destructive w-full text-left hover:bg-destructive/10 rounded-lg text-sm transition-colors">
+                    <LogOut className="w-4 h-4" /> Keluar
                   </button>
                 </div>
               )}

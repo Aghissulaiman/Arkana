@@ -55,10 +55,10 @@ const RECENT_REQUESTS = [
 ];
 
 const RECENT_USERS = [
-  { name: "Budi Santoso", email: "budi@email.com", joined: "2 jam lalu", points: 1250 },
-  { name: "Siti Rahayu", email: "siti@email.com", joined: "1 hari lalu", points: 3400 },
-  { name: "Ahmad Fauzi", email: "ahmad@email.com", joined: "2 hari lalu", points: 800 },
-  { name: "Rina Dewi", email: "rina@email.com", joined: "3 hari lalu", points: 5200 },
+  { name: "Budi Santoso", email: "budi@email.com", joined: "2 jam lalu" },
+  { name: "Siti Rahayu", email: "siti@email.com", joined: "1 hari lalu" },
+  { name: "Ahmad Fauzi", email: "ahmad@email.com", joined: "2 hari lalu" },
+  { name: "Rina Dewi", email: "rina@email.com", joined: "3 hari lalu" },
 ];
 
 const STATUS_STYLE: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -89,14 +89,14 @@ export default function AdminDashboard() {
     <div className="max-w-7xl mx-auto space-y-6">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-emerald-600 to-teal-700 p-6 rounded-3xl text-white shadow-lg">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Dashboard Admin</h1>
-          <p className="text-sm text-muted-foreground">Pantau dan kelola semua aktivitas sistem Arkana</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">Dashboard Admin</h1>
+          <p className="text-emerald-100 mt-1">Pantau dan kelola semua aktivitas sistem Arkana</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">Export Laporan</Button>
-          <Button size="sm">Tambah Admin</Button>
+        <div className="flex gap-3">
+          <Button variant="outline" className="bg-white/10 text-white hover:bg-white/20 border-white/20 backdrop-blur-sm">Export Laporan</Button>
+          <Button className="bg-white text-emerald-700 hover:bg-slate-100 shadow-md">Tambah Admin</Button>
         </div>
       </div>
 
@@ -179,8 +179,7 @@ export default function AdminDashboard() {
                     <p className="text-[10px] text-muted-foreground">{user.joined}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-xs font-semibold text-primary">{user.points.toLocaleString()}</p>
-                    <p className="text-[10px] text-muted-foreground">poin</p>
+                    <p className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">User Baru</p>
                   </div>
                 </CardContent>
               </Card>
@@ -188,26 +187,29 @@ export default function AdminDashboard() {
           </div>
 
           {/* Summary card */}
-          <Card className="bg-primary text-white mt-4">
-            <CardContent className="p-4 space-y-2">
-              <h3 className="font-semibold text-sm">Ringkasan Bulan Ini</h3>
-              <div className="space-y-1 text-xs text-white/80">
-                <div className="flex justify-between">
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white mt-4 shadow-xl border-0 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl -mr-10 -mt-10" />
+            <CardContent className="p-5 space-y-3 relative z-10">
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Ringkasan Bulan Ini
+              </h3>
+              <div className="space-y-2 text-sm text-slate-300">
+                <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
                   <span>Total Permintaan</span>
-                  <span className="font-semibold text-white">142</span>
+                  <span className="font-bold text-white text-base">142</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
                   <span>Berhasil</span>
-                  <span className="font-semibold text-white">128</span>
+                  <span className="font-bold text-emerald-400 text-base">128</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
                   <span>Ditolak</span>
-                  <span className="font-semibold text-white">14</span>
+                  <span className="font-bold text-rose-400 text-base">14</span>
                 </div>
-                <div className="w-full h-1.5 bg-white/20 rounded-full mt-2">
-                  <div className="h-full bg-white rounded-full" style={{ width: "90%" }} />
+                <div className="w-full h-2 bg-slate-700 rounded-full mt-4 overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: "90%" }} />
                 </div>
-                <p className="text-center text-[10px] text-white/70">90% tingkat keberhasilan</p>
+                <p className="text-center text-xs text-slate-400 mt-2 font-medium">90% tingkat keberhasilan</p>
               </div>
             </CardContent>
           </Card>
