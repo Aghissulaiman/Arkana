@@ -26,6 +26,7 @@ export function LoginForm({
   const router = useRouter();
   const supabase = createClientSupabaseClient();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -34,43 +35,58 @@ export function LoginForm({
     setLoading(true);
     setError("");
 
-    // 1. Cek apakah user sudah ada di tabel USERS kita (bukan auth)
-    const { data: existingUser, error: checkError } = await supabase
-      .from("users")
-      .select("id, email")
-      .eq("email", email)
-      .maybeSingle();
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    // Jika user tidak ada di tabel users kita
-    if (!existingUser) {
-      setError("Email tidak terdaftar. Silakan daftar terlebih dahulu.");
+    if (signInError) {
+      setError(signInError.message);
       setLoading(false);
       return;
     }
 
-    // 2. Kirim OTP (tanpa shouldCreateUser)
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-    });
-
-    if (otpError) {
-      setError(otpError.message);
-      setLoading(false);
-      return;
+    if (data.user) {
+      await handleUserRedirect(data.user);
     }
 
     setLoading(false);
-    router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
   };
 
   const handleGoogleLogin = async () => {
+    setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`
-      }
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
-    if (error) console.error(error);
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    }
+  };
+
+  const handleUserRedirect = async (user: any) => {
+    const { data: userData } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const role = userData?.role || "user";
+
+    switch (role) {
+      case "admin":
+        router.push("/admin/dashboard");
+        break;
+      case "agent":
+        router.push("/agent/dashboard");
+        break;
+      default:
+        router.push("/user/home");
+        break;
+    }
   };
 
   return (
@@ -85,7 +101,7 @@ export function LoginForm({
             Selamat Datang
           </h1>
           <p className="text-sm text-muted-foreground">
-            Masukkan email untuk mendapatkan kode verifikasi
+            Masuk dengan email dan password
           </p>
         </div>
 
@@ -104,12 +120,25 @@ export function LoginForm({
           />
         </Field>
 
-        {error && (
-          <p className="text-sm text-red-500 text-center">{error}</p>
-        )}
+        <Field>
+          <FieldLabel htmlFor="password" className="text-foreground">
+            Password
+          </FieldLabel>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Password Anda"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="bg-background border-border"
+          />
+        </Field>
+
+        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
         <Button type="submit" className="w-full mt-2" disabled={loading}>
-          {loading ? "Memproses..." : "Kirim OTP"}
+          {loading ? "Memproses..." : "Masuk"}
         </Button>
 
         <FieldSeparator className="text-muted-foreground">Atau</FieldSeparator>
@@ -118,6 +147,7 @@ export function LoginForm({
           variant="outline"
           type="button"
           onClick={handleGoogleLogin}
+          disabled={loading}
           className="w-full border-border hover:bg-muted"
         >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
