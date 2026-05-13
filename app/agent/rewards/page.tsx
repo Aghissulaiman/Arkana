@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
+import { Toaster, toast } from "sonner";
 import { 
   Loader2, 
   Plus, 
@@ -17,7 +18,14 @@ import {
   X,
   Upload,
   Eye,
-  EyeOff
+  EyeOff,
+  Search,
+  CheckSquare,
+  Square,
+  Trash,
+  Power,
+  Download,
+  RefreshCw
 } from "lucide-react";
 
 type Reward = {
@@ -45,6 +53,7 @@ type FormData = {
 };
 
 const categories = [
+  { value: "all", label: "Semua", icon: Package, color: "bg-gray-500" },
   { value: "product", label: "Produk", icon: Package, color: "bg-blue-500" },
   { value: "voucher", label: "Voucher", icon: Ticket, color: "bg-purple-500" },
   { value: "cash", label: "Tarik Tunai", icon: DollarSign, color: "bg-green-500" },
@@ -56,11 +65,23 @@ export default function AgentRewardsPage() {
   const supabase = createClientSupabaseClient();
   
   const [rewards, setRewards] = useState<Reward[]>([]);
+  const [filteredRewards, setFilteredRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAgent, setIsAgent] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  
+  // Bulk actions
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  
   const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
@@ -77,6 +98,10 @@ export default function AgentRewardsPage() {
   useEffect(() => {
     checkAgentAndFetch();
   }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [searchQuery, categoryFilter, statusFilter, rewards]);
 
   const checkAgentAndFetch = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -101,13 +126,40 @@ export default function AgentRewardsPage() {
   };
 
   const fetchRewards = async () => {
-    const { data } = await supabase
+    setLoading(true);
+    const { data, error } = await supabase
       .from("rewards")
       .select("*")
       .order("created_at", { ascending: false });
     
-    setRewards(data || []);
+    if (error) {
+      toast.error("Gagal memuat data reward");
+      console.error(error);
+    } else {
+      setRewards(data || []);
+    }
     setLoading(false);
+  };
+
+  const applyFilters = () => {
+    let filtered = [...rewards];
+    
+    if (searchQuery) {
+      filtered = filtered.filter(r => 
+        r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(r => r.category === categoryFilter);
+    }
+    
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(r => r.is_active === (statusFilter === "active"));
+    }
+    
+    setFilteredRewards(filtered);
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
@@ -120,7 +172,7 @@ export default function AgentRewardsPage() {
       .upload(filePath, file);
 
     if (uploadError) {
-      console.error("Upload error:", uploadError);
+      toast.error("Gagal upload gambar: " + uploadError.message);
       return null;
     }
 
@@ -134,6 +186,10 @@ export default function AgentRewardsPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Ukuran gambar maksimal 2MB");
+        return;
+      }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -141,6 +197,22 @@ export default function AgentRewardsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      toast.error("Nama reward wajib diisi");
+      return;
+    }
+    
+    if (formData.points_required <= 0) {
+      toast.error("Poin yang dibutuhkan harus lebih dari 0");
+      return;
+    }
+    
+    if (formData.category === "product" && formData.stock < 0) {
+      toast.error("Stok tidak boleh negatif");
+      return;
+    }
+    
     setUploading(true);
 
     let imageUrl = formData.image_url;
@@ -152,8 +224,10 @@ export default function AgentRewardsPage() {
       }
     }
 
+    let error = null;
+    
     if (editingId) {
-      await supabase
+      const { error: updateError } = await supabase
         .from("rewards")
         .update({
           name: formData.name,
@@ -167,8 +241,10 @@ export default function AgentRewardsPage() {
           updated_at: new Date().toISOString(),
         })
         .eq("id", editingId);
+      error = updateError;
+      if (!error) toast.success("Reward berhasil diupdate");
     } else {
-      await supabase.from("rewards").insert({
+      const { error: insertError } = await supabase.from("rewards").insert({
         name: formData.name,
         description: formData.description,
         category: formData.category,
@@ -178,10 +254,17 @@ export default function AgentRewardsPage() {
         image_url: imageUrl,
         is_active: formData.is_active,
       });
+      error = insertError;
+      if (!error) toast.success("Reward berhasil ditambahkan");
     }
 
-    resetForm();
-    await fetchRewards();
+    if (error) {
+      toast.error("Gagal menyimpan reward: " + error.message);
+    } else {
+      resetForm();
+      await fetchRewards();
+    }
+    
     setUploading(false);
   };
 
@@ -211,16 +294,110 @@ export default function AgentRewardsPage() {
       }
     }
 
-    await supabase.from("rewards").delete().eq("id", id);
-    await fetchRewards();
+    const { error } = await supabase.from("rewards").delete().eq("id", id);
+    
+    if (error) {
+      toast.error("Gagal menghapus reward");
+    } else {
+      toast.success("Reward berhasil dihapus");
+      await fetchRewards();
+      setSelectedIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+    }
   };
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
-    await supabase
+    const { error } = await supabase
       .from("rewards")
       .update({ is_active: !currentStatus })
       .eq("id", id);
-    await fetchRewards();
+    
+    if (error) {
+      toast.error("Gagal mengubah status");
+    } else {
+      toast.success(`Reward ${!currentStatus ? "diaktifkan" : "dinonaktifkan"}`);
+      await fetchRewards();
+    }
+  };
+
+  // Bulk Actions
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      setShowBulkActions(newSet.size > 0);
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredRewards.length && filteredRewards.length > 0) {
+      setSelectedIds(new Set());
+      setShowBulkActions(false);
+    } else {
+      const newSet = new Set(filteredRewards.map(r => r.id));
+      setSelectedIds(newSet);
+      setShowBulkActions(true);
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (!confirm(`⚠️ Peringatan! Anda akan menghapus ${selectedIds.size} reward secara permanen. Tindakan ini tidak dapat dibatalkan. Lanjutkan?`)) return;
+    
+    setBulkLoading(true);
+    
+    for (const id of selectedIds) {
+      const reward = rewards.find(r => r.id === id);
+      if (reward?.image_url) {
+        const path = reward.image_url.split("/").pop();
+        if (path) {
+          await supabase.storage.from("rewards").remove([`products/${path}`]);
+        }
+      }
+    }
+    
+    const { error } = await supabase
+      .from("rewards")
+      .delete()
+      .in("id", Array.from(selectedIds));
+    
+    if (error) {
+      toast.error("Gagal menghapus reward terpilih");
+    } else {
+      toast.success(`${selectedIds.size} reward berhasil dihapus`);
+      await fetchRewards();
+      setSelectedIds(new Set());
+      setShowBulkActions(false);
+    }
+    
+    setBulkLoading(false);
+  };
+
+  const bulkToggleActive = async (active: boolean) => {
+    setBulkLoading(true);
+    
+    const { error } = await supabase
+      .from("rewards")
+      .update({ is_active: active })
+      .in("id", Array.from(selectedIds));
+    
+    if (error) {
+      toast.error("Gagal mengubah status reward");
+    } else {
+      toast.success(`${selectedIds.size} reward berhasil ${active ? "diaktifkan" : "dinonaktifkan"}`);
+      await fetchRewards();
+      setSelectedIds(new Set());
+      setShowBulkActions(false);
+    }
+    
+    setBulkLoading(false);
   };
 
   const resetForm = () => {
@@ -254,6 +431,27 @@ export default function AgentRewardsPage() {
     return cat?.color || "bg-gray-500";
   };
 
+  const exportData = () => {
+    const data = filteredRewards.map(r => ({
+      Nama: r.name,
+      Kategori: categories.find(c => c.value === r.category)?.label || r.category,
+      Poin: r.points_required,
+      Nilai_Tunai: r.cash_value ? `Rp${r.cash_value.toLocaleString()}` : "-",
+      Stok: r.category === "product" ? r.stock : "∞",
+      Status: r.is_active ? "Aktif" : "Nonaktif",
+      Dibuat: new Date(r.created_at).toLocaleDateString("id-ID"),
+    }));
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rewards_export_${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Data berhasil diexport");
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -272,49 +470,157 @@ export default function AgentRewardsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" richColors />
+      
       <div className="max-w-7xl mx-auto px-4 py-6">
         
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Kelola Reward</h1>
             <p className="text-sm text-gray-500 mt-1">Tambah/edit produk yang bisa ditukar dengan poin</p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Tambah Reward
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => fetchRewards()}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Reward
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <p className="text-xs text-gray-500">Total Reward</p>
             <p className="text-2xl font-bold text-gray-800">{rewards.length}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <p className="text-xs text-gray-500">Produk Aktif</p>
             <p className="text-2xl font-bold text-green-600">{rewards.filter(r => r.is_active).length}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <p className="text-xs text-gray-500">Produk Nonaktif</p>
             <p className="text-2xl font-bold text-gray-400">{rewards.filter(r => !r.is_active).length}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <p className="text-xs text-gray-500">Total Stok</p>
             <p className="text-2xl font-bold text-blue-600">{rewards.reduce((sum, r) => sum + (r.stock || 0), 0)}</p>
           </div>
         </div>
 
+        {/* Filters Bar */}
+        <div className="bg-white rounded-xl p-4 shadow-sm mb-6 border border-gray-100">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Cari reward..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+            
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              {categories.map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </select>
+            
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="all">Semua Status</option>
+              <option value="active">Aktif</option>
+              <option value="inactive">Nonaktif</option>
+            </select>
+            
+            <button
+              onClick={exportData}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </button>
+          </div>
+        </div>
+
+        {/* Bulk Actions Bar */}
+        {showBulkActions && (
+          <div className="bg-blue-50 rounded-xl p-3 mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="w-5 h-5 text-blue-600" />
+              <span className="text-sm font-medium text-blue-700">
+                {selectedIds.size} reward dipilih
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => bulkToggleActive(true)}
+                disabled={bulkLoading}
+                className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
+              >
+                <Power className="w-3.5 h-3.5" />
+                Aktifkan
+              </button>
+              <button
+                onClick={() => bulkToggleActive(false)}
+                disabled={bulkLoading}
+                className="flex items-center gap-1 px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 disabled:opacity-50"
+              >
+                <EyeOff className="w-3.5 h-3.5" />
+                Nonaktifkan
+              </button>
+              <button
+                onClick={bulkDelete}
+                disabled={bulkLoading}
+                className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
+              >
+                <Trash className="w-3.5 h-3.5" />
+                Hapus
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Rewards Table */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
+                  <th className="px-4 py-3 w-10">
+                    <button 
+                      onClick={toggleSelectAll} 
+                      className="text-gray-500 hover:text-gray-700 transition-colors"
+                      disabled={filteredRewards.length === 0}
+                    >
+                      {selectedIds.size === filteredRewards.length && filteredRewards.length > 0 ? (
+                        <CheckSquare className="w-4 h-4" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
+                    </button>
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Gambar</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Nama</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Kategori</th>
@@ -326,15 +632,26 @@ export default function AgentRewardsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {rewards.length === 0 ? (
+                {filteredRewards.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
-                      Belum ada reward. Klik "Tambah Reward" untuk memulai.
+                    <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
+                      {searchQuery || categoryFilter !== "all" || statusFilter !== "all" 
+                        ? "Tidak ada reward sesuai filter" 
+                        : "Belum ada reward. Klik 'Tambah Reward' untuk memulai."}
                     </td>
                   </tr>
                 ) : (
-                  rewards.map((reward) => (
+                  filteredRewards.map((reward) => (
                     <tr key={reward.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <button onClick={() => toggleSelect(reward.id)}>
+                          {selectedIds.has(reward.id) ? (
+                            <CheckSquare className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      </td>
                       <td className="px-4 py-3">
                         <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden">
                           {reward.image_url ? (
@@ -344,6 +661,7 @@ export default function AgentRewardsPage() {
                               width={40}
                               height={40}
                               className="w-full h-full object-cover"
+                              loading="lazy"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -353,8 +671,10 @@ export default function AgentRewardsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-gray-800 text-sm">{reward.name}</p>
-                        <p className="text-xs text-gray-400 line-clamp-1">{reward.description}</p>
+                        <p className="font-medium text-gray-800 text-sm line-clamp-1">{reward.name}</p>
+                        {reward.description && (
+                          <p className="text-xs text-gray-400 line-clamp-1">{reward.description}</p>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs text-white ${getCategoryColor(reward.category)}`}>
@@ -374,17 +694,17 @@ export default function AgentRewardsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`text-sm ${(reward.stock || 0) <= 10 && (reward.stock || 0) > 0 ? 'text-orange-500' : 'text-gray-600'}`}>
+                        <span className={`text-sm ${(reward.stock || 0) <= 10 && (reward.stock || 0) > 0 ? 'text-orange-500 font-medium' : 'text-gray-600'}`}>
                           {reward.category === "product" ? (reward.stock || 0) : "∞"}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <button
                           onClick={() => toggleActive(reward.id, reward.is_active)}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
                             reward.is_active
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                           }`}
                         >
                           {reward.is_active ? (
@@ -399,12 +719,14 @@ export default function AgentRewardsPage() {
                           <button
                             onClick={() => handleEdit(reward)}
                             className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(reward.id, reward.image_url)}
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Hapus"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -421,27 +743,29 @@ export default function AgentRewardsPage() {
 
       {/* Modal Form */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && resetForm()}>
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl">
             <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-800">
                 {editingId ? "Edit Reward" : "Tambah Reward Baru"}
               </h2>
-              <button onClick={resetForm} className="p-1 hover:bg-gray-100 rounded-lg">
-                <X className="w-5 h-5" />
+              <button onClick={resetForm} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {/* Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Gambar Reward</label>
                 <div className="flex gap-4 items-start">
-                  <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
                     {imagePreview ? (
                       <Image src={imagePreview} alt="Preview" width={96} height={96} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Preview</div>
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs text-center p-2">
+                        Preview
+                      </div>
                     )}
                   </div>
                   <div className="flex-1">
@@ -457,7 +781,9 @@ export default function AgentRewardsPage() {
 
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nama Reward *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Reward <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   required
@@ -482,13 +808,15 @@ export default function AgentRewardsPage() {
 
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Kategori *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Kategori <span className="text-red-500">*</span>
+                </label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  {categories.map((cat) => (
+                  {categories.filter(c => c.value !== "all").map((cat) => (
                     <option key={cat.value} value={cat.value}>{cat.label}</option>
                   ))}
                 </select>
@@ -497,7 +825,9 @@ export default function AgentRewardsPage() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Points Required */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Poin yang Dibutuhkan *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Poin yang Dibutuhkan <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="number"
                     required
@@ -535,7 +865,7 @@ export default function AgentRewardsPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="50"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Kosongkan/tidak berlaku untuk voucher & donasi</p>
+                  <p className="text-xs text-gray-400 mt-1">Khusus kategori Produk</p>
                 </div>
 
                 {/* Status */}
@@ -563,9 +893,14 @@ export default function AgentRewardsPage() {
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {uploading ? "Menyimpan..." : (editingId ? "Update" : "Simpan")}
+                  {uploading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Menyimpan...
+                    </span>
+                  ) : (editingId ? "Update" : "Simpan")}
                 </button>
               </div>
             </form>
