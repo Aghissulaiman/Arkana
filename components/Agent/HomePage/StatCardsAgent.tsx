@@ -35,9 +35,16 @@ export default function StatCardsAgent() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
         const { data: pickups, error } = await supabase
           .from("pickup_requests")
-          .select("*");
+          .select("*")
+          .eq("agent_id", user.id);
 
         if (error) throw error;
 
@@ -48,7 +55,7 @@ export default function StatCardsAgent() {
         const today = new Date().toISOString().split("T")[0];
 
         const todayTasks = pickups.filter(
-          (item) => item.date?.split("T")[0] === today
+          (item) => item.created_at?.split("T")[0] === today
         );
 
         const completedToday = todayTasks.filter(
@@ -60,7 +67,10 @@ export default function StatCardsAgent() {
         );
 
         const totalWeight = completed.reduce(
-          (acc, item) => acc + (item.weight || 0),
+          (acc, item) => {
+            const weights = item.estimated_weight as Record<string, number> || {};
+            return acc + Object.values(weights).reduce((a, b) => a + b, 0);
+          },
           0
         );
 
