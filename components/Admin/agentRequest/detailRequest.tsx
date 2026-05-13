@@ -1,157 +1,273 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
-import {
-  ArrowLeft,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Mail,
-  MapPin,
-  Calendar,
-} from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle, XCircle, Building2, MapPin, Phone, Package, Calendar } from "lucide-react";
+import Link from "next/link";
+import { Toaster, toast } from "sonner";
 
-interface PageProps {
-  params: Promise<{ id: string }>;
+interface AgentApplication {
+  id: string;
+  agent_name: string;
+  phone: string;
+  address: string;
+  service_area: string;
+  waste_categories: string[];
+  status: string;
+  created_at: string;
+  user_email?: string;
 }
 
-export default function AgentDetailPage({ params }: PageProps) {
-  // Solusi untuk error: params is a Promise
-  const resolvedParams = use(params);
-  const id = resolvedParams.id;
+interface Props {
+  id: string;  // ← terima id sebagai props, bukan dari params
+}
 
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  pending: { label: "Menunggu", color: "bg-yellow-100 text-yellow-700" },
+  approved: { label: "Disetujui", color: "bg-green-100 text-green-700" },
+  rejected: { label: "Ditolak", color: "bg-red-100 text-red-700" },
+};
+
+const WASTE_LABELS: Record<string, string> = {
+  plastic: "Plastik",
+  paper: "Kertas",
+  cardboard: "Kardus",
+  glass: "Kaca",
+  aluminium: "Aluminium",
+  metal: "Logam",
+  electronic: "Elektronik",
+  mixed: "Campuran",
+};
+
+export default function AgentDetailPage({ id }: Props) {
   const router = useRouter();
   const supabase = createClientSupabaseClient();
-
-  const [data, setData] = useState<any>(null);
+  
+  const [application, setApplication] = useState<AgentApplication | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    const fetchDetail = async () => {
-      try {
-        const { data: app, error } = await supabase
-          .from("agent_applications")
-          .select(
-            `
-            *,
-            users (
-              email,
-              full_name
-            )
-          `,
-          )
-          .eq("id", id)
-          .single();
+    fetchApplication();
+  }, [id]);
 
-        if (error) throw error;
-        setData(app);
-      } catch (err) {
-        console.error("Error fetching detail:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchApplication = async () => {
+    setLoading(true);
+    
+    const { data, error } = await supabase
+      .from("agent_applications")
+      .select(`
+        *,
+        users!agent_applications_user_id_fkey (email)
+      `)
+      .eq("id", id)
+      .single();
 
-    if (id) fetchDetail();
-  }, [id, supabase]);
+    if (error || !data) {
+      toast.error("Data tidak ditemukan");
+      router.push("/admin/agent-applications");
+      return;
+    }
+
+    setApplication({
+      ...data,
+      user_email: data.users?.email,
+    });
+    
+    setLoading(false);
+  };
+
+  const handleApprove = async () => {
+    if (!application) return;
+    
+    setProcessing(true);
+    
+    // Update status application
+    await supabase
+      .from("agent_applications")
+      .update({ status: "approved", reviewed_at: new Date().toISOString() })
+      .eq("id", application.id);
+
+    // Update role user menjadi agent
+    await supabase
+      .from("users")
+      .update({ role: "agent" })
+      .eq("id", application.user_id);
+
+    // Insert ke tabel agents
+    await supabase.from("agents").insert({
+      user_id: application.user_id,
+      agent_name: application.agent_name,
+      phone: application.phone,
+      address: application.address,
+      service_area: application.service_area,
+      waste_categories: application.waste_categories,
+      balance_income: 0,
+      is_active: true,
+    });
+
+    toast.success("Pendaftaran agen disetujui!");
+    setProcessing(false);
+    router.push("/admin/agent-applications");
+  };
+
+  const handleReject = async () => {
+    if (!application) return;
+    
+    setProcessing(true);
+    
+    await supabase
+      .from("agent_applications")
+      .update({ status: "rejected", reviewed_at: new Date().toISOString() })
+      .eq("id", application.id);
+
+    toast.success("Pendaftaran agen ditolak");
+    setProcessing(false);
+    router.push("/admin/agent-applications");
+  };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-emerald-500 mb-2" size={32} />
-        <p className="text-slate-500 text-sm font-medium">
-          Memuat detail pengajuan...
-        </p>
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
       </div>
     );
   }
 
+  if (!application) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <p className="text-gray-500">Data tidak ditemukan</p>
+        <Link href="/admin/agent-applications" className="mt-4 text-green-600 hover:underline">
+          Kembali
+        </Link>
+      </div>
+    );
+  }
+
+  const statusInfo = STATUS_LABELS[application.status] || { label: application.status, color: "bg-gray-100 text-gray-700" };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6 font-montserrat p-4 md:p-8">
-      {/* Tombol Kembali */}
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <Toaster position="top-right" richColors />
+      
+      {/* Back Button */}
       <button
         onClick={() => router.back()}
-        className="group flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-emerald-600 transition-all"
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 transition-colors"
       >
-        <ArrowLeft
-          size={18}
-          className="group-hover:-translate-x-1 transition-transform"
-        />
-        Kembali ke Daftar
+        <ArrowLeft className="w-5 h-5" />
+        <span>Kembali</span>
       </button>
 
-      <div className="bg-white border border-slate-200 rounded-[32px] overflow-hidden shadow-sm">
-        {/* Header Visual */}
-        <div className="h-32 bg-gradient-to-r from-emerald-500 to-teal-600 p-8 flex items-end">
-          <div className="bg-white p-4 rounded-2xl shadow-xl translate-y-12">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center font-bold text-xl">
-              {data?.agent_name?.charAt(0)}
+      {/* Header */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+        <div className="bg-gradient-to-r from-green-600 to-green-500 px-6 py-4">
+          <div className="flex justify-between items-start">
+            <h1 className="text-xl font-bold text-white">{application.agent_name}</h1>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+              {statusInfo.label}
+            </span>
+          </div>
+          <p className="text-green-100 text-sm mt-1">Pendaftaran Agen</p>
+        </div>
+        
+        <div className="p-6 space-y-4">
+          <div className="flex items-start gap-3">
+            <Building2 className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div>
+              <p className="text-sm text-gray-500">Nama Agen</p>
+              <p className="font-medium">{application.agent_name}</p>
             </div>
           </div>
-        </div>
-
-        <div className="pt-16 p-8 space-y-8">
-          <div>
-            <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-              {data?.agent_name}
-            </h1>
-            <div className="flex flex-wrap gap-4 mt-3">
-              <span className="flex items-center gap-1.5 text-slate-500 text-sm font-medium">
-                <Mail size={14} /> {data?.users?.email}
-              </span>
-              <span className="flex items-center gap-1.5 text-slate-500 text-sm font-medium">
-                <MapPin size={14} /> {data?.service_area}
-              </span>
-              <span className="flex items-center gap-1.5 text-slate-500 text-sm font-medium">
-                <Calendar size={14} />{" "}
-                {new Date(data?.created_at).toLocaleDateString("id-ID", {
+          
+          <div className="flex items-start gap-3">
+            <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div>
+              <p className="text-sm text-gray-500">Nomor Telepon</p>
+              <p className="font-medium">{application.phone || "-"}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div>
+              <p className="text-sm text-gray-500">Alamat</p>
+              <p className="font-medium">{application.address || "-"}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div>
+              <p className="text-sm text-gray-500">Wilayah Layanan</p>
+              <p className="font-medium">{application.service_area || "-"}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <Package className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div>
+              <p className="text-sm text-gray-500">Jenis Sampah</p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {application.waste_categories?.map((w) => (
+                  <span key={w} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                    {WASTE_LABELS[w] || w}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div>
+              <p className="text-sm text-gray-500">Tanggal Daftar</p>
+              <p className="font-medium">
+                {new Date(application.created_at).toLocaleDateString("id-ID", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
                 })}
-              </span>
+              </p>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 rounded-3xl p-6 border border-slate-100">
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                Status Verifikasi
-              </label>
-              <div className="mt-1">
-                <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold border border-amber-200 uppercase">
-                  {data?.status}
-                </span>
-              </div>
-            </div>
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                ID Pengajuan
-              </label>
-              <p className="mt-1 text-sm font-mono text-slate-600">{id}</p>
-            </div>
-          </div>
-
-          {/* Tombol Aksi */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-4">
-            <button
-              disabled={isProcessing}
-              className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-emerald-200 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <CheckCircle size={20} /> Setujui Kemitraan
-            </button>
-            <button
-              disabled={isProcessing}
-              className="flex-1 h-14 bg-white border-2 border-rose-100 text-rose-600 hover:bg-rose-50 rounded-2xl font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <XCircle size={20} /> Tolak Pengajuan
-            </button>
           </div>
         </div>
       </div>
+
+      {/* Action Buttons (only for pending) */}
+      {application.status === "pending" && (
+        <div className="flex gap-4">
+          <button
+            onClick={handleApprove}
+            disabled={processing}
+            className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
+            Setujui Pendaftaran
+          </button>
+          <button
+            onClick={handleReject}
+            disabled={processing}
+            className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <XCircle className="w-5 h-5" />}
+            Tolak Pendaftaran
+          </button>
+        </div>
+      )}
+
+      {/* Info for approved/rejected */}
+      {application.status !== "pending" && (
+        <div className="bg-gray-50 rounded-xl p-4 text-center">
+          <p className="text-sm text-gray-600">
+            {application.status === "approved" 
+              ? "✅ Pendaftaran ini telah disetujui. Pengguna sekarang dapat login sebagai agen."
+              : "❌ Pendaftaran ini telah ditolak."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
