@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import {
   Leaf,
   User,
@@ -44,6 +45,48 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
   const [sidebarWidth, setSidebarWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [profileName, setProfileName] = useState("Loading...");
+  const [profileRole, setProfileRole] = useState("Agent");
+  const supabase = createClientSupabaseClient();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("user_id", user.id)
+            .single();
+          
+          if (profile?.full_name) {
+            setProfileName(profile.full_name);
+          } else {
+            setProfileName(user.email?.split("@")[0] || "Agent");
+          }
+
+          const { data: userData } = await supabase
+            .from("users")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+            
+          if (userData?.role) {
+            setProfileRole(userData.role === 'admin' ? 'Admin' : 'Agent Aktif');
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -132,7 +175,7 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
         </nav>
 
         <div className="p-3 border-t">
-          <button className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-red-500 hover:bg-red-50 text-sm transition-colors">
+          <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-red-500 hover:bg-red-50 text-sm transition-colors">
             <LogOut className="w-4 h-4" />
             Keluar
           </button>
@@ -191,8 +234,8 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
                   <User className="w-3.5 h-3.5 text-green-600" />
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-xs font-medium leading-none">Budi Santoso</p>
-                  <p className="text-[10px] text-muted-foreground leading-none mt-0.5">Agent Aktif</p>
+                  <p className="text-xs font-medium leading-none">{profileName}</p>
+                  <p className="text-[10px] text-muted-foreground leading-none mt-0.5">{profileRole}</p>
                 </div>
               </button>
 
@@ -205,7 +248,7 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
                     <Settings className="w-4 h-4" /> Pengaturan
                   </Link>
                   <div className="border-t border-border my-1" />
-                  <button className="flex items-center gap-2 px-3 py-2 text-destructive w-full text-left hover:bg-destructive/10 rounded-lg text-sm transition-colors">
+                  <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 text-destructive w-full text-left hover:bg-destructive/10 rounded-lg text-sm transition-colors">
                     <LogOut className="w-4 h-4" /> Keluar
                   </button>
                 </div>
@@ -256,7 +299,7 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
           </nav>
 
           <div className="absolute bottom-0 left-0 right-0 p-3 border-t">
-            <button className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-red-500 hover:bg-red-50 text-sm">
+            <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-red-500 hover:bg-red-50 text-sm">
               <LogOut className="w-4 h-4" />
               Keluar
             </button>

@@ -150,7 +150,7 @@ export default function RegisterAgentPage() {
         <p className="text-muted-foreground mb-6">
           Pendaftaran Anda sebagai agen telah kami terima. Silakan tunggu konfirmasi dari admin.
         </p>
-        <Button onClick={() => router.push("/user/home")} className="bg-primary">
+        <Button onClick={() => router.push("/agent")} className="bg-primary">
           Kembali ke Dashboard
         </Button>
       </div>

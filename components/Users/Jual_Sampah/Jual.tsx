@@ -71,7 +71,7 @@ export default function PickupRequestForm() {
     try {
       // 1. Ambil user yang login dari AUTH
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+
       if (userError || !user) {
         console.error("User not logged in");
         router.push("/login");
@@ -187,15 +187,15 @@ export default function PickupRequestForm() {
   const selectedAgent = agents.find(a => a.id === selectedAgentId);
   const availableWasteTypes = wasteTypes.filter(type => {
     if (!selectedAgent || !selectedAgent.waste_types) return true;
-    return selectedAgent.waste_types.some(w => 
-      type.name.toLowerCase().includes(w.toLowerCase()) || 
+    return selectedAgent.waste_types.some(w =>
+      type.name.toLowerCase().includes(w.toLowerCase()) ||
       w.toLowerCase().includes(type.name.toLowerCase())
     );
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     console.log("=== SUBMITTING REQUEST ===");
     console.log("userId:", userId);
     console.log("selectedAgentUserId:", selectedAgentUserId);
@@ -321,8 +321,8 @@ export default function PickupRequestForm() {
         <p className="text-sm text-muted-foreground">
           Petugas kami akan segera memproses penjemputan sampah Anda
         </p>
-        <Button 
-          className="mt-4" 
+        <Button
+          className="mt-4"
           variant="outline"
           onClick={() => router.push("/dashboard")}
         >
@@ -490,9 +490,9 @@ export default function PickupRequestForm() {
         </div>
 
         {/* Submit */}
-        <Button 
-          type="submit" 
-          disabled={isSubmitting || !userAddress || !selectedAgentId || agents.length === 0} 
+        <Button
+          type="submit"
+          disabled={isSubmitting || !userAddress || !selectedAgentId || agents.length === 0}
           className="w-full gap-2"
         >
           {isSubmitting ? (
