@@ -29,7 +29,7 @@ export default function StatCardsAgent() {
       try {
         // Ambil data pickup
         const { data: pickups, error } = await supabase
-          .from("pickups")
+          .from("pickup_requests")
           .select("*");
 
         if (error) throw error;

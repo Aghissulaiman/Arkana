@@ -253,13 +253,13 @@ export default function PickupRequestForm() {
       }
 
       const { data: newRequest, error } = await supabase
-        .from("requests")
+        .from("pickup_requests")
         .insert({
           user_id: userId,
           agent_id: selectedAgentUserId,
           status: "pending",
           pickup_address: userAddress,
-          estimated_weights: estimatedWeights,
+          estimated_weight: estimatedWeights,
           created_at: pickupDateTime.toISOString(),
         })
         .select();
