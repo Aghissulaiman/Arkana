@@ -36,24 +36,30 @@ export default function StatCardsAgent() {
         return;
       }
 
-      // Cari agent_id dari tabel agents
-      const { data: agentData } = await supabase
+      // Cari agent_id dari tabel agents berdasarkan user_id
+      const { data: agentData, error: agentError } = await supabase
         .from("agents")
         .select("id")
         .eq("user_id", user.id)
         .single();
 
-      if (!agentData) {
+      if (agentError || !agentData) {
+        console.log("User tidak terdaftar sebagai agent");
         setLoading(false);
         return;
       }
 
+      console.log("Agent ID untuk filter:", agentData.id);
+
+      // Filter berdasarkan agent_id yang benar
       const { data: pickups, error } = await supabase
         .from("pickup_requests")
         .select("*")
-        .eq("agent_id", agentData.id);
+        .eq("agent_id", agentData.id);  // ← PAKAI agentData.id
 
       if (error) throw error;
+
+      console.log("Pickups untuk agent ini:", pickups?.length || 0);
 
       const completed = pickups?.filter((item) => item.status === "completed") || [];
       const today = new Date().toISOString().split("T")[0];
