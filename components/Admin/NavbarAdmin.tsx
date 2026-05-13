@@ -215,12 +215,16 @@ export default function AdminSidebar({
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
-              <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
-                <Settings className="w-5 h-5" />
-              </button>
+              <Link href="/admin/notifications">
+                <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
+                  <Bell className="w-5 h-5" />
+                </button>
+              </Link>
+              <Link href="/admin/settings">
+                <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
+                  <Settings className="w-5 h-5" />
+                </button>
+              </Link>
             </div>
 
             <div className="h-6 w-px bg-slate-200 mx-1" />
