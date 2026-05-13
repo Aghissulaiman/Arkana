@@ -222,7 +222,7 @@ export default function RequestPickupPage({ params }: PageProps) {
 
     toast.success("Permintaan penjemputan berhasil dikirim!");
     setTimeout(() => {
-      router.push("/user/riwayat");
+      router.push("/user/home");
     }, 2000);
     
     setSubmitting(false);
@@ -444,7 +444,7 @@ export default function RequestPickupPage({ params }: PageProps) {
           <div className="flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-blue-800">💡 Informasi</p>
+              <p className="text-sm font-semibold text-blue-800"> Informasi</p>
               <p className="text-xs text-blue-700 mt-1">
                 Poin akan masuk ke akun Anda setelah agen mengonfirmasi dan menimbang sampah.
               </p>
