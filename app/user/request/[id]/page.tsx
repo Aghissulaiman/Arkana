@@ -187,22 +187,32 @@ export default function RequestPickupPage({ params }: PageProps) {
 
     const { data: { user } } = await supabase.auth.getUser();
     
-    const selectedTypes = Object.keys(selectedWaste)
-      .filter(w => selectedWaste[w] > 0)
-      .join(', ');
+    // --- PERBAIKAN DI SINI ---
+    // Cari tahu sampah apa saja yang dipilih user
+    const activeWastes = Object.keys(selectedWaste).filter(w => selectedWaste[w] > 0);
+    
+    // Tentukan final_waste_type agar sesuai dengan ENUM database
+    let finalWasteType = "mixed";
+    if (activeWastes.length === 1) {
+      finalWasteType = activeWastes[0]; // Jika cuma 1 jenis, pakai jenis tersebut
+    } else if (activeWastes.length > 1) {
+      finalWasteType = "mixed"; // Jika lebih dari 1 jenis, jadikan "mixed" (campuran)
+    }
 
     const { error: requestError } = await supabase
       .from("pickup_requests")
       .insert({
         user_id: user?.id,
         agent_id: agentId,
-        waste_type: selectedTypes || "mixed",
+        waste_type: finalWasteType, // <-- GUNAKAN VARIABEL YANG BARU
         estimated_weight: totalWeight,
         total_points: totalPoints, 
         pickup_address: userAddress,
         notes: notes,
         status: "pending",
       });
+
+    // --- BATAS PERBAIKAN ---
 
     if (requestError) {
       toast.error("Gagal mengirim permintaan: " + requestError.message);

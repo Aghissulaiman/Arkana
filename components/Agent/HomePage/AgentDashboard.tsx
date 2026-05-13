@@ -39,7 +39,7 @@ export default function AgentDashboard() {
         )
         .subscribe();
     };
-
+    
     setupRealtime();
 
     return () => {
