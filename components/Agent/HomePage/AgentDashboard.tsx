@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Navigation, Clock, CheckCircle2, Loader2 } from "lucide-react";
+import { MapPin, Navigation, Clock, CheckCircle2, Loader2, Truck } from "lucide-react";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
+import Link from "next/link";
 
 export default function AgentDashboard() {
   const supabase = createClientSupabaseClient();
@@ -41,8 +42,7 @@ export default function AgentDashboard() {
         return;
       }
 
-      if (requests) {
-        // Ambil nama customer untuk setiap request
+      if (requests && requests.length > 0) {
         const userIds = [...new Set(requests.map(r => r.user_id))];
         let profiles: any[] | null = null;
         if (userIds.length > 0) {
@@ -59,21 +59,22 @@ export default function AgentDashboard() {
         }
 
         const formattedRequests = requests.map(req => {
-          const weights = req.estimated_weight as Record<string, number> || {};
-          const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+          const totalWeight = req.estimated_weight || 0;
           const date = new Date(req.created_at);
+          const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+          const dateStr = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 
           return {
-            id: `REQ-${String(req.id).padStart(3, '0')}`,
+            id: `REQ-${req.id.slice(0, 8)}`,
             dbId: req.id,
             customer: profileMap.get(req.user_id) || "Pengguna",
             address: req.pickup_address,
-            distance: "- km", // Bisa dihitung jika ada koordinat
-            time: `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`,
-            date: date.toLocaleDateString("id-ID", { day: '2-digit', month: 'long', year: 'numeric' }),
+            distance: "- km",
+            time: timeStr,
+            date: dateStr,
             status: req.status,
             weight: `${totalWeight} kg`,
-            points: `+${totalWeight * 10}`, // Simulasi poin
+            points: `+${totalWeight * 10}`,
           };
         });
 
@@ -112,7 +113,7 @@ export default function AgentDashboard() {
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
-      {/* Tugas Hari Ini */}
+      {/* Tugas Aktif */}
       <Card className="lg:col-span-2 border-0 shadow-sm bg-background">
         <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 pb-4">
           <CardTitle className="text-lg font-bold text-foreground">Tugas Penjemputan</CardTitle>
@@ -129,6 +130,9 @@ export default function AgentDashboard() {
                     <Badge variant="outline" className="text-[10px] font-bold text-muted-foreground bg-muted/50 border-border px-2 py-0.5">{task.id}</Badge>
                     {task.status === "accepted" && (
                       <Badge className="bg-primary/20 text-primary border-none text-[10px] hover:bg-primary/30">Sedang Berjalan</Badge>
+                    )}
+                    {task.status === "pending" && (
+                      <Badge className="bg-yellow-500/20 text-yellow-700 border-none text-[10px]">Menunggu</Badge>
                     )}
                   </div>
                   <div>
@@ -150,7 +154,7 @@ export default function AgentDashboard() {
                   </div>
                 </div>
                 <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36 justify-center">
-                  <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm" onClick={() => window.open(`https://maps.google.com/?q=${task.address}`, '_blank')}>
+                  <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm" onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(task.address)}`, '_blank')}>
                     <MapPin className="w-4 h-4 mr-2" />
                     Navigasi
                   </Button>
@@ -172,6 +176,7 @@ export default function AgentDashboard() {
             <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
               <CheckCircle2 className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
               <p className="font-medium">Tidak ada tugas penjemputan saat ini</p>
+              <p className="text-sm text-muted-foreground mt-1">Tunggu permintaan dari user</p>
             </div>
           )}
         </CardContent>
@@ -186,7 +191,7 @@ export default function AgentDashboard() {
           {recentPickups.map((pickup) => (
             <div key={pickup.id} className="flex items-start gap-4 pb-4 border-b border-border/50 last:border-0 last:pb-0">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <Truck className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm text-foreground truncate">{pickup.customer}</p>
@@ -206,9 +211,11 @@ export default function AgentDashboard() {
             </div>
           )}
           {recentPickups.length > 0 && (
-            <Button variant="ghost" className="w-full text-xs font-bold text-primary hover:text-primary hover:bg-primary/10 mt-2">
-              Lihat Semua Riwayat
-            </Button>
+            <Link href="/agent/tasks">
+              <Button variant="ghost" className="w-full text-xs font-bold text-primary hover:text-primary hover:bg-primary/10 mt-2">
+                Lihat Semua Tugas
+              </Button>
+            </Link>
           )}
         </CardContent>
       </Card>
