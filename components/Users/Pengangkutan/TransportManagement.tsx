@@ -52,7 +52,7 @@ function PickupFormContent() {
   const searchParams = useSearchParams();
   const supabase = createClientSupabaseClient();
   const queryAgentId = searchParams.get("agentId");
-  
+
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -91,7 +91,7 @@ function PickupFormContent() {
     try {
       // 1. Ambil user yang login dari AUTH
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+
       if (userError || !user) {
         console.error("User not logged in");
         router.push("/login");
@@ -207,15 +207,15 @@ function PickupFormContent() {
   const selectedAgent = agents.find(a => a.id === selectedAgentId);
   const availableWasteTypes = wasteTypes.filter(type => {
     if (!selectedAgent || !selectedAgent.waste_types) return true;
-    return selectedAgent.waste_types.some(w => 
-      type.name.toLowerCase().includes(w.toLowerCase()) || 
+    return selectedAgent.waste_types.some(w =>
+      type.name.toLowerCase().includes(w.toLowerCase()) ||
       w.toLowerCase().includes(type.name.toLowerCase())
     );
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validasi
     if (!userId) {
       alert("User tidak ditemukan. Silakan login ulang.");
@@ -326,14 +326,14 @@ function PickupFormContent() {
 
   if (isSuccess) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-md mx-auto mt-20"
       >
         <Card className="p-10 text-center rounded-[2rem] border-border shadow-xl shadow-primary/10 bg-card">
           <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 relative">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
@@ -348,7 +348,7 @@ function PickupFormContent() {
           <p className="text-muted-foreground mb-8">
             Mitra kami akan segera memproses penjemputan sampah Anda sesuai jadwal.
           </p>
-          <Button 
+          <Button
             className="w-full h-14 rounded-2xl text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
             onClick={() => router.push("/user/home")}
           >
@@ -381,214 +381,214 @@ function PickupFormContent() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section 1: Lokasi & Agen */}
         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.5, delay: 0.1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
           <Card className="p-6 sm:p-8 rounded-[2rem] border-border/50 shadow-xl shadow-border/50 bg-card/80 backdrop-blur-xl">
-             <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <MapPin className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Lokasi & Agen</h2>
-                  <p className="text-sm text-muted-foreground">Tentukan alamat dan agen tujuan</p>
-                </div>
-             </div>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                <MapPin className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Lokasi & Agen</h2>
+                <p className="text-sm text-muted-foreground">Tentukan alamat dan agen tujuan</p>
+              </div>
+            </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Lokasi */}
-                <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 relative group overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
-                  <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">
-                    Alamat Penjemputan
-                  </label>
-                  <div className="text-foreground font-medium leading-relaxed min-h-[3rem]">
-                    {userAddress || "Alamat belum diatur"}
-                  </div>
-                  <button type="button" onClick={() => router.push("/user/profile")} className="mt-3 text-sm text-primary font-bold hover:text-primary/80 hover:underline inline-flex items-center gap-1.5 transition-colors">
-                    <Map className="w-4 h-4" /> Ubah alamat di profil
-                  </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Lokasi */}
+              <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 relative group overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
+                <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">
+                  Alamat Penjemputan
+                </label>
+                <div className="text-foreground font-medium leading-relaxed min-h-[3rem]">
+                  {userAddress || "Alamat belum diatur"}
                 </div>
+                <button type="button" onClick={() => router.push("/user/profile")} className="mt-3 text-sm text-primary font-bold hover:text-primary/80 hover:underline inline-flex items-center gap-1.5 transition-colors">
+                  <Map className="w-4 h-4" /> Ubah alamat di profil
+                </button>
+              </div>
 
-                {/* Agen */}
-                <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 relative group overflow-hidden flex flex-col justify-center">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
-                  <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">
-                    Agen Penjemput
-                  </label>
-                  <div className="text-foreground font-medium leading-relaxed">
-                    {selectedAgent ? (
-                      <div>
-                        <p className="font-bold text-lg">{selectedAgent.name}</p>
-                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {selectedAgent.phone}</p>
-                        <p className="text-sm text-muted-foreground mt-0.5 flex items-start gap-1"><MapPin className="w-3.5 h-3.5 mt-0.5" /> {selectedAgent.address}</p>
-                      </div>
-                    ) : (
-                      <div className="py-2">
-                        <span className="text-destructive font-semibold">Agen belum dipilih</span>
-                        <br />
-                        <button type="button" onClick={() => router.push("/user/home")} className="mt-2 text-sm text-primary font-bold hover:text-primary/80 hover:underline">
-                          Pilih Agen dari Dashboard
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  {selectedAgentId && (
-                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-primary mt-3 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Agen tersedia dan dipilih
-                    </motion.p>
+              {/* Agen */}
+              <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 relative group overflow-hidden flex flex-col justify-center">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
+                <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">
+                  Agen Penjemput
+                </label>
+                <div className="text-foreground font-medium leading-relaxed">
+                  {selectedAgent ? (
+                    <div>
+                      <p className="font-bold text-lg">{selectedAgent.name}</p>
+                      <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {selectedAgent.phone}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5 flex items-start gap-1"><MapPin className="w-3.5 h-3.5 mt-0.5" /> {selectedAgent.address}</p>
+                    </div>
+                  ) : (
+                    <div className="py-2">
+                      <span className="text-destructive font-semibold">Agen belum dipilih</span>
+                      <br />
+                      <button type="button" onClick={() => router.push("/user/home")} className="mt-2 text-sm text-primary font-bold hover:text-primary/80 hover:underline">
+                        Pilih Agen dari Dashboard
+                      </button>
+                    </div>
                   )}
                 </div>
-             </div>
+                {selectedAgentId && (
+                  <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-primary mt-3 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Agen tersedia dan dipilih
+                  </motion.p>
+                )}
+              </div>
+            </div>
           </Card>
         </motion.div>
 
         {/* Section 2: Detail Sampah */}
         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.5, delay: 0.2 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Card className="p-6 sm:p-8 rounded-[2rem] border-border/50 shadow-xl shadow-border/50 bg-card/80 backdrop-blur-xl">
-             <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <Package className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Detail Sampah</h2>
-                  <p className="text-sm text-muted-foreground">Informasi sampah yang akan dijemput</p>
-                </div>
-             </div>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Package className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Detail Sampah</h2>
+                <p className="text-sm text-muted-foreground">Informasi sampah yang akan dijemput</p>
+              </div>
+            </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Jenis Sampah */}
-                <div>
-                  <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">Jenis Sampah</label>
-                  <div className="relative">
-                    <select
-                      required
-                      value={formData.wasteType}
-                      onChange={(e) => handleChange("wasteType", e.target.value)}
-                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none shadow-sm transition-all cursor-pointer hover:border-primary/50"
-                    >
-                      <option value="">-- Pilih Jenis --</option>
-                      {availableWasteTypes.map((type) => (
-                        <option key={type.id} value={type.id}>
-                          {type.name} - {type.price_per_kg.toLocaleString("id-ID")} poin/kg
-                        </option>
-                      ))}
-                      {availableWasteTypes.length === 0 && selectedAgent && (
-                        <option value="" disabled>Agen ini tidak menerima jenis sampah dari katalog</option>
-                      )}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-background pl-2">
-                      <Leaf className="w-5 h-5 text-muted-foreground" />
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Jenis Sampah */}
+              <div>
+                <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">Jenis Sampah</label>
+                <div className="relative">
+                  <select
+                    required
+                    value={formData.wasteType}
+                    onChange={(e) => handleChange("wasteType", e.target.value)}
+                    className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none shadow-sm transition-all cursor-pointer hover:border-primary/50"
+                  >
+                    <option value="">-- Pilih Jenis --</option>
+                    {availableWasteTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name} - {type.price_per_kg.toLocaleString("id-ID")} poin/kg
+                      </option>
+                    ))}
+                    {availableWasteTypes.length === 0 && selectedAgent && (
+                      <option value="" disabled>Agen ini tidak menerima jenis sampah dari katalog</option>
+                    )}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-background pl-2">
+                    <Leaf className="w-5 h-5 text-muted-foreground" />
                   </div>
                 </div>
+              </div>
 
-                {/* Estimasi Berat */}
-                <div>
-                  <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">Estimasi Berat</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="0.1"
-                      required
-                      placeholder="0.0"
-                      value={formData.estimatedWeight}
-                      onChange={(e) => handleChange("estimatedWeight", e.target.value)}
-                      className="w-full pl-5 pr-16 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm transition-all hover:border-primary/50"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground font-bold bg-muted px-3 py-1.5 rounded-xl">
-                      kg
-                    </div>
+              {/* Estimasi Berat */}
+              <div>
+                <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">Estimasi Berat</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    required
+                    placeholder="0.0"
+                    value={formData.estimatedWeight}
+                    onChange={(e) => handleChange("estimatedWeight", e.target.value)}
+                    className="w-full pl-5 pr-16 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm transition-all hover:border-primary/50"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground font-bold bg-muted px-3 py-1.5 rounded-xl">
+                    kg
                   </div>
                 </div>
-             </div>
+              </div>
+            </div>
           </Card>
         </motion.div>
 
         {/* Section 3: Jadwal & Catatan */}
         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.5, delay: 0.3 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
         >
           <Card className="p-6 sm:p-8 rounded-[2rem] border-border/50 shadow-xl shadow-border/50 bg-card/80 backdrop-blur-xl">
-             <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <Calendar className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Jadwal & Catatan</h2>
-                  <p className="text-sm text-muted-foreground">Tentukan waktu penjemputan</p>
-                </div>
-             </div>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Calendar className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Jadwal & Catatan</h2>
+                <p className="text-sm text-muted-foreground">Tentukan waktu penjemputan</p>
+              </div>
+            </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="text-sm font-semibold text-muted-foreground block mb-3">Tanggal Penjemputan</label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      required
-                      min={getMinDate()}
-                      value={formData.pickupDate}
-                      onChange={(e) => handleChange("pickupDate", e.target.value)}
-                      className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm transition-all appearance-none cursor-text hover:border-primary/50"
-                    />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="text-sm font-semibold text-muted-foreground block mb-3">Tanggal Penjemputan</label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    required
+                    min={getMinDate()}
+                    value={formData.pickupDate}
+                    onChange={(e) => handleChange("pickupDate", e.target.value)}
+                    className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm transition-all appearance-none cursor-text hover:border-primary/50"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-muted-foreground block mb-3">Waktu Penjemputan</label>
+                <div className="relative">
+                  <select
+                    required
+                    value={formData.pickupTime}
+                    onChange={(e) => handleChange("pickupTime", e.target.value)}
+                    className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none shadow-sm transition-all cursor-pointer hover:border-primary/50"
+                  >
+                    <option value="">-- Pilih Jam --</option>
+                    <option value="08:00 - 10:00">08:00 - 10:00</option>
+                    <option value="10:00 - 12:00">10:00 - 12:00</option>
+                    <option value="12:00 - 14:00">12:00 - 14:00</option>
+                    <option value="14:00 - 16:00">14:00 - 16:00</option>
+                    <option value="16:00 - 18:00">16:00 - 18:00</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-background pl-2">
+                    <Clock className="w-5 h-5 text-muted-foreground" />
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm font-semibold text-muted-foreground block mb-3">Waktu Penjemputan</label>
-                  <div className="relative">
-                    <select
-                      required
-                      value={formData.pickupTime}
-                      onChange={(e) => handleChange("pickupTime", e.target.value)}
-                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none shadow-sm transition-all cursor-pointer hover:border-primary/50"
-                    >
-                      <option value="">-- Pilih Jam --</option>
-                      <option value="08:00 - 10:00">08:00 - 10:00</option>
-                      <option value="10:00 - 12:00">10:00 - 12:00</option>
-                      <option value="12:00 - 14:00">12:00 - 14:00</option>
-                      <option value="14:00 - 16:00">14:00 - 16:00</option>
-                      <option value="16:00 - 18:00">16:00 - 18:00</option>
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-background pl-2">
-                      <Clock className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                  </div>
-                </div>
-             </div>
+              </div>
+            </div>
 
-             <div>
-               <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">
-                  <ClipboardList className="w-4 h-4 text-muted-foreground" /> Catatan Tambahan (Opsional)
-               </label>
-               <textarea
-                 rows={3}
-                 placeholder="Contoh: Tolong hubungi nomor saya jika sudah di depan rumah atau sampah sudah dipisahkan dalam kardus..."
-                 value={formData.notes}
-                 onChange={(e) => handleChange("notes", e.target.value)}
-                 className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm transition-all resize-none hover:border-primary/50"
-               />
-             </div>
+            <div>
+              <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">
+                <ClipboardList className="w-4 h-4 text-muted-foreground" /> Catatan Tambahan (Opsional)
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Contoh: Tolong hubungi nomor saya jika sudah di depan rumah atau sampah sudah dipisahkan dalam kardus..."
+                value={formData.notes}
+                onChange={(e) => handleChange("notes", e.target.value)}
+                className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm transition-all resize-none hover:border-primary/50"
+              />
+            </div>
           </Card>
         </motion.div>
 
         {/* Submit */}
-        <motion.div 
-           initial={{ opacity: 0, y: 20 }} 
-           animate={{ opacity: 1, y: 0 }} 
-           transition={{ duration: 0.5, delay: 0.4 }} 
-           className="mt-8"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mt-8"
         >
-          <Button 
-            type="submit" 
-            disabled={isSubmitting || !userAddress || !selectedAgentId || agents.length === 0} 
+          <Button
+            type="submit"
+            disabled={isSubmitting || !userAddress || !selectedAgentId || agents.length === 0}
             className="w-full py-8 rounded-2xl text-lg font-extrabold shadow-xl shadow-primary/25 bg-primary hover:bg-primary/90 text-primary-foreground transition-all gap-3 hover:-translate-y-1"
           >
             {isSubmitting ? (
@@ -603,11 +603,11 @@ function PickupFormContent() {
               </>
             )}
           </Button>
-          
+
           {!userAddress && (
             <p className="text-sm text-destructive text-center mt-5 font-bold flex items-center justify-center gap-2 bg-destructive/10 py-3 rounded-xl">
-               <MapPin className="w-4 h-4" />
-               Silakan lengkapi alamat di halaman profil terlebih dahulu
+              <MapPin className="w-4 h-4" />
+              Silakan lengkapi alamat di halaman profil terlebih dahulu
             </p>
           )}
         </motion.div>

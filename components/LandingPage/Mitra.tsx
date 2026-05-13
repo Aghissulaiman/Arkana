@@ -66,7 +66,7 @@ export default function MitraSection() {
                 </div>
 
                 <h3 className="text-2xl md:text-3xl font-bold text-foreground leading-tight mb-4">
-                  Jadi Mitra,
+                  Jadi Agent,
                   <br />
                   Perluas Jangkauan Bisnis
                 </h3>

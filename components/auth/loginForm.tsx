@@ -84,7 +84,7 @@ export function LoginForm({
         router.push("/admin/dashboard");
         break;
       case "agent":
-        router.push("/agent/dashboard");
+        router.push("/agent");
         break;
       default:
         router.push("/user/home");

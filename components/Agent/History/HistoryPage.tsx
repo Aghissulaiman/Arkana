@@ -1,55 +1,103 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Calendar, Weight, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2, Calendar, Weight, Loader2 } from "lucide-react";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
 
 export default function HistoryPage() {
-  const history = [
-    {
-      id: "REQ-000",
-      customer: "Budi Jaya",
-      address: "Jl. Sudirman No. 1, Jakarta Pusat",
-      date: "07 Mei 2026, 08:30",
-      weight: "15 kg",
-    },
-    {
-      id: "REQ-999",
-      customer: "Warung Bu Ani",
-      address: "Jl. Thamrin No. 4, Jakarta Pusat",
-      date: "06 Mei 2026, 14:15",
-      weight: "22 kg",
-    },
-    {
-      id: "REQ-998",
-      customer: "Klinik Sehat",
-      address: "Jl. Diponegoro 10, Jakarta",
-      date: "06 Mei 2026, 10:00",
-      weight: "8 kg",
-    },
-    {
-      id: "REQ-997",
-      customer: "SMA N 1 Jakarta",
-      address: "Jl. Budi Utomo No. 7",
-      date: "05 Mei 2026, 11:30",
-      weight: "45 kg",
-    },
-  ];
+  const [history, setHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClientSupabaseClient();
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: requests, error } = await supabase
+        .from("requests")
+        .select(`
+          id,
+          pickup_address,
+          estimated_weights,
+          created_at,
+          user_id
+        `)
+        .eq("agent_id", user.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching history:", error);
+        return;
+      }
+
+      if (requests) {
+        const userIds = [...new Set(requests.map(r => r.user_id))];
+        let profiles: any[] | null = null;
+        if (userIds.length > 0) {
+          const { data } = await supabase
+            .from("profiles")
+            .select("user_id, full_name")
+            .in("user_id", userIds);
+          profiles = data;
+        }
+
+        const profileMap = new Map();
+        if (profiles) {
+          profiles.forEach(p => profileMap.set(p.user_id, p.full_name));
+        }
+
+        const formattedHistory = requests.map(req => {
+          const weights = req.estimated_weights as Record<string, number> || {};
+          const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+          const date = new Date(req.created_at);
+
+          return {
+            id: `REQ-${String(req.id).padStart(3, '0')}`,
+            customer: profileMap.get(req.user_id) || "Pengguna",
+            address: req.pickup_address,
+            date: date.toLocaleDateString("id-ID", { day: '2-digit', month: 'short', year: 'numeric' }) + `, ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`,
+            weight: `${totalWeight} kg`,
+          };
+        });
+
+        setHistory(formattedHistory);
+      }
+    } catch (error) {
+      console.error("Failed to fetch history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const searchParams = useSearchParams();
   const searchQuery = searchParams?.get("q")?.toLowerCase() || "";
 
   const filteredHistory = useMemo(() => {
     if (!searchQuery) return history;
-    return history.filter(item => 
+    return history.filter(item =>
       item.customer.toLowerCase().includes(searchQuery) ||
       item.id.toLowerCase().includes(searchQuery) ||
       item.address.toLowerCase().includes(searchQuery)
     );
-  }, [searchQuery]);
+  }, [searchQuery, history]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pt-8">
@@ -61,7 +109,7 @@ export default function HistoryPage() {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
                   <CheckCircle2 className="w-5 h-5 text-primary" />
                 </div>
-                
+
                 <div className="flex-1 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-base text-foreground">{item.customer}</h3>
@@ -86,6 +134,12 @@ export default function HistoryPage() {
             </CardContent>
           </Card>
         ))}
+        {filteredHistory.length === 0 && (
+          <div className="col-span-full text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
+            <CheckCircle2 className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
+            <p className="font-medium">Tidak ada riwayat penjemputan</p>
+          </div>
+        )}
       </div>
     </div>
   );
