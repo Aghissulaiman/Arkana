@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react"; // ← tambahkan use
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
@@ -14,7 +14,6 @@ import {
   Recycle,
   Building2,
   Truck,
-  Calendar,
   ArrowLeft,
   CheckCircle
 } from "lucide-react";
@@ -91,7 +90,6 @@ export default function RequestPickupPage({ params }: PageProps) {
   const [userName, setUserName] = useState("");
   const [selectedWaste, setSelectedWaste] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState("");
-  const [pickupDate, setPickupDate] = useState("");
 
   useEffect(() => {
     if (!agentId) return;
@@ -185,11 +183,6 @@ export default function RequestPickupPage({ params }: PageProps) {
       return;
     }
 
-    if (!pickupDate) {
-      toast.error("Pilih tanggal penjemputan");
-      return;
-    }
-
     setSubmitting(true);
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -204,7 +197,6 @@ export default function RequestPickupPage({ params }: PageProps) {
         pickup_address: userAddress,
         notes: notes,
         status: "pending",
-        pickup_date: pickupDate,
       });
 
     if (requestError) {
@@ -259,6 +251,7 @@ export default function RequestPickupPage({ params }: PageProps) {
           <span className="text-sm">Kembali</span>
         </button>
 
+        {/* Agent Info Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6 border border-gray-100">
           <div className="bg-gradient-to-r from-green-600 to-green-500 px-6 py-5">
             <div className="flex justify-between items-start">
@@ -295,6 +288,7 @@ export default function RequestPickupPage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* Price List Card */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6 border border-gray-100">
           <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 className="font-bold text-lg text-gray-800">💰 Daftar Harga Sampah</h2>
@@ -327,6 +321,7 @@ export default function RequestPickupPage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* Request Form */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
           <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 className="font-bold text-lg text-gray-800">📝 Form Penjemputan</h2>
@@ -347,6 +342,9 @@ export default function RequestPickupPage({ params }: PageProps) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Jl. Contoh No. 123, RT 01/RW 02"
               />
+              <p className="text-xs text-gray-400 mt-1">
+                {!userAddress && "⚠️ Lengkapi alamat di profil untuk penjemputan"}
+              </p>
             </div>
 
             <div>
@@ -399,22 +397,6 @@ export default function RequestPickupPage({ params }: PageProps) {
                 <span className="text-2xl font-bold text-green-600">
                   {totalPoints.toLocaleString()}
                 </span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tanggal Penjemputan <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="date"
-                  required
-                  value={pickupDate}
-                  onChange={(e) => setPickupDate(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
               </div>
             </div>
 

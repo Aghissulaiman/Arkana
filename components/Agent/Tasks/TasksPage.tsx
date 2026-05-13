@@ -42,7 +42,6 @@ export default function TasksPage() {
         return;
       }
 
-      // Ambil semua pickup request untuk agent ini
       const { data: requests, error } = await supabase
         .from("pickup_requests")
         .select(`
@@ -64,7 +63,6 @@ export default function TasksPage() {
       }
 
       if (requests && requests.length > 0) {
-        // Ambil data user (customer)
         const userIds = [...new Set(requests.map(r => r.user_id))];
         let profiles: any[] | null = null;
         
@@ -90,13 +88,6 @@ export default function TasksPage() {
           const date = new Date(req.created_at);
           const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-          // Tentukan status display
-          let displayStatus = req.status;
-          if (req.status === "pending") displayStatus = "pending";
-          if (req.status === "accepted") displayStatus = "accepted";
-          if (req.status === "completed") displayStatus = "completed";
-          if (req.status === "cancelled") displayStatus = "cancelled";
-
           return {
             id: `REQ-${req.id.slice(0, 8)}`,
             dbId: req.id,
@@ -105,7 +96,7 @@ export default function TasksPage() {
             address: req.pickup_address,
             distance: "- km",
             time: timeStr,
-            status: displayStatus,
+            status: req.status,
             weight_est: `${totalWeight} kg`,
             notes: req.notes || "",
           };
@@ -174,15 +165,11 @@ export default function TasksPage() {
       );
     }
 
-    if (filter === "Semua") {
-      return tasksToFilter;
-    } else if (filter === "Berjalan") {
-      return tasksToFilter.filter(t => t.status === "accepted");
-    } else if (filter === "Menunggu") {
-      return tasksToFilter.filter(t => t.status === "pending");
-    } else if (filter === "Selesai") {
-      return tasksToFilter.filter(t => t.status === "completed");
-    }
+    if (filter === "Semua") return tasksToFilter;
+    if (filter === "Berjalan") return tasksToFilter.filter(t => t.status === "accepted");
+    if (filter === "Menunggu") return tasksToFilter.filter(t => t.status === "pending");
+    if (filter === "Selesai") return tasksToFilter.filter(t => t.status === "completed");
+    
     return tasksToFilter;
   }, [filter, searchQuery, tasks]);
 
@@ -198,26 +185,17 @@ export default function TasksPage() {
     <div className="max-w-7xl mx-auto space-y-8 pt-8">
       <Toaster position="top-right" richColors />
       
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Tugas Penjemputan</h1>
           <p className="text-sm text-muted-foreground">Kelola permintaan penjemputan sampah</p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={fetchTasks}
-            className="gap-2"
-          >
-            <Loader2 className="w-3.5 h-3.5" />
-            Refresh
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={fetchTasks} className="gap-2">
+          <Loader2 className="w-3.5 h-3.5" />
+          Refresh
+        </Button>
       </div>
 
-      {/* Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {["Semua", "Menunggu", "Berjalan", "Selesai"].map((tab) => (
           <button
@@ -244,7 +222,6 @@ export default function TasksPage() {
         ))}
       </div>
 
-      {/* Tasks Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTasks.map((task) => (
           <Card 
@@ -326,7 +303,6 @@ export default function TasksPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="pt-3 flex flex-col gap-2">
                 {task.status !== "completed" && task.status !== "cancelled" && (
                   <div className="flex gap-2">
@@ -344,11 +320,7 @@ export default function TasksPage() {
                         onClick={() => updateTaskStatus(task.dbId, 'completed', 'menyelesaikan')}
                         disabled={processingId === task.dbId}
                       >
-                        {processingId === task.dbId ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                        )}
+                        {processingId === task.dbId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />}
                         Selesai
                       </Button>
                     ) : (
@@ -357,11 +329,7 @@ export default function TasksPage() {
                         onClick={() => updateTaskStatus(task.dbId, 'accepted', 'menerima')}
                         disabled={processingId === task.dbId}
                       >
-                        {processingId === task.dbId ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                        )}
+                        {processingId === task.dbId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />}
                         Terima
                       </Button>
                     )}
@@ -375,11 +343,7 @@ export default function TasksPage() {
                     onClick={() => updateTaskStatus(task.dbId, 'cancelled', 'menolak')}
                     disabled={processingId === task.dbId}
                   >
-                    {processingId === task.dbId ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                    )}
+                    {processingId === task.dbId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5 mr-1.5" />}
                     Tolak Penjemputan
                   </Button>
                 )}
