@@ -8,7 +8,10 @@ import {
   MapPin,
   TrendingUp,
 } from "lucide-react";
+
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
+
+const supabase = createClientSupabaseClient();
 
 interface Stats {
   completedPickups: number;
@@ -19,8 +22,6 @@ interface Stats {
 }
 
 export default function StatCardsAgent() {
-  const supabase = createClientSupabaseClient();
-
   const [stats, setStats] = useState<Stats>({
     completedPickups: 0,
     totalWeight: 0,
@@ -86,24 +87,25 @@ export default function StatCardsAgent() {
       value: loading ? "..." : stats.completedPickups,
       desc: "Total pickup selesai",
       icon: CheckCircle2,
-      bg: "bg-emerald-100",
       color: "text-emerald-600",
+      bg: "bg-emerald-100/50",
+      progress: 98,
     },
     {
       label: "Berat Sampah",
       value: loading ? "..." : `${stats.totalWeight} kg`,
       desc: "Total berat terkumpul",
       icon: Weight,
-      bg: "bg-blue-100",
       color: "text-blue-600",
+      bg: "bg-blue-100/50",
     },
     {
       label: "Tugas Hari Ini",
       value: loading ? "..." : stats.todayTasks,
       desc: `${stats.completedToday} selesai, ${stats.pendingToday} pending`,
       icon: MapPin,
-      bg: "bg-purple-100",
-      color: "text-purple-600",
+      color: "text-amber-600",
+      bg: "bg-amber-100/50",
     },
   ];
 
@@ -121,19 +123,36 @@ export default function StatCardsAgent() {
               >
                 <stat.icon className="w-5 h-5" />
               </div>
+
+              {stat.progress && (
+                <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                  <TrendingUp className="w-3 h-3" /> +2.1%
+                </div>
+              )}
             </div>
 
             <div>
               <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] mb-1">
                 {stat.label}
               </p>
+
               <h3 className="text-3xl font-black text-slate-900 tracking-tight">
                 {stat.value}
               </h3>
+
               <p className="text-[11px] font-medium text-slate-400 mt-1">
                 {stat.desc}
               </p>
             </div>
+
+            {stat.progress && (
+              <div className="mt-4 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                  style={{ width: `${stat.progress}%` }}
+                />
+              </div>
+            )}
           </div>
         </Card>
       ))}

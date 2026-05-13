@@ -3,18 +3,30 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
-import { 
-  Loader2, 
-  Coins, 
-  Package, 
-  Ticket, 
-  DollarSign, 
+import {
+  Loader2,
+  Coins,
+  Package,
+  Ticket,
+  DollarSign,
   Heart,
   ArrowLeft,
   CheckCircle,
   AlertCircle,
-  ShoppingBag
+  ShoppingBag,
+  Truck,
+  MapPin,
+  Map,
+  Phone,
+  Leaf,
+  Calendar,
+  Clock,
+  ClipboardList,
+  Send
 } from "lucide-react";
 import Link from "next/link";
 import { Toaster, toast } from "sonner";
@@ -32,15 +44,68 @@ type Reward = {
   created_at: string;
 };
 
+type Agent = {
+  id: string;
+  user_id: string;
+  name: string;
+  phone: string;
+  address: string;
+  waste_types?: string[];
+};
+
+type PickupFormData = {
+  agentId: string;
+  wasteType: string;
+  estimatedWeight: string;
+  pickupDate: string;
+  pickupTime: string;
+  notes: string;
+};
+
+type WasteType = {
+  id: string;
+  name: string;
+  unit: string;
+  price_per_kg: number;
+};
+
 export default function RewardDetailPage() {
-  const router = useRouter();
-  const params = useParams();
-  const supabase = createClientSupabaseClient();
-  const queryAgentId = searchParams.get("agentId");
-  const [loading, setLoading] = useState(true);
-  const [userPoints, setUserPoints] = useState(0);
-  const [redeeming, setRedeeming] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+
+const router = useRouter();
+const params = useParams();
+const supabase = createClientSupabaseClient();
+
+  const [formData, setFormData] = useState<PickupFormData>({
+    agentId: "",
+    wasteType: "",
+    estimatedWeight: "",
+    pickupDate: "",
+    pickupTime: "",
+    notes: "",
+  });
+
+  const [userId, setUserId] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userAddress, setUserAddress] = useState("");
+  const [reward, setReward] = useState<Reward | null>(null);
+  
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [wasteTypes, setWasteTypes] = useState<WasteType[]>([]);
+  
+  const [selectedAgentId, setSelectedAgentId] = useState("");
+  const [selectedAgentUserId, setSelectedAgentUserId] = useState("");
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+const [loading, setLoading] = useState(true);
+const [userPoints, setUserPoints] = useState(0);
+const [redeeming, setRedeeming] = useState(false);
+const [showConfirm, setShowConfirm] = useState(false);
+
+  const getMinDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
 
   useEffect(() => {
     fetchData();
@@ -64,7 +129,7 @@ export default function RewardDetailPage() {
       const { data: userData, error: userDetailsError } = await supabase
         .from("profiles")
         .select("full_name, address")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (userDetailsError) {
@@ -186,7 +251,7 @@ export default function RewardDetailPage() {
     const { data: profile } = await supabase
       .from("profiles")
       .select("balance_points")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     setUserPoints(profile?.balance_points || 0);
@@ -290,7 +355,7 @@ export default function RewardDetailPage() {
 
   if (!reward) {
     return (
-<<<<<<< HEAD
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -303,7 +368,7 @@ export default function RewardDetailPage() {
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
             >
-              <CheckCircle2 className="w-12 h-12 text-primary" />
+              <CheckCircle className="w-12 h-12 text-primary" />
             </motion.div>
             <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping" />
           </div>
@@ -325,7 +390,6 @@ export default function RewardDetailPage() {
   }
 
   return (
-<<<<<<< HEAD
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -402,7 +466,7 @@ export default function RewardDetailPage() {
                 </div>
                 {selectedAgentId && (
                   <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-primary mt-3 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Agen tersedia dan dipilih
+                    <CheckCircle className="w-3.5 h-3.5" /> Agen tersedia dan dipilih
                   </motion.p>
                 )}
               </div>
