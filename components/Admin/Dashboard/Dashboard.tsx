@@ -81,7 +81,7 @@ export default function AdminDashboard() {
           >
             Log Aktivitas
           </Button>
-          <Button className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-emerald-100 transition-all">
+          <Button className="flex-1 md:flex-none bg-emerald-600 text-white rounded-xl px-6 h-11 font-bold shadow-xs shadow-emerald-100 transition-all hover:text-emerald-700 ">
             Export Report
           </Button>
         </div>
@@ -146,16 +146,10 @@ export default function AdminDashboard() {
                       className="w-14 h-14 rounded-2xl object-cover grayscale-[0.2] border-2 border-white shadow-sm"
                       alt="avatar"
                     />
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 border-2 border-white rounded-full flex items-center justify-center">
-                      <ShieldCheck className="w-3 h-3 text-white" />
-                    </div>
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
                       {agent.name}
-                      <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                        {agent.id}
-                      </span>
                     </h4>
                     <div className="flex items-center gap-3 mt-1">
                       <p className="text-[11px] text-slate-400 font-medium">
@@ -170,14 +164,8 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex gap-2 items-center justify-end">
-                  <Button
-                    variant="outline"
-                    className="h-10 px-4 rounded-xl text-slate-500 border-slate-200 text-xs font-bold hover:bg-slate-100 transition-all"
-                  >
-                    Cek Dokumen
-                  </Button>
                   <Button className="h-10 px-5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-emerald-600 transition-all shadow-md shadow-slate-200">
-                    Setujui
+                    Cek Dokumen
                   </Button>
                 </div>
               </div>
@@ -335,9 +323,6 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.15em]">
-                        {trx.id}
-                      </span>
                       <span
                         className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase border ${s.color}`}
                       >
@@ -364,9 +349,6 @@ export default function AdminDashboard() {
                   <div className="text-left sm:text-right">
                     <p className="text-[11px] font-bold text-slate-400">
                       {trx.time}
-                    </p>
-                    <p className="text-[10px] font-medium text-slate-300 hidden sm:block">
-                      Status Terupdate
                     </p>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-600 group-hover:text-white transition-all transform group-hover:rotate-45">

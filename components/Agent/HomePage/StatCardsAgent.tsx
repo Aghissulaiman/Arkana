@@ -10,6 +10,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+<<<<<<< HEAD
 const stats = [
   {
     label: "Success Rate",
@@ -45,6 +46,100 @@ const stats = [
     bg: "bg-amber-100/50",
   },
 ];
+=======
+interface Stats {
+  completedPickups: number;
+  totalWeight: number;
+  todayTasks: number;
+  completedToday: number;
+  pendingToday: number;
+}
+
+export default function StatCardsAgent() {
+  const [stats, setStats] = useState<Stats>({
+    completedPickups: 0,
+    totalWeight: 0,
+    todayTasks: 0,
+    completedToday: 0,
+    pendingToday: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Ambil data pickup
+        const { data: pickups, error } = await supabase
+          .from("pickup_requests")
+          .select("*");
+
+        if (error) throw error;
+
+        const completed = pickups.filter(
+          (item) => item.status === "completed"
+        );
+
+        const today = new Date().toISOString().split("T")[0];
+
+        const todayTasks = pickups.filter(
+          (item) => item.date?.split("T")[0] === today
+        );
+
+        const completedToday = todayTasks.filter(
+          (item) => item.status === "completed"
+        );
+
+        const pendingToday = todayTasks.filter(
+          (item) => item.status === "pending"
+        );
+
+        const totalWeight = completed.reduce(
+          (acc, item) => acc + (item.weight || 0),
+          0
+        );
+
+        setStats({
+          completedPickups: completed.length,
+          totalWeight,
+          todayTasks: todayTasks.length,
+          completedToday: completedToday.length,
+          pendingToday: pendingToday.length,
+        });
+      } catch (err) {
+        console.error("Gagal mengambil data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const statsData = [
+    {
+      title: "Penjemputan Selesai",
+      value: loading ? "..." : stats.completedPickups,
+      change: "Total pickup selesai",
+      icon: CheckCircle2,
+      trend: "up",
+    },
+    {
+      title: "Berat Sampah",
+      value: loading ? "..." : `${stats.totalWeight} kg`,
+      change: "Total berat terkumpul",
+      icon: Weight,
+      trend: "up",
+    },
+    {
+      title: "Tugas Hari Ini",
+      value: loading ? "..." : stats.todayTasks,
+      change: `${stats.completedToday} selesai, ${stats.pendingToday} pending`,
+      icon: MapPin,
+      trend: "neutral",
+    },
+  ];
+>>>>>>> 996549601c03ea65e745939a186b4d59dc220f98
 
 export function StatCards() {
   return (

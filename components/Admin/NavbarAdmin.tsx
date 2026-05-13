@@ -92,7 +92,7 @@ export default function AdminSidebar({
     <div className="h-screen flex bg-[#F8FAFC] font-sans text-slate-900 overflow-hidden">
       {/* --- DESKTOP SIDEBAR --- */}
       <aside
-        className="hidden lg:flex flex-col h-full border-r border-slate-200 bg-white z-50 transition-all duration-300 ease-in-out relative flex-shrink-0"
+        className="hidden lg:flex flex-col h-full border-r border-slate-200 bg-white z-50 transition-all duration-300 ease-in-out relative shrink-0"
         style={{ width: sidebarWidth }}
       >
         {/* Toggle Collapse Button */}
@@ -109,17 +109,17 @@ export default function AdminSidebar({
 
         {/* Logo Section */}
         <div
-          className={`h-16 flex items-center border-b border-slate-50 flex-shrink-0 transition-all duration-300 ${
+          className={`h-16 flex items-center border-b border-slate-50 shrink-0 transition-all duration-300 ${
             isCollapsed ? "justify-center px-0" : "px-5"
           }`}
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shadow-md shrink-0">
               <Leaf className="w-4 h-4 text-white" strokeWidth={2.5} />
             </div>
             {!isCollapsed && (
               <span className="font-bold text-slate-900 text-base tracking-tight animate-in fade-in duration-300">
-                Arkana
+                TrashFlow
               </span>
             )}
           </div>
@@ -158,7 +158,7 @@ export default function AdminSidebar({
                         }`}
                       >
                         <item.icon
-                          className={`w-[17px] h-[17px] flex-shrink-0 ${
+                          className={`w-4.25 h-4.25 shrink-0 ${
                             active
                               ? "text-emerald-600"
                               : "text-slate-400 group-hover:text-slate-600"
@@ -169,7 +169,7 @@ export default function AdminSidebar({
                           <span className="flex-1 truncate">{item.name}</span>
                         )}
                         {isCollapsed && (
-                          <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[70] shadow-xl">
+                          <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-900 text-white text-[11px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-70 shadow-xl">
                             {item.name}
                           </div>
                         )}
@@ -183,7 +183,7 @@ export default function AdminSidebar({
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-3 border-t border-slate-100 flex-shrink-0">
+        <div className="p-3 border-t border-slate-100 shrink-0">
           <button
             className={`flex items-center text-rose-500 rounded-lg transition-all text-[13px] font-bold w-full ${
               isCollapsed
@@ -191,7 +191,7 @@ export default function AdminSidebar({
                 : "px-3 py-2 gap-2.5 hover:bg-rose-50"
             }`}
           >
-            <LogOut className="w-[17px] h-[17px]" strokeWidth={2.5} />
+            <LogOut className="w-4.25 h-4.25" strokeWidth={2.5} />
             {!isCollapsed && <span>Keluar</span>}
           </button>
         </div>
@@ -200,7 +200,7 @@ export default function AdminSidebar({
       {/* --- CONTENT AREA --- */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* REFINED NAVBAR */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 flex-shrink-0">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-40 shrink-0">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -208,19 +208,20 @@ export default function AdminSidebar({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-sm font-bold text-slate-400 hidden lg:block">
-              Panel Administrasi
-            </h1>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
-              <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
-                <Settings className="w-5 h-5" />
-              </button>
+              <Link href="/admin/notifications">
+                <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
+                  <Bell className="w-5 h-5" />
+                </button>
+              </Link>
+              <Link href="/admin/settings">
+                <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
+                  <Settings className="w-5 h-5" />
+                </button>
+              </Link>
             </div>
 
             <div className="h-6 w-px bg-slate-200 mx-1" />
@@ -231,7 +232,7 @@ export default function AdminSidebar({
                 className="flex items-center gap-3 pl-2 cursor-pointer"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
               >
-                <div className="flex flex-col items-end hidden sm:flex leading-tight">
+                <div className="flex flex-col items-end  sm:flex leading-tight">
                   <span className="text-[13px] font-bold text-slate-800 leading-none">
                     Shyfa Felia
                   </span>
@@ -257,16 +258,20 @@ export default function AdminSidebar({
                       Email
                     </p>
                     <p className="text-[12px] font-semibold text-slate-700 truncate">
-                      shyfa@arkana.com
+                      shyfa@TrashFlow.com
                     </p>
                   </div>
 
-                  <button className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors text-left">
-                    <User size={14} /> Profil Saya
-                  </button>
-                  <button className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors text-left">
-                    <Settings size={14} /> Pengaturan
-                  </button>
+                  <Link href="/admin/profile">
+                    <button className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors text-left">
+                      <User size={14} /> Profil Saya
+                    </button>
+                  </Link>
+                  <Link href="/admin/settings">
+                    <button className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors text-left">
+                      <Settings size={14} /> Pengaturan
+                    </button>
+                  </Link>
 
                   <div className="h-px bg-slate-50 my-1" />
 

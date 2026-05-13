@@ -23,11 +23,11 @@ export default function HistoryPage() {
       if (!user) return;
 
       const { data: requests, error } = await supabase
-        .from("requests")
+        .from("pickup_requests")
         .select(`
           id,
           pickup_address,
-          estimated_weights,
+          estimated_weight,
           created_at,
           user_id
         `)
@@ -57,7 +57,7 @@ export default function HistoryPage() {
         }
 
         const formattedHistory = requests.map(req => {
-          const weights = req.estimated_weights as Record<string, number> || {};
+          const weights = req.estimated_weight as Record<string, number> || {};
           const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
           const date = new Date(req.created_at);
 

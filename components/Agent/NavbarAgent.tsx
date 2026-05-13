@@ -258,7 +258,7 @@ export default function AgentSidebar({ children }: { children: React.ReactNode }
         </div>
 
         <aside
-          className={`fixed top-0 left-0 h-full w-[260px] bg-background z-50 transform transition duration-300 lg:hidden shadow-xl ${
+          className={`fixed top-0 left-0 h-full w-65 bg-background z-50 transform transition duration-300 lg:hidden shadow-xl ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >

@@ -1,47 +1,56 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { createClientSupabaseClient } from "@/lib/supabaseClient";
-import { 
-  Loader2, 
-  MapPin, 
-  Star, 
-  Phone, 
-  Building2,
-  Package,
-  Leaf,
-  Recycle,
-  Truck,
-  ArrowLeft,
-  Clock,
-  CheckCircle,
-  Store
-} from "lucide-react";
+import React, { useState, Suspense, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Toaster, toast } from "sonner";
-
-// Next.js 16 - params langsung berupa objek, bukan Promise
-interface PageProps {
-  params: { id: string };
-}
+import {
+  MapPin,
+  Star,
+  CheckCircle2,
+  ChevronRight,
+  Recycle,
+  Search,
+  Loader2,
+  Package,
+  Leaf,
+  Building2,
+} from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
 
 type Agent = {
   id: string;
+  user_id: string;
   agent_name: string;
   phone: string;
   address: string;
   service_area: string;
   waste_categories: string[];
   is_active: boolean;
+  rating?: number;
+  distance_km?: number;
+  price_per_kg?: number;
 };
 
 type PriceCatalog = {
   waste_type: string;
   price_per_kg: number;
 };
+
+const WASTE_CHIPS = [
+  "Semua",
+  "Terdekat",
+  "plastic",
+  "paper",
+  "cardboard",
+  "glass",
+  "aluminium",
+  "metal",
+  "electronic",
+  "mixed",
+];
 
 const WASTE_LABELS: Record<string, string> = {
   plastic: "Plastik",
@@ -54,225 +63,302 @@ const WASTE_LABELS: Record<string, string> = {
   mixed: "Campuran",
 };
 
-const WASTE_ICONS: Record<string, any> = {
-  plastic: Package,
-  paper: Leaf,
-  cardboard: Package,
-  glass: Package,
-  aluminium: Package,
-  metal: Recycle,
-  electronic: Recycle,
-  mixed: Building2,
+const TAG_COLORS: Record<string, string> = {
+  plastic: "bg-blue-100/80 text-blue-800",
+  paper: "bg-amber-100/80 text-amber-800",
+  cardboard: "bg-orange-100/80 text-orange-800",
+  glass: "bg-emerald-100/80 text-emerald-800",
+  aluminium: "bg-slate-200/80 text-slate-800",
+  metal: "bg-gray-200/80 text-gray-800",
+  electronic: "bg-purple-100/80 text-purple-800",
+  mixed: "bg-slate-100/80 text-slate-700",
 };
 
-const WASTE_COLORS: Record<string, string> = {
-  plastic: "bg-blue-100 text-blue-800",
-  paper: "bg-amber-100 text-amber-800",
-  cardboard: "bg-orange-100 text-orange-800",
-  glass: "bg-emerald-100 text-emerald-800",
-  aluminium: "bg-slate-100 text-slate-800",
-  metal: "bg-gray-100 text-gray-800",
-  electronic: "bg-purple-100 text-purple-800",
-  mixed: "bg-slate-100 text-slate-800",
-};
+function getIconForWaste(wasteType: string) {
+  const icons: Record<string, any> = {
+    plastic: Package,
+    paper: Leaf,
+    cardboard: Package,
+    glass: Package,
+    aluminium: Package,
+    metal: Recycle,
+    electronic: Recycle,
+    mixed: Building2,
+  };
+  return icons[wasteType] || Recycle;
+}
 
-export default function AgentDetailPage({ params }: PageProps) {
-  const router = useRouter();
+function getRandomRating() {
+  return +(4 + Math.random() * 0.9).toFixed(1);
+}
+
+function DashboardContent() {
+  const searchParams = useSearchParams();
   const supabase = createClientSupabaseClient();
-  const [agent, setAgent] = useState<Agent | null>(null);
+  const search = searchParams?.get("q") || "";
+  const [activeChip, setActiveChip] = useState("Semua");
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [prices, setPrices] = useState<PriceCatalog[]>([]);
   const [loading, setLoading] = useState(true);
-  const { id: agentId } = params; // Langsung ambil id dari params
-  const [rating] = useState((4 + Math.random() * 0.9).toFixed(1));
-  const [distance] = useState((Math.random() * 5 + 0.5).toFixed(1));
+  const [userLocation, setUserLocation] = useState("Depok");
 
   useEffect(() => {
-    if (!agentId) return;
+    const fetchUserLocation = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("address")
+          .eq("user_id", user.id)
+          .single();
+        
+        if (profile?.address) {
+          const city = profile.address.split(",").slice(-2)[0]?.trim() || "Lokasi Anda";
+          setUserLocation(city);
+        }
+      }
+    };
+    fetchUserLocation();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      
+      // Ambil agent
+      const { data: agentsData, error: agentsError } = await supabase
+        .from("agents")
+        .select("*")
+        .eq("is_active", true);
+
+      if (agentsError) {
+        console.error("Error fetching agents:", agentsError);
+      }
+
+      // Ambil harga
+      const { data: priceData } = await supabase
+        .from("price_catalog")
+        .select("waste_type, price_per_kg");
+
+      if (priceData) setPrices(priceData);
+
+      // Proses agent dengan rating random & jarak random
+      const processedAgents = (agentsData || []).map(agent => ({
+        ...agent,
+        rating: getRandomRating(),
+        distance_km: +(Math.random() * 5 + 0.5).toFixed(1),
+        price_per_kg: agent.waste_categories?.[0] 
+          ? priceData?.find(p => p.waste_type === agent.waste_categories[0])?.price_per_kg || 500
+          : 500
+      }));
+
+      // Urutkan berdasarkan jarak terdekat
+      processedAgents.sort((a, b) => (a.distance_km || 999) - (b.distance_km || 999));
+      
+      setAgents(processedAgents);
+      setLoading(false);
+    };
+
     fetchData();
-  }, [agentId]);
+  }, []);
 
-  const fetchData = async () => {
-    if (!agentId) return;
-    
-    setLoading(true);
-    
-    // Ambil data agent
-    const { data: agentData, error: agentError } = await supabase
-      .from("agents")
-      .select("*")
-      .eq("id", agentId)
-      .single();
+  // Filter agent
+  const filteredAgents = agents.filter((agent) => {
+    const matchSearch =
+      search === "" ||
+      agent.agent_name.toLowerCase().includes(search.toLowerCase()) ||
+      agent.service_area?.toLowerCase().includes(search.toLowerCase()) ||
+      agent.waste_categories?.some((w) => w.toLowerCase().includes(search.toLowerCase()));
 
-    if (agentError || !agentData) {
-      toast.error("Agent tidak ditemukan");
-      router.push("/user/home");
-      return;
+    const matchChip =
+      activeChip === "Semua" ||
+      activeChip === "Terdekat" ||
+      agent.waste_categories?.some((w) => w.toLowerCase() === activeChip.toLowerCase());
+
+    return matchSearch && matchChip;
+  });
+
+  // Urutkan: Terdekat di atas/awal
+  const sortedAgents = [...filteredAgents].sort((a, b) => {
+    if (activeChip === "Terdekat") {
+      return (a.distance_km || 999) - (b.distance_km || 999);
     }
-
-    setAgent(agentData);
-
-    // Ambil harga dari price_catalog
-    const { data: priceData } = await supabase
-      .from("price_catalog")
-      .select("waste_type, price_per_kg");
-
-    setPrices(priceData || []);
-    setLoading(false);
-  };
-
-  const getPricePerKg = (wasteType: string) => {
-    return prices.find(p => p.waste_type === wasteType)?.price_per_kg || 0;
-  };
+    return (a.distance_km || 999) - (b.distance_km || 999);
+  });
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
-      </div>
-    );
-  }
-
-  if (!agent) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <p className="text-gray-500">Agent tidak ditemukan</p>
-        <Link href="/user/home" className="mt-4 text-green-600 hover:underline">
-          Kembali ke Beranda
-        </Link>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <Toaster position="top-right" richColors />
-      
-      <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="w-full min-h-screen bg-slate-50 font-sans">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-6 md:py-8 space-y-8">
         
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-5 transition-colors group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-sm">Kembali</span>
-        </button>
-
-        {/* Agent Info Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6 border border-gray-100">
-          {/* Header Banner */}
-          <div className="bg-gradient-to-r from-green-600 to-green-500 px-6 py-5">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Store className="w-5 h-5 text-white/80" />
-                  <span className="text-white/80 text-xs font-medium">Agen Bank Sampah</span>
-                </div>
-                <h1 className="text-2xl font-bold text-white">{agent.agent_name}</h1>
-                <div className="flex flex-wrap items-center gap-3 mt-2">
-                  <div className="flex items-center gap-1 bg-white/20 rounded-full px-2 py-0.5">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    <span className="text-sm text-white font-medium">{rating}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-white/80 text-sm">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {agent.service_area}
-                  </div>
-                  <div className="flex items-center gap-1 text-white/80 text-sm">
-                    <Clock className="w-3.5 h-3.5" />
-                    {distance} km dari Anda
-                  </div>
-                </div>
-              </div>
-              <Badge className={agent.is_active ? "bg-green-400 text-white px-3 py-1" : "bg-gray-400 text-white px-3 py-1"}>
-                {agent.is_active ? "🟢 Buka" : "🔴 Tutup"}
-              </Badge>
+        {/* HEADING */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-primary mb-1 uppercase tracking-wider">
+              Lokasi Saat Ini
+            </p>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-slate-800" />
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                {userLocation}
+              </h1>
             </div>
           </div>
-          
-          {/* Contact Info */}
-          <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3">
-                <Phone className="w-5 h-5 text-green-600 mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-400">Nomor Telepon</p>
-                  <p className="font-medium text-gray-800">{agent.phone || "Belum tersedia"}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-green-600 mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-400">Alamat Lengkap</p>
-                  <p className="font-medium text-gray-800">{agent.address || "Belum tersedia"}</p>
-                </div>
-              </div>
-            </div>
+          <div className="text-sm text-muted-foreground bg-white px-3 py-1 rounded-full shadow-sm">
+            {sortedAgents.length} Agen Tersedia
           </div>
         </div>
 
-        {/* Price List Card */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6 border border-gray-100">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-            <h2 className="font-bold text-lg text-gray-800">💰 Daftar Harga Sampah</h2>
-            <p className="text-sm text-gray-500">Harga per kilogram (kg) yang berlaku</p>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {agent.waste_categories?.map((wasteType) => {
-              const Icon = WASTE_ICONS[wasteType] || Package;
-              const price = getPricePerKg(wasteType);
+        {/* CATEGORY CHIPS */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-bold text-slate-800">Filter Sampah</h2>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {WASTE_CHIPS.map((chip) => {
+              const isActive = activeChip === chip;
+              const displayLabel = WASTE_LABELS[chip] || chip;
               return (
-                <div key={wasteType} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl ${WASTE_COLORS[wasteType]}`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">{WASTE_LABELS[wasteType] || wasteType}</p>
-                      <p className="text-xs text-gray-400">per kilogram</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-green-600">
-                      {price.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-400">poin/kg</p>
-                  </div>
-                </div>
+                <button
+                  key={chip}
+                  onClick={() => setActiveChip(chip)}
+                  className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                    isActive
+                      ? "bg-primary text-white shadow-md shadow-primary/30"
+                      : "bg-white text-slate-600 shadow-sm border border-slate-200 hover:border-primary/50"
+                  }`}
+                >
+                  {displayLabel}
+                </button>
               );
             })}
           </div>
         </div>
 
-        {/* Info Card */}
-        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 mb-6 border border-blue-100">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-blue-800">💡 Cara Penjemputan</p>
-              <p className="text-xs text-blue-700 mt-1">
-                1. Pilih jenis sampah dan masukkan perkiraan berat<br />
-                2. Pilih tanggal penjemputan<br />
-                3. Agen akan menghubungi Anda untuk konfirmasi<br />
-                4. Poin akan masuk setelah sampah ditimbang
+        {/* ALL AGENTS (1 Grid, Terdekat di Atas) */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-slate-900">
+              Agen Terdekat
+            </h2>
+            <Button variant="ghost" size="sm" className="text-primary text-xs">
+              Lihat Semua <ChevronRight className="w-3 h-3 ml-1" />
+            </Button>
+          </div>
+
+          {sortedAgents.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
+              <Search className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-slate-800 mb-2">
+                Tidak Ada Agen Ditemukan
+              </h3>
+              <p className="text-slate-500 text-sm">
+                Coba sesuaikan kata kunci atau filter.
               </p>
             </div>
-          </div>
-        </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {sortedAgents.map((agent, idx) => {
+                const Icon = getIconForWaste(agent.waste_categories?.[0] || "mixed");
+                const isTopRated = (agent.rating || 0) >= 4.8;
+                const isNearest = idx < 3;
+                
+                return (
+                  <Link
+                    key={agent.id}
+                    href={`/user/request/${agent.id}`}
+                    className="block group"
+                  >
+                    <Card className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                      {/* Banner with distance badge */}
+                      <div className="relative h-24 bg-gradient-to-r from-primary/20 to-primary/5 flex items-center justify-center">
+                        <div className="absolute top-2 left-2 flex gap-1">
+                          {isNearest && (
+                            <Badge className="bg-blue-500 text-white text-[10px] px-2 py-0.5">
+                              📍 Terdekat
+                            </Badge>
+                          )}
+                          {isTopRated && (
+                            <Badge className="bg-amber-500 text-white text-[10px] px-2 py-0.5">
+                              ⭐ Unggulan
+                            </Badge>
+                          )}
+                          {agent.is_active && (
+                            <Badge className="bg-green-500 text-white text-[10px] px-2 py-0.5">
+                              ✓ Aktif
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="bg-white/80 rounded-full p-2 shadow-md">
+                          <Icon className="w-8 h-8 text-primary" />
+                        </div>
+                      </div>
+                      
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-bold text-slate-900 truncate">
+                            {agent.agent_name}
+                          </h3>
+                          <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full">
+                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                            <span className="text-xs font-bold text-amber-700">{agent.rating}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
+                          <MapPin className="w-3 h-3 text-primary" />
+                          {agent.distance_km} km - {agent.service_area}
+                        </div>
 
-        {/* Action Button - LANGSUNG KE REQUEST */}
-        <Link href={`/user/request/${agent.id}`}>
-          <Button className="w-full py-6 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-            <Truck className="w-5 h-5" />
-            Ajukan Penjemputan
-          </Button>
-        </Link>
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {agent.waste_categories?.slice(0, 3).map((w) => (
+                            <span
+                              key={w}
+                              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${TAG_COLORS[w] || "bg-slate-100 text-slate-600"}`}
+                            >
+                              {WASTE_LABELS[w] || w}
+                            </span>
+                          ))}
+                          {(agent.waste_categories?.length || 0) > 3 && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                              +{(agent.waste_categories?.length || 0) - 3}
+                            </span>
+                          )}
+                        </div>
 
-        {/* Disclaimer */}
-        <p className="text-center text-xs text-gray-400 mt-4">
-          Pastikan data alamat Anda sudah benar sebelum mengajukan penjemputan
-        </p>
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                          <span className="text-xs text-slate-500">Poin/kg</span>
+                          <span className="text-lg font-black text-primary">
+                            {agent.price_per_kg?.toLocaleString()}
+                            <span className="text-xs font-normal text-slate-400"> poin</span>
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </section>
       </div>
     </div>
+  );
+}
+
+export default function HomeDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }

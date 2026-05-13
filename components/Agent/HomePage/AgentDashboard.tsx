@@ -24,12 +24,12 @@ export default function AgentDashboard() {
       if (!user) return;
 
       const { data: requests, error } = await supabase
-        .from("requests")
+        .from("pickup_requests")
         .select(`
           id,
           status,
           pickup_address,
-          estimated_weights,
+          estimated_weight,
           created_at,
           user_id
         `)
@@ -59,7 +59,7 @@ export default function AgentDashboard() {
         }
 
         const formattedRequests = requests.map(req => {
-          const weights = req.estimated_weights as Record<string, number> || {};
+          const weights = req.estimated_weight as Record<string, number> || {};
           const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
           const date = new Date(req.created_at);
 
@@ -77,7 +77,7 @@ export default function AgentDashboard() {
           };
         });
 
-        setActiveTasks(formattedRequests.filter(r => ["pending", "progress"].includes(r.status)));
+        setActiveTasks(formattedRequests.filter(r => ["pending", "accepted"].includes(r.status)));
         setRecentPickups(formattedRequests.filter(r => r.status === "completed").slice(0, 5));
       }
     } catch (error) {
@@ -90,7 +90,7 @@ export default function AgentDashboard() {
   const updateTaskStatus = async (id: string, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from("requests")
+        .from("pickup_requests")
         .update({ status: newStatus })
         .eq("id", id);
 
@@ -122,12 +122,12 @@ export default function AgentDashboard() {
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           {activeTasks.map((task) => (
-            <div key={task.id} className={`p-5 rounded-xl border transition-all duration-300 ${task.status === 'progress' ? 'border-primary shadow-sm bg-primary/5' : 'border-border/60 bg-card hover:bg-muted/30'}`}>
+            <div key={task.id} className={`p-5 rounded-xl border transition-all duration-300 ${task.status === 'accepted' ? 'border-primary shadow-sm bg-primary/5' : 'border-border/60 bg-card hover:bg-muted/30'}`}>
               <div className="flex flex-col sm:flex-row justify-between gap-5">
                 <div className="space-y-3 flex-1">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-[10px] font-bold text-muted-foreground bg-muted/50 border-border px-2 py-0.5">{task.id}</Badge>
-                    {task.status === "progress" && (
+                    {task.status === "accepted" && (
                       <Badge className="bg-primary/20 text-primary border-none text-[10px] hover:bg-primary/30">Sedang Berjalan</Badge>
                     )}
                   </div>
@@ -154,13 +154,13 @@ export default function AgentDashboard() {
                     <MapPin className="w-4 h-4 mr-2" />
                     Navigasi
                   </Button>
-                  {task.status === "progress" ? (
+                  {task.status === "accepted" ? (
                     <Button size="sm" variant="outline" className="w-full font-bold border-primary text-primary hover:bg-primary/10" onClick={() => updateTaskStatus(task.dbId, 'completed')}>
                       <CheckCircle2 className="w-4 h-4 mr-2" />
                       Selesai
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline" className="w-full font-bold border-border text-foreground hover:bg-muted" onClick={() => updateTaskStatus(task.dbId, 'progress')}>
+                    <Button size="sm" variant="outline" className="w-full font-bold border-border text-foreground hover:bg-muted" onClick={() => updateTaskStatus(task.dbId, 'accepted')}>
                       Terima
                     </Button>
                   )}

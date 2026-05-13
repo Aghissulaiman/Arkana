@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect, use } from "react"; // ← tambahkan use
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import { 
@@ -9,10 +9,10 @@ import {
   MapPin, 
   Star, 
   Phone, 
-  Building2,
   Package,
   Leaf,
   Recycle,
+  Building2,
   Truck,
   Calendar,
   ArrowLeft,
@@ -21,6 +21,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Toaster, toast } from "sonner";
+
+// params adalah Promise di Next.js 16
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
 
 type Agent = {
   id: string;
@@ -70,10 +75,13 @@ const WASTE_COLORS: Record<string, string> = {
   mixed: "bg-slate-100 text-slate-800",
 };
 
-export default function RequestPickupPage() {
+export default function RequestPickupPage({ params }: PageProps) {
   const router = useRouter();
-  const params = useParams();
   const supabase = createClientSupabaseClient();
+  
+  // UNWRAP params dengan use()
+  const { id: agentId } = use(params);
+  
   const [agent, setAgent] = useState<Agent | null>(null);
   const [prices, setPrices] = useState<PriceCatalog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,9 +92,6 @@ export default function RequestPickupPage() {
   const [selectedWaste, setSelectedWaste] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState("");
   const [pickupDate, setPickupDate] = useState("");
-  const agentId = params?.id as string;
-  const [rating] = useState((4 + Math.random() * 0.9).toFixed(1));
-  const [distance] = useState((Math.random() * 5 + 0.5).toFixed(1));
 
   useEffect(() => {
     if (!agentId) return;
@@ -98,14 +103,12 @@ export default function RequestPickupPage() {
     
     setLoading(true);
     
-    // Ambil data user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push("/login");
       return;
     }
 
-    // Ambil profile user
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name, phone, address")
@@ -116,7 +119,6 @@ export default function RequestPickupPage() {
     setUserPhone(profile?.phone || "");
     setUserAddress(profile?.address || "");
 
-    // Ambil data agent
     const { data: agentData, error: agentError } = await supabase
       .from("agents")
       .select("*")
@@ -131,14 +133,12 @@ export default function RequestPickupPage() {
 
     setAgent(agentData);
 
-    // Initialize selected waste
     const initialSelected: Record<string, number> = {};
     agentData.waste_categories?.forEach((w: string) => {
       initialSelected[w] = 0;
     });
     setSelectedWaste(initialSelected);
 
-    // Ambil harga
     const { data: priceData } = await supabase
       .from("price_catalog")
       .select("waste_type, price_per_kg");
@@ -242,6 +242,8 @@ export default function RequestPickupPage() {
 
   const totalPoints = calculateTotalPoints();
   const totalWeight = calculateTotalWeight();
+  const rating = (4 + Math.random() * 0.9).toFixed(1);
+  const distance = (Math.random() * 5 + 0.5).toFixed(1);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -257,7 +259,6 @@ export default function RequestPickupPage() {
           <span className="text-sm">Kembali</span>
         </button>
 
-        {/* Agent Info Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6 border border-gray-100">
           <div className="bg-gradient-to-r from-green-600 to-green-500 px-6 py-5">
             <div className="flex justify-between items-start">
@@ -294,7 +295,6 @@ export default function RequestPickupPage() {
           </div>
         </div>
 
-        {/* Price List Card */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6 border border-gray-100">
           <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 className="font-bold text-lg text-gray-800">💰 Daftar Harga Sampah</h2>
@@ -327,7 +327,6 @@ export default function RequestPickupPage() {
           </div>
         </div>
 
-        {/* Request Form */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
           <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 className="font-bold text-lg text-gray-800">📝 Form Penjemputan</h2>
@@ -348,9 +347,6 @@ export default function RequestPickupPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Jl. Contoh No. 123, RT 01/RW 02"
               />
-              <p className="text-xs text-gray-400 mt-1">
-                {!userAddress && "⚠️ Lengkapi alamat di profil untuk penjemputan"}
-              </p>
             </div>
 
             <div>
@@ -438,7 +434,7 @@ export default function RequestPickupPage() {
             <Button
               type="submit"
               disabled={submitting || totalWeight === 0}
-              className="w-full py-6 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:transform-none"
+              className="w-full py-6 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all"
             >
               {submitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -457,7 +453,6 @@ export default function RequestPickupPage() {
               <p className="text-sm font-semibold text-blue-800">💡 Informasi</p>
               <p className="text-xs text-blue-700 mt-1">
                 Poin akan masuk ke akun Anda setelah agen mengonfirmasi dan menimbang sampah.
-                Pastikan sampah sudah dipisahkan sesuai jenisnya.
               </p>
             </div>
           </div>
@@ -465,4 +460,4 @@ export default function RequestPickupPage() {
       </div>
     </div>
   );
-}   
+}
