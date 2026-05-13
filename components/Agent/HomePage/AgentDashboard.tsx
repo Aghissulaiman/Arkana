@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Navigation, Clock, CheckCircle2, Loader2, Truck } from "lucide-react";
+import { MapPin, Navigation, Clock, CheckCircle2, Loader2, Truck, Eye, ChevronRight } from "lucide-react";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
 
@@ -13,55 +13,35 @@ export default function AgentDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTasks, setActiveTasks] = useState<any[]>([]);
   const [recentPickups, setRecentPickups] = useState<any[]>([]);
-  const [debugInfo, setDebugInfo] = useState<any>({});
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      console.log("=== DEBUG AGENT DASHBOARD ===");
-      console.log("User:", user);
-      console.log("User Error:", userError);
+      const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        console.log("User tidak login");
         setLoading(false);
         return;
       }
 
       // Cari agent_id dari tabel agents berdasarkan user_id
-      const { data: agentData, error: agentError } = await supabase
+      const { data: agentData } = await supabase
         .from("agents")
         .select("id, agent_name")
         .eq("user_id", user.id)
         .single();
 
-      console.log("Agent Data:", agentData);
-      console.log("Agent Error:", agentError);
-
       if (!agentData) {
-        console.log("User ini bukan agent atau belum terdaftar di tabel agents");
         setLoading(false);
         return;
       }
 
-      // Ambil pickup requests berdasarkan agent_id (BUKAN user.id)
-      const { data: requests, error: requestsError } = await supabase
+      // Ambil pickup requests berdasarkan agent_id
+      const { data: requests } = await supabase
         .from("pickup_requests")
         .select("*")
         .eq("agent_id", agentData.id)
         .order("created_at", { ascending: false });
-
-      console.log("Requests:", requests);
-      console.log("Requests Error:", requestsError);
-      console.log("Jumlah Request:", requests?.length || 0);
-
-      setDebugInfo({
-        agentId: agentData.id,
-        agentName: agentData.agent_name,
-        totalRequests: requests?.length || 0,
-      });
 
       if (requests && requests.length > 0) {
         // Ambil nama customer
@@ -94,7 +74,10 @@ export default function AgentDashboard() {
           };
         });
 
-        setActiveTasks(formattedRequests.filter(r => ["pending", "accepted"].includes(r.status)));
+        // Ambil tugas yang pending/accepted
+        const allActiveTasks = formattedRequests.filter(r => ["pending", "accepted"].includes(r.status));
+        // Hanya ambil 3 tugas teratas untuk dashboard
+        setActiveTasks(allActiveTasks.slice(0, 3));
         setRecentPickups(formattedRequests.filter(r => r.status === "completed").slice(0, 5));
       } else {
         setActiveTasks([]);
@@ -104,21 +87,6 @@ export default function AgentDashboard() {
       console.error("Failed to fetch dashboard data:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const updateTaskStatus = async (id: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from("pickup_requests")
-        .update({ status: newStatus })
-        .eq("id", id);
-
-      if (!error) {
-        fetchDashboardData();
-      }
-    } catch (err) {
-      console.error("Error updating task:", err);
     }
   };
 
@@ -134,19 +102,12 @@ export default function AgentDashboard() {
     );
   }
 
+  const totalActiveTasksCount = activeTasks.length;
+
   return (
     <div className="space-y-6">
-      {/* Debug Info (hapus setelah masalah selesai) */}
-      <div className="bg-yellow-50 p-4 rounded-xl text-xs">
-        <p className="font-bold">🔍 Debug Info:</p>
-        <p>Agent ID: {debugInfo.agentId || "-"}</p>
-        <p>Agent Name: {debugInfo.agentName || "-"}</p>
-        <p>Total Requests: {debugInfo.totalRequests || 0}</p>
-        <p>Active Tasks: {activeTasks.length}</p>
-        <p className="text-muted-foreground mt-2">* Cek console browser (F12) untuk detail</p>
-      </div>
-
       <div className="grid lg:grid-cols-3 gap-6">
+        {/* Tugas Aktif Section */}
         <Card className="lg:col-span-2 border-0 shadow-sm bg-background">
           <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 pb-4">
             <CardTitle className="text-lg font-bold text-foreground">Tugas Penjemputan</CardTitle>
@@ -187,20 +148,28 @@ export default function AgentDashboard() {
                     </div>
                   </div>
                   <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36 justify-center">
-                    <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm" onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(task.address)}`, '_blank')}>
+                    <Button 
+                      size="sm" 
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm" 
+                      onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(task.address)}`, '_blank')}
+                    >
                       <MapPin className="w-4 h-4 mr-2" />
                       Navigasi
                     </Button>
-                    {task.status === "accepted" ? (
-                      <Button size="sm" variant="outline" className="w-full font-bold border-primary text-primary hover:bg-primary/10" onClick={() => updateTaskStatus(task.dbId, 'completed')}>
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        Selesai
+                    <Link href={`/agent/tasks/${task.dbId}`} className="w-full">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className={`w-full font-bold ${
+                          task.status === "accepted" 
+                            ? "border-green-500 text-green-600 hover:bg-green-50" 
+                            : "border-blue-500 text-blue-600 hover:bg-blue-50"
+                        }`}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        {task.status === "accepted" ? "Proses" : "Lihat Detail"}
                       </Button>
-                    ) : (
-                      <Button size="sm" variant="outline" className="w-full font-bold border-border text-foreground hover:bg-muted" onClick={() => updateTaskStatus(task.dbId, 'accepted')}>
-                        Terima
-                      </Button>
-                    )}
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -212,9 +181,22 @@ export default function AgentDashboard() {
                 <p className="text-sm text-muted-foreground mt-1">Tunggu permintaan dari user</p>
               </div>
             )}
+            
+            {/* Tombol Lihat Semua Tugas */}
+            {activeTasks.length > 0 && (
+              <div className="pt-4 border-t border-border/50">
+                <Link href="/agent/tasks">
+                  <Button variant="ghost" className="w-full text-primary hover:text-primary hover:bg-primary/10 gap-2">
+                    Lihat Semua Tugas
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
 
+        {/* Riwayat Terbaru Section */}
         <Card className="border-0 shadow-sm bg-background">
           <CardHeader className="border-b border-border/50 pb-4">
             <CardTitle className="text-lg font-bold text-foreground">Riwayat Terbaru</CardTitle>
@@ -243,9 +225,9 @@ export default function AgentDashboard() {
               </div>
             )}
             {recentPickups.length > 0 && (
-              <Link href="/agent/tasks">
+              <Link href="/agent/history">
                 <Button variant="ghost" className="w-full text-xs font-bold text-primary hover:text-primary hover:bg-primary/10 mt-2">
-                  Lihat Semua Tugas
+                  Lihat Semua Riwayat
                 </Button>
               </Link>
             )}

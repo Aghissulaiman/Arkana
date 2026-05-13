@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { StatCards } from "./StatCards";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,19 +14,45 @@ import {
   XCircle,
   AlertCircle,
   ShieldCheck,
-  UserPlus,
   ArrowRight,
+  Loader2,
+  Eye,
+  Check,
+  Users,
+  Package,
+  TrendingUp,
 } from "lucide-react";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
+import { Toaster, toast } from "sonner";
 
-// Perbaikan: Definisi tipe dan data yang sebelumnya missing
 type StatusType = "Menunggu" | "Diproses" | "Selesai" | "Ditolak";
-const CATEGORIES = [
-  "Semua",
-  "Plastik & Botol",
-  "Kertas & Kardus",
-  "Logam",
-  "Elektronik",
-];
+type AgentApplication = {
+  id: string;
+  agent_name: string;
+  service_area: string;
+  waste_categories: string[];
+  status: string;
+  created_at: string;
+  user_email?: string;
+};
+
+type PickupRequest = {
+  id: string;
+  request_code: string;
+  user_name?: string;
+  agent_name?: string;
+  waste_type: string;
+  estimated_weight: number;
+  status: string;
+  created_at: string;
+};
+
+type AgentStats = {
+  id: string;
+  agent_name: string;
+  total_pickups: number;
+  avg_rating: number;
+};
 
 const STATUS_STYLE: Record<
   StatusType,
@@ -54,10 +80,192 @@ const STATUS_STYLE: Record<
   },
 };
 
+const WASTE_LABELS: Record<string, string> = {
+  plastic: "Plastik & Botol",
+  paper: "Kertas & Kardus",
+  cardboard: "Kardus",
+  glass: "Kaca",
+  aluminium: "Aluminium",
+  metal: "Logam",
+  electronic: "Elektronik",
+  mixed: "Campuran",
+};
+
+const CATEGORIES = ["Semua", "Plastik & Botol", "Kertas & Kardus", "Logam", "Elektronik"];
+
 export default function AdminDashboard() {
+  const router = useRouter();
+  const supabase = createClientSupabaseClient();
+  
+  const [applications, setApplications] = useState<AgentApplication[]>([]);
+  const [pickups, setPickups] = useState<PickupRequest[]>([]);
+  const [topAgents, setTopAgents] = useState<AgentStats[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("Semua");
+  const [stats, setStats] = useState({
+    totalAgents: 0,
+    totalPickups: 0,
+    totalPoints: 0,
+    pendingPickups: 0,
+  });
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const { data: userData } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (userData?.role !== "admin") {
+        router.push("/user/home");
+        return;
+      }
+
+      // 1. Ambil pending agent applications
+      const { data: appData } = await supabase
+        .from("agent_applications")
+        .select(`
+          *,
+          users!agent_applications_user_id_fkey (email)
+        `)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      const formattedApps = (appData || []).map((app: any) => ({
+        id: app.id,
+        agent_name: app.agent_name,
+        service_area: app.service_area,
+        waste_categories: app.waste_categories,
+        status: app.status,
+        created_at: app.created_at,
+        user_email: app.users?.email,
+      }));
+      setApplications(formattedApps);
+
+      // 2. Ambil recent pickup requests
+      const { data: pickupData } = await supabase
+        .from("pickup_requests")
+        .select(`
+          *,
+          users!pickup_requests_user_id_fkey (email),
+          agents!pickup_requests_agent_id_fkey (agent_name)
+        `)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const formattedPickups = (pickupData || []).map((p: any) => ({
+        id: p.id,
+        request_code: p.request_code,
+        user_name: p.users?.email?.split("@")[0] || "User",
+        agent_name: p.agents?.agent_name || "-",
+        waste_type: WASTE_LABELS[p.waste_type] || p.waste_type,
+        estimated_weight: p.estimated_weight,
+        status: p.status,
+        created_at: p.created_at,
+      }));
+      setPickups(formattedPickups);
+
+      // 3. Ambil top agents
+      const { data: agentsData } = await supabase
+        .from("agents")
+        .select("id, agent_name, avg_rating")
+        .order("avg_rating", { ascending: false })
+        .limit(3);
+
+      const topAgentsWithStats = await Promise.all(
+        (agentsData || []).map(async (agent) => {
+          const { count } = await supabase
+            .from("pickup_requests")
+            .select("*", { count: "exact", head: true })
+            .eq("agent_id", agent.id)
+            .eq("status", "completed");
+          
+          return {
+            id: agent.id,
+            agent_name: agent.agent_name,
+            total_pickups: count || 0,
+            avg_rating: agent.avg_rating || 4.5,
+          };
+        })
+      );
+      setTopAgents(topAgentsWithStats);
+
+      // 4. Ambil statistik
+      const { count: totalAgents } = await supabase
+        .from("agents")
+        .select("*", { count: "exact", head: true });
+
+      const { data: allPickups } = await supabase
+        .from("pickup_requests")
+        .select("status, total_points");
+
+      const totalPickups = allPickups?.length || 0;
+      const totalPoints = allPickups?.reduce((sum, p) => sum + (p.total_points || 0), 0) || 0;
+      const pendingPickups = allPickups?.filter(p => p.status === "pending").length || 0;
+
+      setStats({
+        totalAgents: totalAgents || 0,
+        totalPickups,
+        totalPoints,
+        pendingPickups,
+      });
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Gagal memuat data dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusType = (status: string): StatusType => {
+    switch(status) {
+      case "pending": return "Menunggu";
+      case "accepted": return "Diproses";
+      case "completed": return "Selesai";
+      case "rejected": return "Ditolak";
+      default: return "Menunggu";
+    }
+  };
+
+  const filteredPickups = pickups.filter(p => {
+    if (searchQuery && !p.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !p.agent_name?.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    if (categoryFilter !== "Semua" && p.waste_type !== categoryFilter) {
+      return false;
+    }
+    return true;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-12 p-6 bg-[#FAFBFC] min-h-screen font-sans">
-      {/* 1. MINIMALIST HEADER */}
+      <Toaster position="top-right" richColors />
+      
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-slate-200 pb-8">
         <div className="w-full md:w-auto">
           <div className="flex items-center gap-2 text-emerald-600 mb-2">
@@ -77,29 +285,77 @@ export default function AdminDashboard() {
         <div className="flex gap-3 w-full md:w-auto">
           <Button
             variant="outline"
+            onClick={() => router.push("/admin/agent-applications")}
             className="flex-1 md:flex-none rounded-xl border-slate-200 text-slate-600 font-bold px-6 h-11"
           >
-            Log Aktivitas
+            Lihat Pendaftaran
           </Button>
-          <Button className="flex-1 md:flex-none bg-emerald-600 text-white rounded-xl px-6 h-11 font-bold shadow-xs shadow-emerald-100 transition-all hover:text-emerald-700 ">
-            Export Report
+          <Button 
+            onClick={fetchAllData}
+            className="flex-1 md:flex-none bg-emerald-600 text-white rounded-xl px-6 h-11 font-bold shadow-xs shadow-emerald-100 transition-all hover:bg-emerald-700"
+          >
+            Refresh Data
           </Button>
         </div>
       </div>
 
-      {/* 2. STATS SECTION */}
-      <StatCards />
+      {/* STATS CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-400">Total Agent</p>
+              <p className="text-3xl font-bold text-slate-800">{stats.totalAgents}</p>
+            </div>
+            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-emerald-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-400">Total Penjemputan</p>
+              <p className="text-3xl font-bold text-slate-800">{stats.totalPickups}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Package className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-400">Total Poin Diberikan</p>
+              <p className="text-3xl font-bold text-slate-800">{stats.totalPoints.toLocaleString()}</p>
+            </div>
+            <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-400">Menunggu Konfirmasi</p>
+              <p className="text-3xl font-bold text-amber-600">{stats.pendingPickups}</p>
+            </div>
+            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+              <Clock className="w-6 h-6 text-amber-600" />
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* 3. AGENT MANAGEMENT SECTION */}
+      {/* AGENT VERIFICATION SECTION */}
       <div className="grid lg:grid-cols-3 gap-10 pt-3">
-        {/* Left: Pending Verifications */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h2 className="text-xl font-bold text-slate-800 flex items-center gap-3">
                 Verifikasi Agent
-                <span className="bg-rose-100 text-rose-600 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                  12 New Request
+                <span className="bg-rose-100 text-rose-600 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  {applications.length} New Request
                 </span>
               </h2>
               <p className="text-xs text-slate-400 font-medium">
@@ -108,6 +364,7 @@ export default function AdminDashboard() {
             </div>
             <Button
               variant="ghost"
+              onClick={() => router.push("/admin/agent-applications")}
               className="text-emerald-600 text-sm font-bold hover:bg-emerald-50 rounded-xl"
             >
               Lihat Semua <ArrowRight className="w-4 h-4 ml-2" />
@@ -115,159 +372,130 @@ export default function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm">
-            {[
-              {
-                name: "Pengepul Jaya Abadi",
-                id: "ARK-882",
-                cap: "850kg/day",
-                loc: "Jakarta Selatan",
-              },
-              {
-                name: "Sinar Rejeki Waste",
-                id: "ARK-712",
-                cap: "1.2 Ton/day",
-                loc: "Depok, Jabar",
-              },
-              {
-                name: "Lestari Recycle",
-                id: "ARK-441",
-                cap: "400kg/day",
-                loc: "Tangerang",
-              },
-            ].map((agent, i) => (
-              <div
-                key={i}
-                className="flex flex-col md:flex-row md:items-center justify-between p-6 border-b border-slate-50 last:border-none hover:bg-slate-50/50 transition-colors gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <img
-                      src={`https://i.pravatar.cc/100?img=${i + 20}`}
-                      className="w-14 h-14 rounded-2xl object-cover grayscale-[0.2] border-2 border-white shadow-sm"
-                      alt="avatar"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                      {agent.name}
-                    </h4>
-                    <div className="flex items-center gap-3 mt-1">
-                      <p className="text-[11px] text-slate-400 font-medium">
-                        {agent.loc}
-                      </p>
-                      <span className="text-slate-200 text-[10px]">|</span>
-                      <p className="text-[11px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">
-                        Cap: {agent.cap}
-                      </p>
+            {applications.length === 0 ? (
+              <div className="p-8 text-center text-slate-400">
+                Tidak ada permintaan verifikasi agent baru
+              </div>
+            ) : (
+              applications.map((app, i) => (
+                <div
+                  key={app.id}
+                  className="flex flex-col md:flex-row md:items-center justify-between p-6 border-b border-slate-50 last:border-none hover:bg-slate-50/50 transition-colors gap-4"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center">
+                        <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        {app.agent_name}
+                      </h4>
+                      <div className="flex items-center gap-3 mt-1">
+                        <p className="text-[11px] text-slate-400 font-medium">{app.service_area}</p>
+                        <span className="text-slate-200 text-[10px]">|</span>
+                        <p className="text-[11px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">
+                          {app.waste_categories?.length || 0} Jenis Sampah
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex gap-2 items-center justify-end">
-                  <Button className="h-10 px-5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-emerald-600 transition-all shadow-md shadow-slate-200">
-                    Cek Dokumen
-                  </Button>
+                  <div className="flex gap-2 items-center justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push(`/admin/agent-applications/${app.id}`)}
+                      className="h-10 px-5 rounded-xl border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-100"
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1" />
+                      Detail
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
-        {/* Right: Top Rated */}
+        {/* TOP PERFORMANCE */}
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-slate-800">
-              Top Performance
-            </h2>
+            <h2 className="text-xl font-bold text-slate-800">Top Performance</h2>
             <p className="text-xs text-slate-400 font-medium">
               Agent dengan produktivitas tertinggi bulan ini.
             </p>
           </div>
 
           <div className="space-y-3">
-            {[
-              {
-                name: "Haryanto Waste",
-                score: 4.9,
-                pickups: 124,
-                color: "text-amber-500 bg-amber-50 border-amber-100",
-              },
-              {
-                name: "Siti Aminah",
-                score: 4.8,
-                pickups: 98,
-                color: "text-emerald-500 bg-emerald-50 border-emerald-100",
-              },
-              {
-                name: "Budi Santoso",
-                score: 4.7,
-                pickups: 82,
-                color: "text-blue-500 bg-blue-50 border-blue-100",
-              },
-            ].map((agent, i) => (
-              <div
-                key={i}
-                className="group p-5 bg-white rounded-3xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-slate-100/50 transition-all cursor-default"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div
-                    className={`px-3 py-1 rounded-full font-black text-[10px] border uppercase tracking-widest ${agent.color}`}
-                  >
-                    Rank #0{i + 1}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs font-black text-slate-700">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    {agent.score}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-black text-slate-800 group-hover:text-emerald-600 transition-colors">
-                      {agent.name}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">
-                      {agent.pickups} Sukses Penjemputan
-                    </p>
-                  </div>
-                  <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
-                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-colors" />
-                  </div>
-                </div>
+            {topAgents.length === 0 ? (
+              <div className="bg-white rounded-3xl p-6 text-center border border-slate-100">
+                <p className="text-sm text-slate-400">Belum ada data agent</p>
               </div>
-            ))}
+            ) : (
+              topAgents.map((agent, i) => (
+                <div
+                  key={agent.id}
+                  className="group p-5 bg-white rounded-3xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg transition-all cursor-default"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`px-3 py-1 rounded-full font-black text-[10px] border uppercase tracking-widest ${
+                      i === 0 ? "text-amber-500 bg-amber-50 border-amber-100" :
+                      i === 1 ? "text-emerald-500 bg-emerald-50 border-emerald-100" :
+                      "text-blue-500 bg-blue-50 border-blue-100"
+                    }`}>
+                      Rank #{i + 1}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-black text-slate-700">
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      {agent.avg_rating.toFixed(1)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-black text-slate-800 group-hover:text-emerald-600 transition-colors">
+                        {agent.agent_name}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">
+                        {agent.total_pickups} Sukses Penjemputan
+                      </p>
+                    </div>
+                    <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
+                      <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      {/* 4. MONITORING SECTION */}
-      <div className="space-y-6 ">
+      {/* ACTIVITY MONITORING */}
+      <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">
-            Aktivitas Terkini
-          </h2>
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Aktivitas Terkini</h2>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Search Bar (Ref: image_740fc5.png) */}
-
           <div className="relative w-full md:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-
             <Input
               placeholder="Cari transaksi atau user..."
               className="pl-11 rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white h-11"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
-          {/* Category Filter */}
 
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
+                onClick={() => setCategoryFilter(cat)}
                 className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
-                  cat === "Semua"
+                  categoryFilter === cat
                     ? "bg-emerald-600 text-white shadow-md shadow-emerald-100"
                     : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                 }`}
@@ -278,86 +506,66 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Activity List */}
         <div className="grid gap-4">
-          {[
-            {
-              id: "TX-99",
-              user: "Rina Dewi",
-              agent: "Haryanto Waste",
-              status: "Diproses",
-              weight: "12kg",
-              time: "2m ago",
-              type: "Plastik & Botol",
-            },
-            {
-              id: "TX-98",
-              user: "Ahmad Fauzi",
-              agent: "Budi Santoso",
-              status: "Menunggu",
-              weight: "5kg",
-              time: "15m ago",
-              type: "Kertas & Kardus",
-            },
-            {
-              id: "TX-97",
-              user: "Siti Rahayu",
-              agent: "Siti Aminah",
-              status: "Selesai",
-              weight: "20kg",
-              time: "1h ago",
-              type: "Logam",
-            },
-          ].map((trx) => {
-            const s = STATUS_STYLE[trx.status as StatusType];
-            return (
-              <div
-                key={trx.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-[28px] border border-slate-100 bg-white hover:border-emerald-200 hover:shadow-xl hover:shadow-slate-100/50 transition-all cursor-pointer group gap-4"
-              >
-                <div className="flex items-center gap-5">
-                  <div
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center ${s.color} bg-opacity-10 transition-all group-hover:scale-105 border`}
-                  >
-                    {s.icon}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase border ${s.color}`}
-                      >
-                        {s.label}
-                      </span>
+          {filteredPickups.length === 0 ? (
+            <div className="bg-white rounded-2xl p-10 text-center border border-slate-100">
+              <p className="text-slate-400">Tidak ada aktivitas</p>
+            </div>
+          ) : (
+            filteredPickups.map((trx) => {
+              const statusType = getStatusType(trx.status);
+              const s = STATUS_STYLE[statusType];
+              const timeAgo = new Date(trx.created_at).toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              
+              return (
+                <div
+                  key={trx.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-[28px] border border-slate-100 bg-white hover:border-emerald-200 hover:shadow-xl transition-all cursor-pointer group gap-4"
+                >
+                  <div className="flex items-center gap-5">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${s.color} bg-opacity-10 transition-all group-hover:scale-105 border`}>
+                      {s.icon}
                     </div>
-                    <h4 className="text-base font-bold text-slate-800 leading-none">
-                      {trx.user}{" "}
-                      <span className="text-slate-300 font-medium mx-1 text-sm">
-                        mengirim ke
-                      </span>{" "}
-                      {trx.agent}
-                    </h4>
-                    <p className="text-xs text-slate-400 font-medium mt-1.5">
-                      {trx.type} •{" "}
-                      <span className="text-emerald-600 font-bold">
-                        {trx.weight}
-                      </span>
-                    </p>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.15em]">
+                          {trx.request_code?.slice(0, 8) || trx.id.slice(0, 8)}
+                        </span>
+                        <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase border ${s.color}`}>
+                          {s.label}
+                        </span>
+                      </div>
+                      <h4 className="text-base font-bold text-slate-800 leading-none">
+                        {trx.user_name}{" "}
+                        <span className="text-slate-300 font-medium mx-1 text-sm">
+                          mengirim ke
+                        </span>{" "}
+                        {trx.agent_name}
+                      </h4>
+                      <p className="text-xs text-slate-400 font-medium mt-1.5">
+                        {trx.waste_type} •{" "}
+                        <span className="text-emerald-600 font-bold">
+                          {trx.estimated_weight} kg
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between sm:justify-end sm:gap-8 border-t sm:border-none pt-3 sm:pt-0">
-                  <div className="text-left sm:text-right">
-                    <p className="text-[11px] font-bold text-slate-400">
-                      {trx.time}
-                    </p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-600 group-hover:text-white transition-all transform group-hover:rotate-45">
-                    <ArrowUpRight className="w-5 h-5" />
+                  <div className="flex items-center justify-between sm:justify-end sm:gap-8 border-t sm:border-none pt-3 sm:pt-0">
+                    <div className="text-left sm:text-right">
+                      <p className="text-[11px] font-bold text-slate-400">{timeAgo}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-600 group-hover:text-white transition-all transform group-hover:rotate-45">
+                      <ArrowUpRight className="w-5 h-5" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
     </div>

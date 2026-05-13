@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Plus,
   X,
-  Tag,
   Edit3,
   Save,
-  Zap,
-  CheckCircle2,
-  TrendingUp,
-  Package,
+  Loader2,
+  RefreshCw,
+  Trash2,
+  Search,
 } from "lucide-react";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
+import { Toaster, toast } from "sonner";
 
 interface WastePrice {
   id: string;
@@ -23,265 +23,338 @@ interface WastePrice {
   updated_at: string;
 }
 
-const DB_WASTE_PRICES: WastePrice[] = [
-  {
-    id: "0a99cc44-0a99cc44",
-    waste_type: "paper",
-    price_per_kg: 250,
-    updated_at: "2026-05-11",
-  },
-  {
-    id: "2ef5b223-2ef5b223",
-    waste_type: "aluminium",
-    price_per_kg: 800,
-    updated_at: "2026-05-11",
-  },
-  {
-    id: "5dd95dc6-5dd95dc6",
-    waste_type: "mixed",
-    price_per_kg: 100,
-    updated_at: "2026-05-11",
-  },
-  {
-    id: "62147a32-62147a32",
-    waste_type: "electronic",
-    price_per_kg: 1000,
-    updated_at: "2026-05-11",
-  },
-  {
-    id: "7a109ec4-7a109ec4",
-    waste_type: "glass",
-    price_per_kg: 150,
-    updated_at: "2026-05-11",
-  },
-  {
-    id: "d88bea2f-d88bea2f",
-    waste_type: "cardboard",
-    price_per_kg: 200,
-    updated_at: "2026-05-11",
-  },
-  {
-    id: "dee2b943-dee2b943",
-    waste_type: "metal",
-    price_per_kg: 600,
-    updated_at: "2026-05-11",
-  },
-  {
-    id: "feb3326a-feb3326a",
-    waste_type: "plastic",
-    price_per_kg: 300,
-    updated_at: "2026-05-11",
-  },
-];
-
-const PACKS = [
-  {
-    id: 1,
-    name: "Starter Pro",
-    price: 150000,
-    duration: "1 Bulan",
-    features: ["Fee +2%", "Verifikasi Akun"],
-  },
-  {
-    id: 2,
-    name: "Business Elite",
-    price: 400000,
-    duration: "3 Bulan",
-    features: ["Fee +5%", "Prioritas Pickup"],
-  },
-];
+const WASTE_LABELS: Record<string, string> = {
+  plastic: "Plastik",
+  paper: "Kertas",
+  cardboard: "Kardus",
+  glass: "Kaca",
+  aluminium: "Aluminium",
+  metal: "Logam",
+  electronic: "Elektronik",
+  mixed: "Campuran",
+};
 
 export default function PricingPage() {
+  const supabase = createClientSupabaseClient();
+  const [wastePrices, setWastePrices] = useState<WastePrice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [wasteModal, setWasteModal] = useState<{
     open: boolean;
     data: WastePrice | null;
-  }>({
-    open: false,
-    data: null,
+  }>({ open: false, data: null });
+  const [formData, setFormData] = useState({
+    waste_type: "",
+    price_per_kg: "",
   });
+  const [saving, setSaving] = useState(false);
 
-  const handleEditWaste = (item: WastePrice) => {
+  useEffect(() => {
+    fetchWastePrices();
+  }, []);
+
+  const fetchWastePrices = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("price_catalog")
+      .select("*")
+      .order("waste_type", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching prices:", error);
+      toast.error("Gagal memuat data harga");
+    } else {
+      setWastePrices(data || []);
+    }
+    setLoading(false);
+  };
+
+  const handleEdit = (item: WastePrice) => {
+    setFormData({
+      waste_type: item.waste_type,
+      price_per_kg: item.price_per_kg.toString(),
+    });
     setWasteModal({ open: true, data: item });
   };
 
+  const handleAdd = () => {
+    setFormData({ waste_type: "", price_per_kg: "" });
+    setWasteModal({ open: true, data: null });
+  };
+
+  const handleSave = async () => {
+    if (!formData.waste_type || !formData.price_per_kg) {
+      toast.error("Isi semua field yang diperlukan");
+      return;
+    }
+
+    setSaving(true);
+    const price = parseInt(formData.price_per_kg);
+
+    if (wasteModal.data) {
+      const { error } = await supabase
+        .from("price_catalog")
+        .update({ price_per_kg: price, updated_at: new Date().toISOString() })
+        .eq("id", wasteModal.data.id);
+
+      if (error) {
+        toast.error("Gagal update harga: " + error.message);
+      } else {
+        toast.success("Harga berhasil diupdate");
+        setWasteModal({ open: false, data: null });
+        fetchWastePrices();
+      }
+    } else {
+      const { error } = await supabase
+        .from("price_catalog")
+        .insert({ waste_type: formData.waste_type.toLowerCase(), price_per_kg: price });
+
+      if (error) {
+        toast.error("Gagal tambah jenis: " + error.message);
+      } else {
+        toast.success("Jenis sampah berhasil ditambahkan");
+        setWasteModal({ open: false, data: null });
+        fetchWastePrices();
+      }
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus jenis sampah ini?")) return;
+
+    const { error } = await supabase.from("price_catalog").delete().eq("id", id);
+    if (error) {
+      toast.error("Gagal menghapus: " + error.message);
+    } else {
+      toast.success("Jenis sampah berhasil dihapus");
+      fetchWastePrices();
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+  };
+
+  const filteredPrices = wastePrices.filter(item =>
+    item.waste_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (WASTE_LABELS[item.waste_type] || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full bg-white min-h-screen">
-      {/* HEADER SECTION */}
-      <div className="px-6 md:px-12 py-10 border-b border-slate-100">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-              <div className="p-2 bg-emerald-50 rounded-xl">
-                <TrendingUp className="text-emerald-600" size={28} />
-              </div>
-              Katalog Harga
-            </h1>
-            <p className="text-slate-400 font-medium">
-              Monitoring harga sampah real-time Arkana.
-            </p>
-          </div>
-          <Button
-            onClick={() => setWasteModal({ open: true, data: null })}
-            className="bg-slate-900 hover:bg-emerald-600 text-white rounded-2xl px-6 py-6 h-auto font-bold transition-all shadow-xl shadow-slate-200 active:scale-95"
-          >
-            <Plus size={20} className="mr-2" /> Tambah Jenis
-          </Button>
-        </div>
-      </div>
-
-      <div className="px-6 md:px-12 py-12 space-y-20">
-        {/* GRID HARGA SAMPAH */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {DB_WASTE_PRICES.map((item) => (
-            <div
-              key={item.id}
-              className="group relative bg-white border border-slate-100 rounded-[32px] p-7 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-[0_20px_50px_rgba(16,185,129,0.08)]"
-            >
-              <button
-                onClick={() => handleEditWaste(item)}
-                className="absolute top-6 right-6 p-2.5 bg-slate-50 text-slate-400 rounded-2xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
-              >
-                <Edit3 size={16} />
-              </button>
-
-              <div className="space-y-6">
-                <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-[20px] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Tag size={26} />
-                </div>
-
-                <div>
-                  <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest mb-1">
-                    Waste Type
-                  </h3>
-                  <p className="text-xl font-bold text-slate-800 capitalize tracking-tight">
-                    {item.waste_type}
-                  </p>
-                </div>
-
-                <div className="flex items-end justify-between border-t border-slate-50 pt-5">
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                      Price per kg
-                    </p>
-                    <p className="text-2xl font-black text-emerald-600 leading-none">
-                      Rp {item.price_per_kg.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center text-[10px] font-black text-slate-300">
-                    KG
-                  </div>
-                </div>
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" richColors />
+      
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Katalog Harga Sampah</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Kelola harga per kilogram untuk setiap jenis sampah
+              </p>
             </div>
-          ))}
-        </div>
-
-        {/* SECTION PAKET MEMBER */}
-        <div className="space-y-10">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] whitespace-nowrap">
-              Premium Membership
-            </h2>
-            <div className="h-px bg-slate-100 w-full" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {PACKS.map((pack) => (
-              <div
-                key={pack.id}
-                className="relative overflow-hidden bg-slate-900 rounded-[40px] p-10 group"
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={fetchWastePrices}
+                className="rounded-lg border-gray-200"
               >
-                {/* Decorative Pattern */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] -mr-32 -mt-32 rounded-full" />
-
-                <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8">
-                  <div className="space-y-6">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-[10px] font-black uppercase tracking-widest">
-                      <Zap size={12} fill="currentColor" /> {pack.duration} Plan
-                    </div>
-                    <div>
-                      <h4 className="text-2xl font-bold text-white tracking-tight mb-3">
-                        {pack.name}
-                      </h4>
-                      <div className="flex gap-2">
-                        {pack.features.map((f, i) => (
-                          <span
-                            key={i}
-                            className="flex items-center gap-1.5 text-[10px] font-bold bg-white/5 text-slate-300 px-3 py-1.5 rounded-xl border border-white/5"
-                          >
-                            <CheckCircle2
-                              size={10}
-                              className="text-emerald-400"
-                            />{" "}
-                            {f}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-left sm:text-right">
-                    <p className="text-3xl font-black text-white">
-                      Rp {pack.price.toLocaleString()}
-                    </p>
-                    <p className="text-xs font-medium text-slate-500 mt-1">
-                      One time payment
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+                <RefreshCw size={16} className="mr-2" />
+                Refresh
+              </Button>
+              <Button
+                onClick={handleAdd}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm"
+              >
+                <Plus size={18} className="mr-2" />
+                Tambah Jenis
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* MODAL STYLING */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cari jenis sampah..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Jenis Sampah
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Harga per kg
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Terakhir Update
+                  </th>
+                  <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredPrices.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                      Tidak ada data
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPrices.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="font-medium text-gray-800 capitalize">
+                          {WASTE_LABELS[item.waste_type] || item.waste_type}
+                        </span>
+                        <p className="text-xs text-gray-400 font-mono mt-0.5">
+                          {item.waste_type}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-lg font-semibold text-emerald-600">
+                          Rp {item.price_per_kg.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-500">
+                          {formatDate(item.updated_at)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Hapus"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Footer Info */}
+        <div className="mt-4 text-center">
+          <p className="text-xs text-gray-400">
+            Menampilkan {filteredPrices.length} dari {wastePrices.length} jenis sampah
+          </p>
+        </div>
+      </div>
+
+      {/* Modal Edit/Add */}
       {wasteModal.open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-          <Card className="w-full max-w-md rounded-[40px] shadow-2xl border-none overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-8 py-8 border-b border-slate-50 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setWasteModal({ open: false, data: null })}>
+          <div className="bg-white rounded-lg max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
               <div>
-                <h3 className="font-black text-xl text-slate-900 tracking-tight">
-                  {wasteModal.data ? "Edit Detail" : "Jenis Baru"}
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {wasteModal.data ? "Edit Harga" : "Tambah Jenis Sampah"}
                 </h3>
-                <p className="text-xs font-medium text-slate-400">
-                  Pastikan data input sudah sesuai.
+                <p className="text-xs text-gray-500">
+                  {wasteModal.data ? "Ubah harga per kilogram" : "Masukkan jenis sampah baru"}
                 </p>
               </div>
               <button
                 onClick={() => setWasteModal({ open: false, data: null })}
-                className="p-3 hover:bg-slate-50 rounded-2xl text-slate-400 transition-colors"
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X size={20} />
+                <X size={16} className="text-gray-500" />
               </button>
             </div>
-            <CardContent className="p-8 space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Nama Sampah
+
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Jenis Sampah
                 </label>
-                <Input
-                  defaultValue={wasteModal.data?.waste_type || ""}
-                  placeholder="Misal: Tembaga"
-                  className="rounded-2xl bg-slate-50 border-none h-14 font-bold focus-visible:ring-emerald-500"
+                <input
+                  value={formData.waste_type}
+                  onChange={(e) => setFormData({ ...formData, waste_type: e.target.value })}
+                  placeholder="Contoh: plastik, kertas, kaca"
+                  disabled={!!wasteModal.data}
+                  className={`w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                    wasteModal.data ? "bg-gray-50 text-gray-500" : ""
+                  }`}
                 />
+                {!wasteModal.data && (
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Gunakan huruf kecil, tanpa spasi
+                  </p>
+                )}
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Harga Beli (Rp)
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Harga per Kilogram (Rp)
                 </label>
-                <Input
+                <input
                   type="number"
-                  defaultValue={wasteModal.data?.price_per_kg || ""}
+                  value={formData.price_per_kg}
+                  onChange={(e) => setFormData({ ...formData, price_per_kg: e.target.value })}
                   placeholder="0"
-                  className="rounded-2xl bg-slate-50 border-none h-14 font-black text-emerald-600 text-lg"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
-              <Button className="w-full bg-slate-900 hover:bg-emerald-600 text-white rounded-[24px] py-8 font-black text-base transition-all active:scale-95 shadow-xl shadow-slate-200 mt-4">
-                <Save size={20} className="mr-3" /> Simpan Perubahan
-              </Button>
-            </CardContent>
-          </Card>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  onClick={() => setWasteModal({ open: false, data: null })}
+                  className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {saving ? "Menyimpan..." : "Simpan"}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
