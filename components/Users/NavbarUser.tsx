@@ -123,7 +123,7 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
   // Menu items untuk dropdown profile
   const profileMenu = [
     { name: "Profile", href: "/user/profile", icon: User },
-    { name: "Riwayat", href: "/user/history", icon: History },
+    { name: "Riwayat", href: "/user/riwayat", icon: History },
     { name: "Bantuan", href: "/user/help", icon: HelpCircle },
     { name: "Pengaturan", href: "/user/settings/akun", icon: Settings },
   ];

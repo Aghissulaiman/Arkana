@@ -1,12 +1,12 @@
-import Sidebar from "@/components/Users/NavbarUser";
-import Pengangangkutan from "@/components/Users/Pengangkutan/TransportManagement";
+import NavbarUser from "@/components/Users/NavbarUser";
+import RequestPickupPage from "@/components/Users/Request/RaqeustComponen";
 
-export default function Pengangkutan() {
+export default function Request() {
   return (
     <>
-      <Sidebar>
-        <Pengangangkutan />
-      </Sidebar>
+    <NavbarUser>
+    <RequestPickupPage/>
+    </NavbarUser>
     </>
-  );
+  )
 }
