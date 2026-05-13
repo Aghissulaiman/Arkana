@@ -1,120 +1,271 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search,
-  Filter,
-  MoreVertical,
   UserCheck,
   UserX,
   Eye,
+  ShieldCheck,
+  Plus,
 } from "lucide-react";
 
 const USERS = [
-  { id: 1, name: "Budi Santoso", email: "budi@email.com", phone: "0812-xxxx-1234", points: 1250, status: "Aktif", joined: "12 Jan 2026" },
-  { id: 2, name: "Siti Rahayu", email: "siti@email.com", phone: "0813-xxxx-5678", points: 3400, status: "Aktif", joined: "15 Jan 2026" },
-  { id: 3, name: "Ahmad Fauzi", email: "ahmad@email.com", phone: "0821-xxxx-9012", points: 800, status: "Nonaktif", joined: "20 Jan 2026" },
-  { id: 4, name: "Rina Dewi", email: "rina@email.com", phone: "0856-xxxx-3456", points: 5200, status: "Aktif", joined: "02 Feb 2026" },
-  { id: 5, name: "Hendra Saputra", email: "hendra@email.com", phone: "0878-xxxx-7890", points: 950, status: "Aktif", joined: "10 Feb 2026" },
+  {
+    id: 1,
+    name: "Budi Santoso",
+    email: "budi@email.com",
+    role: "Masyarakat",
+    points: 1250,
+    status: "Aktif",
+    joined: "12 Jan 2026",
+  },
+  {
+    id: 2,
+    name: "Siti Rahayu",
+    email: "siti@email.com",
+    role: "Masyarakat",
+    points: 3400,
+    status: "Aktif",
+    joined: "15 Jan 2026",
+  },
+  {
+    id: 3,
+    name: "Ahmad Fauzi",
+    email: "ahmad@admin.com",
+    role: "Petugas",
+    points: 0,
+    status: "Aktif",
+    joined: "20 Jan 2026",
+  },
+  {
+    id: 4,
+    name: "Rina Dewi",
+    email: "rina@email.com",
+    role: "Masyarakat",
+    points: 5200,
+    status: "Aktif",
+    joined: "02 Feb 2026",
+  },
+  {
+    id: 5,
+    name: "Hendra Saputra",
+    email: "hendra@admin.com",
+    role: "Petugas",
+    points: 0,
+    status: "Nonaktif",
+    joined: "10 Feb 2026",
+  },
 ];
 
 export default function UserTable() {
+  const [activeTab, setActiveTab] = useState("masyarakat");
+
+  const filteredUsers = USERS.filter((user) =>
+    activeTab === "masyarakat"
+      ? user.role === "Masyarakat"
+      : user.role === "Petugas",
+  );
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+    <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-0">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Manajemen User</h1>
-          <p className="text-sm text-muted-foreground">Kelola semua pengguna yang terdaftar di sistem</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            Manajemen User
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Kelola akses dan data pengguna sistem Arkana.
+          </p>
         </div>
-        <Button size="sm">Tambah User</Button>
+        <Button className="bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-100 gap-2">
+          <Plus className="w-4 h-4" /> Tambah{" "}
+          {activeTab === "masyarakat" ? "User" : "Petugas"}
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Cari nama, email..." className="pl-9 h-9" />
-            </div>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="w-4 h-4" /> Filter
-            </Button>
-          </div>
-        </CardHeader>
+      <Tabs
+        defaultValue="masyarakat"
+        onValueChange={setActiveTab}
+        className="w-full space-y-6"
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <TabsList className="grid grid-cols-2 w-full sm:w-[400px] h-11 bg-slate-100 p-1">
+            <TabsTrigger
+              value="masyarakat"
+              className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm font-semibold"
+            >
+              Masyarakat
+            </TabsTrigger>
+            <TabsTrigger
+              value="petugas"
+              className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm font-semibold"
+            >
+              Petugas
+            </TabsTrigger>
+          </TabsList>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/30">
-                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium">User</th>
-                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium">Telepon</th>
-                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium">Poin</th>
-                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium">Status</th>
-                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium">Bergabung</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {USERS.map((user) => (
-                  <tr key={user.id} className="border-b hover:bg-muted/20 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-semibold text-primary">{user.name.charAt(0)}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-xs text-muted-foreground">{user.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{user.phone}</td>
-                    <td className="px-4 py-3 font-semibold text-primary">{user.points.toLocaleString()}</td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        variant="outline"
-                        className={
-                          user.status === "Aktif"
-                            ? "border-green-200 bg-green-50 text-green-600"
-                            : "border-gray-200 bg-gray-50 text-gray-500"
-                        }
+          <div className="flex gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                placeholder="Cari nama atau email..."
+                className="pl-9 h-10 border-slate-200"
+              />
+            </div>
+          </div>
+        </div>
+
+        <TabsContent value={activeTab} className="mt-0 focus-visible:ring-0">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-slate-50/50">
+                      <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Identitas
+                      </th>
+                      {activeTab === "masyarakat" && (
+                        <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Tabungan Poin
+                        </th>
+                      )}
+                      <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Tanggal Bergabung
+                      </th>
+                      <th className="px-6 py-4 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredUsers.map((user) => (
+                      <tr
+                        key={user.id}
+                        className="group hover:bg-slate-50/50 transition-colors"
                       >
-                        {user.status}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{user.joined}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 justify-end">
-                        <Button variant="ghost" size="icon" className="w-7 h-7">
-                          <Eye className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="w-7 h-7 text-primary">
-                          <UserCheck className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="w-7 h-7 text-red-500">
-                          <UserX className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold border-2 ${
+                                activeTab === "masyarakat"
+                                  ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                  : "bg-blue-50 text-blue-600 border-blue-100"
+                              }`}
+                            >
+                              {user.name.charAt(0)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-800 truncate">
+                                {user.name}
+                              </p>
+                              <p className="text-xs text-slate-400 truncate">
+                                {user.email}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        {activeTab === "masyarakat" && (
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-emerald-600 text-base">
+                                {user.points.toLocaleString()}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                Poin
+                              </span>
+                            </div>
+                          </td>
+                        )}
+                        <td className="px-6 py-4">
+                          <Badge
+                            variant="secondary"
+                            className={`rounded-md px-2 py-0.5 font-bold border-none ${
+                              user.status === "Aktif"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full mr-2 ${user.status === "Aktif" ? "bg-emerald-500" : "bg-slate-400"}`}
+                            />
+                            {user.status}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-slate-500 font-medium">
+                          {user.joined}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-8 h-8 hover:text-emerald-600 hover:bg-emerald-50"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-8 h-8 hover:text-blue-600 hover:bg-blue-50"
+                            >
+                              <UserCheck className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-8 h-8 hover:text-rose-600 hover:bg-rose-50"
+                            >
+                              <UserX className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-          <div className="px-4 py-3 border-t flex items-center justify-between text-xs text-muted-foreground">
-            <span>Menampilkan 5 dari 1.284 user</span>
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" className="h-7 text-xs">Sebelumnya</Button>
-              <Button variant="outline" size="sm" className="h-7 text-xs">Berikutnya</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              {/* Pagination Section */}
+              <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <span className="text-xs font-medium text-slate-500 italic">
+                  Menampilkan {filteredUsers.length} dari total data {activeTab}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-4 border-slate-200 font-semibold text-xs"
+                  >
+                    Sebelumnya
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-4 border-slate-200 font-semibold text-xs text-emerald-600"
+                  >
+                    Berikutnya
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,8 +18,11 @@ import {
   Truck,
   Coins,
   CalendarDays,
+  Award,
+  ChevronRight,
 } from "lucide-react";
 
+// Data tetap sama
 const MONTHLY_DATA = [
   { month: "Jan", sampah: 320, transaksi: 95, user: 40 },
   { month: "Feb", sampah: 410, transaksi: 110, user: 55 },
@@ -29,152 +38,284 @@ const TOP_USERS = [
   { rank: 2, name: "Siti Rahayu", points: 3400, sampah: "12 kg", transaksi: 8 },
   { rank: 3, name: "Budi Santoso", points: 1250, sampah: "6 kg", transaksi: 5 },
   { rank: 4, name: "Ahmad Fauzi", points: 800, sampah: "4 kg", transaksi: 3 },
-  { rank: 5, name: "Hendra Saputra", points: 950, sampah: "5 kg", transaksi: 4 },
+  {
+    rank: 5,
+    name: "Hendra Saputra",
+    points: 950,
+    sampah: "5 kg",
+    transaksi: 4,
+  },
 ];
 
 const SUMMARY_STATS = [
-  { label: "Total Sampah Terkumpul", value: "4.820 kg", change: "+15%", icon: Recycle, color: "text-primary", bg: "bg-primary/10", up: true },
-  { label: "Total Pengguna Aktif", value: "1.284", change: "+24", icon: Users, color: "text-blue-500", bg: "bg-blue-50", up: true },
-  { label: "Total Pengiriman", value: "538", change: "+38", icon: Truck, color: "text-orange-500", bg: "bg-orange-50", up: true },
-  { label: "Poin Diredeem", value: "89.500", change: "-1.2k", icon: Coins, color: "text-yellow-500", bg: "bg-yellow-50", up: false },
+  {
+    label: "Total Sampah",
+    value: "4.820 kg",
+    change: "+15%",
+    icon: Recycle,
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+    up: true,
+  },
+  {
+    label: "Pengguna Aktif",
+    value: "1.284",
+    change: "+24",
+    icon: Users,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    up: true,
+  },
+  {
+    label: "Total Pengiriman",
+    value: "538",
+    change: "+38",
+    icon: Truck,
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+    up: true,
+  },
+  {
+    label: "Poin Diredeem",
+    value: "89.500",
+    change: "-1.2k",
+    icon: Coins,
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+    up: false,
+  },
 ];
 
 export default function ReportsPage() {
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+    <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-0">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b pb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Laporan</h1>
-          <p className="text-sm text-muted-foreground">Rekap data dan performa sistem Arkana</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            Laporan Analitik
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Pantau performa pengelolaan sampah dan partisipasi pengguna Arkana.
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
-            <CalendarDays className="w-4 h-4" /> Mei 2026
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button
+            variant="outline"
+            className="flex-1 md:flex-none justify-start font-medium border-slate-200"
+          >
+            <CalendarDays className="mr-2 h-4 w-4 text-slate-500" />
+            Mei 2026
           </Button>
-          <Button size="sm" className="gap-2">
-            <Download className="w-4 h-4" /> Export PDF
+          <Button className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-200">
+            <Download className="mr-2 h-4 w-4" />
+            Export PDF
           </Button>
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* Summary Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {SUMMARY_STATS.map((s, i) => {
           const Icon = s.icon;
           return (
-            <Card key={i} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 ${s.bg} rounded-xl flex items-center justify-center`}>
+            <Card
+              key={i}
+              className="relative overflow-hidden border-none shadow-sm ring-1 ring-slate-200 hover:shadow-md transition-all"
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className={`p-2.5 ${s.bg} rounded-lg`}>
                     <Icon className={`w-5 h-5 ${s.color}`} />
                   </div>
-                  <span className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${s.up ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
-                    {s.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  <Badge
+                    variant="secondary"
+                    className={`${s.up ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50"} border-none font-bold`}
+                  >
+                    {s.up ? (
+                      <TrendingUp className="w-3 h-3 mr-1" />
+                    ) : (
+                      <TrendingDown className="w-3 h-3 mr-1" />
+                    )}
                     {s.change}
-                  </span>
+                  </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
-                <h3 className="text-xl font-bold">{s.value}</h3>
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-slate-500">
+                    {s.label}
+                  </p>
+                  <h3 className="text-2xl font-bold text-slate-900 mt-1">
+                    {s.value}
+                  </h3>
+                </div>
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-
-        {/* Bar Chart - Sampah per Bulan */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">Sampah Terkumpul per Bulan</CardTitle>
-                <Badge variant="outline" className="text-xs font-normal">2026</Badge>
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Main Chart Section */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-8">
+              <div className="space-y-1">
+                <CardTitle className="text-lg font-bold text-slate-800">
+                  Volume Sampah Bulanan
+                </CardTitle>
+                <CardDescription>
+                  Visualisasi pertumbuhan pengumpulan sampah (kg)
+                </CardDescription>
               </div>
+              <Badge variant="outline" className="rounded-md">
+                Jan - Mei 2026
+              </Badge>
             </CardHeader>
-            <CardContent className="pt-2">
-              <div className="space-y-3">
+            <CardContent>
+              <div className="space-y-6">
                 {MONTHLY_DATA.map((d) => (
-                  <div key={d.month} className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span className="w-8">{d.month}</span>
-                      <span>{d.sampah} kg · {d.transaksi} transaksi · {d.user} user baru</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary rounded-full transition-all duration-500"
-                          style={{ width: `${(d.sampah / MAX_SAMPAH) * 100}%` }}
-                        />
+                  <div key={d.month} className="group">
+                    <div className="flex justify-between items-end mb-2">
+                      <div>
+                        <span className="text-sm font-bold text-slate-700">
+                          {d.month}
+                        </span>
+                        <span className="ml-2 text-[11px] text-slate-400 font-medium uppercase tracking-wider group-hover:text-emerald-600 transition-colors">
+                          {d.transaksi} Transaksi · {d.user} User Baru
+                        </span>
                       </div>
-                      <span className="text-xs font-semibold w-14 text-right">{d.sampah} kg</span>
+                      <span className="text-sm font-bold text-slate-900">
+                        {d.sampah} kg
+                      </span>
+                    </div>
+                    <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                        style={{ width: `${(d.sampah / MAX_SAMPAH) * 100}%` }}
+                      />
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Legend */}
-              <div className="mt-4 pt-4 border-t flex flex-wrap gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 bg-primary rounded-sm" />
-                  <span>Volume Sampah</span>
+              <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-emerald-500 rounded-full" />
+                    <span className="text-xs font-medium text-slate-500 text-nowrap">
+                      Volume Sampah
+                    </span>
+                  </div>
+                  <div className="text-xs">
+                    <span className="text-slate-400 uppercase tracking-tighter mr-2">
+                      Total
+                    </span>
+                    <span className="font-bold text-slate-800">2.100 kg</span>
+                  </div>
                 </div>
-                <span>Total 5 bulan: <strong className="text-foreground">2.100 kg</strong></span>
-                <span>Rata-rata: <strong className="text-foreground">420 kg/bulan</strong></span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-bold"
+                >
+                  Lihat Detail <ChevronRight className="ml-1 w-4 h-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Top Users */}
-        <div>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Top 5 Pengguna Aktif</CardTitle>
+        {/* Right Sidebar */}
+        <div className="space-y-6">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-500" />
+                <CardTitle className="text-lg font-bold text-slate-800 uppercase tracking-tight">
+                  Leaderboard
+                </CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {TOP_USERS.map((user) => (
-                <div key={user.rank} className="flex items-center gap-3">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                    user.rank === 1 ? "bg-yellow-100 text-yellow-600"
-                    : user.rank === 2 ? "bg-gray-100 text-gray-500"
-                    : user.rank === 3 ? "bg-orange-100 text-orange-600"
-                    : "bg-muted text-muted-foreground"
-                  }`}>
-                    {user.rank}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{user.sampah} · {user.transaksi}x transaksi</p>
+            <CardContent className="p-0">
+              <div className="divide-y divide-slate-100">
+                {TOP_USERS.map((user) => (
+                  <div
+                    key={user.rank}
+                    className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="relative">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-white shadow-sm ${
+                          user.rank === 1
+                            ? "bg-amber-400 text-white"
+                            : user.rank === 2
+                              ? "bg-slate-300 text-slate-700"
+                              : user.rank === 3
+                                ? "bg-orange-300 text-orange-900"
+                                : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {user.rank}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800 truncate">
+                        {user.name}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge
+                          variant="outline"
+                          className="px-1.5 py-0 text-[10px] h-4 bg-white font-medium text-slate-500 border-slate-200 uppercase tracking-tighter"
+                        >
+                          {user.sampah}
+                        </Badge>
+                        <span className="text-[11px] text-slate-400">
+                          {user.transaksi}x Transaksi
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-emerald-600">
+                        {user.points.toLocaleString()}
+                      </p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Poin
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xs font-semibold text-primary">{user.points.toLocaleString()}</p>
-                    <p className="text-[10px] text-muted-foreground">poin</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </CardContent>
           </Card>
 
-          {/* Summary Card */}
-          <Card className="mt-4 bg-primary text-white">
-            <CardContent className="p-4 space-y-2">
-              <h3 className="font-semibold text-sm">Rata-rata per Transaksi</h3>
-              <div className="space-y-1.5 text-xs text-white/80">
-                <div className="flex justify-between">
-                  <span>Berat sampah</span>
-                  <span className="font-semibold text-white">3,9 kg</span>
+          {/* Quick Metrics Card */}
+          <Card className="bg-slate-900 text-white border-none shadow-lg shadow-slate-200">
+            <CardContent className="p-6">
+              <h3 className="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">
+                Efisiensi Sistem
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-300">
+                    Rata-rata/Transaksi
+                  </span>
+                  <span className="text-sm font-bold">3,9 kg</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Poin diberikan</span>
-                  <span className="font-semibold text-white">1.560</span>
+                <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 w-[70%]" />
                 </div>
-                <div className="flex justify-between">
-                  <span>Waktu proses</span>
-                  <span className="font-semibold text-white">~2 jam</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-300">
+                    Waktu Respon Agent
+                  </span>
+                  <span className="text-sm font-bold">~2.4 Jam</span>
                 </div>
+                <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 w-[85%]" />
+                </div>
+                <Button className="w-full mt-4 bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs uppercase tracking-tighter h-9">
+                  Buka Analitik Lanjutan
+                </Button>
               </div>
             </CardContent>
           </Card>
