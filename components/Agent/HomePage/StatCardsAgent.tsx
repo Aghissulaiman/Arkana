@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Weight,
   MapPin,
-  TrendingUp,
 } from "lucide-react";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 
@@ -37,16 +36,28 @@ export default function StatCardsAgent() {
         return;
       }
 
+      // Cari agent_id dari tabel agents
+      const { data: agentData } = await supabase
+        .from("agents")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!agentData) {
+        setLoading(false);
+        return;
+      }
+
       const { data: pickups, error } = await supabase
         .from("pickup_requests")
         .select("*")
-        .eq("agent_id", user.id);
+        .eq("agent_id", agentData.id);
 
       if (error) throw error;
 
-      const completed = pickups.filter((item) => item.status === "completed");
+      const completed = pickups?.filter((item) => item.status === "completed") || [];
       const today = new Date().toISOString().split("T")[0];
-      const todayTasks = pickups.filter((item) => item.created_at?.split("T")[0] === today);
+      const todayTasks = pickups?.filter((item) => item.created_at?.split("T")[0] === today) || [];
       const completedToday = todayTasks.filter((item) => item.status === "completed");
       const pendingToday = todayTasks.filter((item) => item.status === "pending" || item.status === "accepted");
       const totalWeight = completed.reduce((acc, item) => acc + (item.estimated_weight || 0), 0);
@@ -67,35 +78,6 @@ export default function StatCardsAgent() {
 
   useEffect(() => {
     fetchStats();
-
-    // Supabase Realtime agar stats ikut update saat ada request baru
-    let channel: any;
-    const setupRealtime = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      channel = supabase
-        .channel('agent-stats-updates')
-        .on(
-          'postgres_changes',
-          {
-            event: '*', 
-            schema: 'public',
-            table: 'pickup_requests',
-            filter: `agent_id=eq.${user.id}`, 
-          },
-          (payload) => {
-            fetchStats();
-          }
-        )
-        .subscribe();
-    };
-
-    setupRealtime();
-
-    return () => {
-      if (channel) supabase.removeChannel(channel);
-    };
   }, []);
 
   const statsData = [
