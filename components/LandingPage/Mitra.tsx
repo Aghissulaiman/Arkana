@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   ChevronRight,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function MitraSection() {
   const items = [
@@ -75,10 +76,11 @@ export default function MitraSection() {
                   menggunakan platform kami untuk menjangkau pelanggan baru.
                 </p>
               </div>
-
+              <Link href = "/register-agent">
               <button className="mt-8 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition w-fit">
                 Gabung Sekarang
               </button>
+              </Link>
             </div>
           </div>
 

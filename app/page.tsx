@@ -13,7 +13,6 @@ export default function arkana(){
   <>
   <Navbar/>
   <Hero/>
-  {/* <CTA/> */}
   <AboutSection/>
   <CaraKerjaSection/>
   <MitraSection/>

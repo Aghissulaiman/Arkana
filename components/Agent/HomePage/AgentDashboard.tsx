@@ -12,7 +12,6 @@ export default function AgentDashboard() {
       distance: "2.4 km",
       time: "10:00 - 12:00",
       status: "pending",
-      type: "Organik & Anorganik",
     },
     {
       id: "REQ-002",
@@ -21,7 +20,6 @@ export default function AgentDashboard() {
       distance: "5.1 km",
       time: "13:00 - 15:00",
       status: "pending",
-      type: "Anorganik",
     },
   ];
 
@@ -53,7 +51,6 @@ export default function AgentDashboard() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm">{task.id}</span>
-                    <Badge variant="secondary" className="text-xs">{task.type}</Badge>
                   </div>
                   <p className="font-medium">{task.customer}</p>
                   <div className="flex items-start gap-2 text-sm text-muted-foreground">

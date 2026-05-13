@@ -15,7 +15,6 @@ export default function HistoryPage() {
       address: "Jl. Sudirman No. 1, Jakarta Pusat",
       date: "07 Mei 2026, 08:30",
       weight: "15 kg",
-      type: "Organik",
     },
     {
       id: "REQ-999",
@@ -23,7 +22,6 @@ export default function HistoryPage() {
       address: "Jl. Thamrin No. 4, Jakarta Pusat",
       date: "06 Mei 2026, 14:15",
       weight: "22 kg",
-      type: "Campuran",
     },
     {
       id: "REQ-998",
@@ -31,7 +29,6 @@ export default function HistoryPage() {
       address: "Jl. Diponegoro 10, Jakarta",
       date: "06 Mei 2026, 10:00",
       weight: "8 kg",
-      type: "Anorganik",
     },
     {
       id: "REQ-997",
@@ -39,7 +36,6 @@ export default function HistoryPage() {
       address: "Jl. Budi Utomo No. 7",
       date: "05 Mei 2026, 11:30",
       weight: "45 kg",
-      type: "Kertas & Plastik",
     },
   ];
 
@@ -76,9 +72,6 @@ export default function HistoryPage() {
                     <span className="flex items-center gap-1 bg-muted/30 px-1.5 py-0.5 rounded border border-border/50">
                       <Calendar className="w-3 h-3 text-muted-foreground/70" />
                       {item.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Badge variant="secondary" className="font-bold bg-primary/10 text-primary px-1.5 py-0 rounded border-none text-[9px]">{item.type}</Badge>
                     </span>
                   </div>
                 </div>

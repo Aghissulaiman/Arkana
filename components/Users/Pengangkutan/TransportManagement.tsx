@@ -319,7 +319,7 @@ function PickupFormContent() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -331,25 +331,25 @@ function PickupFormContent() {
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-md mx-auto mt-20"
       >
-        <Card className="p-10 text-center rounded-[2rem] border-slate-100 shadow-xl shadow-emerald-500/10">
-          <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6 relative">
+        <Card className="p-10 text-center rounded-[2rem] border-border shadow-xl shadow-primary/10 bg-card">
+          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 relative">
             <motion.div 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
             >
-              <CheckCircle2 className="w-12 h-12 text-emerald-600" />
+              <CheckCircle2 className="w-12 h-12 text-primary" />
             </motion.div>
-            <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20 animate-ping" />
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping" />
           </div>
-          <h3 className="text-2xl font-extrabold text-slate-800 mb-3">
+          <h3 className="text-2xl font-extrabold text-foreground mb-3">
             Hore! Permintaan Berhasil
           </h3>
-          <p className="text-slate-500 mb-8">
+          <p className="text-muted-foreground mb-8">
             Mitra kami akan segera memproses penjemputan sampah Anda sesuai jadwal.
           </p>
           <Button 
-            className="w-full h-14 rounded-2xl text-lg font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all"
+            className="w-full h-14 rounded-2xl text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
             onClick={() => router.push("/user/home")}
           >
             Kembali ke Beranda
@@ -367,13 +367,13 @@ function PickupFormContent() {
         transition={{ duration: 0.5 }}
         className="mb-8 text-center"
       >
-        <div className="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-2xl mb-5 shadow-sm transform -rotate-6">
-          <Truck className="w-8 h-8 text-emerald-600 transform rotate-6" />
+        <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl mb-5 shadow-sm transform -rotate-6">
+          <Truck className="w-8 h-8 text-primary transform rotate-6" />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
-          Ajukan Penjemputan <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-600">Sampah</span>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-3">
+          Ajukan Penjemputan <span className="text-primary">Sampah</span>
         </h1>
-        <p className="text-slate-500 max-w-lg mx-auto text-lg">
+        <p className="text-muted-foreground max-w-lg mx-auto text-lg">
           Pilah sampahmu, pilih agen terdekat, dan kami akan datang menjemput.
         </p>
       </motion.div>
@@ -385,57 +385,57 @@ function PickupFormContent() {
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Card className="p-6 sm:p-8 rounded-[2rem] border-slate-100 shadow-xl shadow-slate-200/50 bg-white/80 backdrop-blur-xl">
+          <Card className="p-6 sm:p-8 rounded-[2rem] border-border/50 shadow-xl shadow-border/50 bg-card/80 backdrop-blur-xl">
              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center border border-blue-100">
-                  <MapPin className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <MapPin className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800">Lokasi & Agen</h2>
-                  <p className="text-sm text-slate-500">Tentukan alamat dan agen tujuan</p>
+                  <h2 className="text-xl font-bold text-foreground">Lokasi & Agen</h2>
+                  <p className="text-sm text-muted-foreground">Tentukan alamat dan agen tujuan</p>
                 </div>
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Lokasi */}
-                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 relative group overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
-                  <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">
+                <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 relative group overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
+                  <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">
                     Alamat Penjemputan
                   </label>
-                  <div className="text-slate-800 font-medium leading-relaxed min-h-[3rem]">
+                  <div className="text-foreground font-medium leading-relaxed min-h-[3rem]">
                     {userAddress || "Alamat belum diatur"}
                   </div>
-                  <button type="button" onClick={() => router.push("/user/profile")} className="mt-3 text-sm text-blue-600 font-bold hover:text-blue-700 hover:underline inline-flex items-center gap-1.5 transition-colors">
+                  <button type="button" onClick={() => router.push("/user/profile")} className="mt-3 text-sm text-primary font-bold hover:text-primary/80 hover:underline inline-flex items-center gap-1.5 transition-colors">
                     <Map className="w-4 h-4" /> Ubah alamat di profil
                   </button>
                 </div>
 
                 {/* Agen */}
-                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 relative group overflow-hidden flex flex-col justify-center">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
-                  <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">
+                <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 relative group overflow-hidden flex flex-col justify-center">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-110" />
+                  <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">
                     Agen Penjemput
                   </label>
-                  <div className="text-slate-800 font-medium leading-relaxed">
+                  <div className="text-foreground font-medium leading-relaxed">
                     {selectedAgent ? (
                       <div>
                         <p className="font-bold text-lg">{selectedAgent.name}</p>
-                        <p className="text-sm text-slate-500 mt-1 flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {selectedAgent.phone}</p>
-                        <p className="text-sm text-slate-500 mt-0.5 flex items-start gap-1"><MapPin className="w-3.5 h-3.5 mt-0.5" /> {selectedAgent.address}</p>
+                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {selectedAgent.phone}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5 flex items-start gap-1"><MapPin className="w-3.5 h-3.5 mt-0.5" /> {selectedAgent.address}</p>
                       </div>
                     ) : (
                       <div className="py-2">
-                        <span className="text-rose-500 font-semibold">Agen belum dipilih</span>
+                        <span className="text-destructive font-semibold">Agen belum dipilih</span>
                         <br />
-                        <button type="button" onClick={() => router.push("/user/home")} className="mt-2 text-sm text-blue-600 font-bold hover:text-blue-700 hover:underline">
+                        <button type="button" onClick={() => router.push("/user/home")} className="mt-2 text-sm text-primary font-bold hover:text-primary/80 hover:underline">
                           Pilih Agen dari Dashboard
                         </button>
                       </div>
                     )}
                   </div>
                   {selectedAgentId && (
-                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-emerald-600 mt-3 flex items-center gap-1">
+                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs font-bold text-primary mt-3 flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Agen tersedia dan dipilih
                     </motion.p>
                   )}
@@ -450,27 +450,27 @@ function PickupFormContent() {
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card className="p-6 sm:p-8 rounded-[2rem] border-slate-100 shadow-xl shadow-slate-200/50 bg-white/80 backdrop-blur-xl">
+          <Card className="p-6 sm:p-8 rounded-[2rem] border-border/50 shadow-xl shadow-border/50 bg-card/80 backdrop-blur-xl">
              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center border border-amber-100">
-                  <Package className="w-6 h-6 text-amber-600" />
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Package className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800">Detail Sampah</h2>
-                  <p className="text-sm text-slate-500">Informasi sampah yang akan dijemput</p>
+                  <h2 className="text-xl font-bold text-foreground">Detail Sampah</h2>
+                  <p className="text-sm text-muted-foreground">Informasi sampah yang akan dijemput</p>
                 </div>
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Jenis Sampah */}
                 <div>
-                  <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">Jenis Sampah</label>
+                  <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">Jenis Sampah</label>
                   <div className="relative">
                     <select
                       required
                       value={formData.wasteType}
                       onChange={(e) => handleChange("wasteType", e.target.value)}
-                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 appearance-none shadow-sm transition-all cursor-pointer hover:border-slate-300"
+                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none shadow-sm transition-all cursor-pointer hover:border-primary/50"
                     >
                       <option value="">-- Pilih Jenis --</option>
                       {availableWasteTypes.map((type) => (
@@ -482,15 +482,15 @@ function PickupFormContent() {
                         <option value="" disabled>Agen ini tidak menerima jenis sampah dari katalog</option>
                       )}
                     </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-white pl-2">
-                      <Leaf className="w-5 h-5 text-slate-400" />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-background pl-2">
+                      <Leaf className="w-5 h-5 text-muted-foreground" />
                     </div>
                   </div>
                 </div>
 
                 {/* Estimasi Berat */}
                 <div>
-                  <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">Estimasi Berat</label>
+                  <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">Estimasi Berat</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -499,9 +499,9 @@ function PickupFormContent() {
                       placeholder="0.0"
                       value={formData.estimatedWeight}
                       onChange={(e) => handleChange("estimatedWeight", e.target.value)}
-                      className="w-full pl-5 pr-16 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm transition-all hover:border-slate-300"
+                      className="w-full pl-5 pr-16 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm transition-all hover:border-primary/50"
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 font-bold bg-slate-100 px-3 py-1.5 rounded-xl">
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground font-bold bg-muted px-3 py-1.5 rounded-xl">
                       kg
                     </div>
                   </div>
@@ -516,20 +516,20 @@ function PickupFormContent() {
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <Card className="p-6 sm:p-8 rounded-[2rem] border-slate-100 shadow-xl shadow-slate-200/50 bg-white/80 backdrop-blur-xl">
+          <Card className="p-6 sm:p-8 rounded-[2rem] border-border/50 shadow-xl shadow-border/50 bg-card/80 backdrop-blur-xl">
              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center border border-violet-100">
-                  <Calendar className="w-6 h-6 text-violet-600" />
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Calendar className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800">Jadwal & Catatan</h2>
-                  <p className="text-sm text-slate-500">Tentukan waktu penjemputan</p>
+                  <h2 className="text-xl font-bold text-foreground">Jadwal & Catatan</h2>
+                  <p className="text-sm text-muted-foreground">Tentukan waktu penjemputan</p>
                 </div>
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="text-sm font-semibold text-slate-500 block mb-3">Tanggal Penjemputan</label>
+                  <label className="text-sm font-semibold text-muted-foreground block mb-3">Tanggal Penjemputan</label>
                   <div className="relative">
                     <input
                       type="date"
@@ -537,18 +537,18 @@ function PickupFormContent() {
                       min={getMinDate()}
                       value={formData.pickupDate}
                       onChange={(e) => handleChange("pickupDate", e.target.value)}
-                      className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm transition-all appearance-none cursor-text hover:border-slate-300"
+                      className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm transition-all appearance-none cursor-text hover:border-primary/50"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-slate-500 block mb-3">Waktu Penjemputan</label>
+                  <label className="text-sm font-semibold text-muted-foreground block mb-3">Waktu Penjemputan</label>
                   <div className="relative">
                     <select
                       required
                       value={formData.pickupTime}
                       onChange={(e) => handleChange("pickupTime", e.target.value)}
-                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 appearance-none shadow-sm transition-all cursor-pointer hover:border-slate-300"
+                      className="w-full pl-5 pr-12 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none shadow-sm transition-all cursor-pointer hover:border-primary/50"
                     >
                       <option value="">-- Pilih Jam --</option>
                       <option value="08:00 - 10:00">08:00 - 10:00</option>
@@ -557,23 +557,23 @@ function PickupFormContent() {
                       <option value="14:00 - 16:00">14:00 - 16:00</option>
                       <option value="16:00 - 18:00">16:00 - 18:00</option>
                     </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-white pl-2">
-                      <Clock className="w-5 h-5 text-slate-400" />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none bg-background pl-2">
+                      <Clock className="w-5 h-5 text-muted-foreground" />
                     </div>
                   </div>
                 </div>
              </div>
 
              <div>
-               <label className="text-sm font-semibold text-slate-500 block mb-3 flex items-center gap-2">
-                  <ClipboardList className="w-4 h-4 text-slate-400" /> Catatan Tambahan (Opsional)
+               <label className="text-sm font-semibold text-muted-foreground block mb-3 flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 text-muted-foreground" /> Catatan Tambahan (Opsional)
                </label>
                <textarea
                  rows={3}
                  placeholder="Contoh: Tolong hubungi nomor saya jika sudah di depan rumah atau sampah sudah dipisahkan dalam kardus..."
                  value={formData.notes}
                  onChange={(e) => handleChange("notes", e.target.value)}
-                 className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 shadow-sm transition-all resize-none hover:border-slate-300"
+                 className="w-full px-5 py-4 text-base font-medium rounded-2xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary shadow-sm transition-all resize-none hover:border-primary/50"
                />
              </div>
           </Card>
@@ -589,7 +589,7 @@ function PickupFormContent() {
           <Button 
             type="submit" 
             disabled={isSubmitting || !userAddress || !selectedAgentId || agents.length === 0} 
-            className="w-full py-8 rounded-2xl text-lg font-extrabold shadow-xl shadow-emerald-500/25 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all gap-3 hover:-translate-y-1"
+            className="w-full py-8 rounded-2xl text-lg font-extrabold shadow-xl shadow-primary/25 bg-primary hover:bg-primary/90 text-primary-foreground transition-all gap-3 hover:-translate-y-1"
           >
             {isSubmitting ? (
               <>
@@ -605,7 +605,7 @@ function PickupFormContent() {
           </Button>
           
           {!userAddress && (
-            <p className="text-sm text-rose-500 text-center mt-5 font-bold flex items-center justify-center gap-2 bg-rose-50 py-3 rounded-xl">
+            <p className="text-sm text-destructive text-center mt-5 font-bold flex items-center justify-center gap-2 bg-destructive/10 py-3 rounded-xl">
                <MapPin className="w-4 h-4" />
                Silakan lengkapi alamat di halaman profil terlebih dahulu
             </p>
@@ -620,7 +620,7 @@ export default function PickupRequestForm() {
   return (
     <Suspense fallback={
       <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="w-12 h-12 animate-spin text-emerald-500" />
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
       </div>
     }>
       <PickupFormContent />
