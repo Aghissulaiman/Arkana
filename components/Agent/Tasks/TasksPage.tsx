@@ -25,17 +25,17 @@ export default function TasksPage() {
       if (!user) return;
 
       const { data: requests, error } = await supabase
-        .from("requests")
+        .from("pickup_requests")
         .select(`
           id,
           status,
           pickup_address,
-          estimated_weights,
+          estimated_weight,
           created_at,
           user_id
         `)
         .eq("agent_id", user.id)
-        .in("status", ["pending", "progress"])
+        .in("status", ["pending", "accepted"])
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -60,7 +60,7 @@ export default function TasksPage() {
         }
 
         const formattedTasks = requests.map(req => {
-          const weights = req.estimated_weights as Record<string, number> || {};
+          const weights = req.estimated_weight as Record<string, number> || {};
           const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
           const date = new Date(req.created_at);
 
@@ -88,7 +88,7 @@ export default function TasksPage() {
   const updateTaskStatus = async (id: string, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from("requests")
+        .from("pickup_requests")
         .update({ status: newStatus })
         .eq("id", id);
 
@@ -116,7 +116,7 @@ export default function TasksPage() {
 
     return filter === "Semua"
       ? tasksToFilter
-      : tasksToFilter.filter(t => filter === "Berjalan" ? t.status === "progress" : t.status === "pending");
+      : tasksToFilter.filter(t => filter === "Berjalan" ? t.status === "accepted" : t.status === "pending");
   }, [filter, searchQuery, tasks]);
 
   if (loading) {
@@ -147,8 +147,8 @@ export default function TasksPage() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTasks.map((task) => (
-          <Card key={task.id} className={`overflow-hidden border-0 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${task.status === "progress" ? "ring-2 ring-primary shadow-primary/10 bg-gradient-to-b from-primary/5 to-background" : "shadow-sm bg-background border border-border/50"}`}>
-            {task.status === "progress" && (
+          <Card key={task.id} className={`overflow-hidden border-0 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${task.status === "accepted" ? "ring-2 ring-primary shadow-primary/10 bg-gradient-to-b from-primary/5 to-background" : "shadow-sm bg-background border border-border/50"}`}>
+            {task.status === "accepted" && (
               <div className="bg-primary text-primary-foreground text-[10px] uppercase font-bold text-center py-1.5 tracking-widest flex items-center justify-center gap-1.5 shadow-sm">Sedang Berjalan</div>
             )}
             <CardContent className="p-5 space-y-4">
@@ -194,13 +194,13 @@ export default function TasksPage() {
                     <Navigation className="w-3.5 h-3.5 mr-1.5" />
                     Rute
                   </Button>
-                  {task.status === "progress" ? (
+                  {task.status === "accepted" ? (
                     <Button variant="outline" className="flex-1 rounded-lg h-9 border-primary text-primary font-bold hover:bg-primary/5 text-xs" onClick={() => updateTaskStatus(task.dbId, 'completed')}>
                       <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                       Selesai
                     </Button>
                   ) : (
-                    <Button variant="outline" className="flex-1 rounded-lg h-9 font-bold border-border text-foreground hover:bg-muted/50 text-xs" onClick={() => updateTaskStatus(task.dbId, 'progress')}>
+                    <Button variant="outline" className="flex-1 rounded-lg h-9 font-bold border-border text-foreground hover:bg-muted/50 text-xs" onClick={() => updateTaskStatus(task.dbId, 'accepted')}>
                       Terima
                     </Button>
                   )}

@@ -104,7 +104,7 @@ export default function ProfilePage() {
       // Ambil statistik dari pickup_requests
       const { data: requests, error: requestsError } = await supabase
         .from("pickup_requests")
-        .select("actual_weight, estimated_weights, status")
+        .select("actual_weight, estimated_weight, status")
         .eq("agent_id", user.id)
         .eq("status", "completed");
 
@@ -114,8 +114,8 @@ export default function ProfilePage() {
       if (requests && !requestsError) {
         requests.forEach(req => {
           let weight = req.actual_weight || 0;
-          if (weight === 0 && req.estimated_weights) {
-             const w = req.estimated_weights as Record<string, number>;
+          if (weight === 0 && req.estimated_weight) {
+             const w = req.estimated_weight as Record<string, number>;
              weight = Object.values(w).reduce((a: number, b: number) => a + b, 0);
           }
           totalWaste += weight;
