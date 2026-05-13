@@ -190,7 +190,7 @@ export default function ReportsPage() {
                     </div>
                     <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                        className="absolute top-0 left-0 h-full bg-linear-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)]"
                         style={{ width: `${(d.sampah / MAX_SAMPAH) * 100}%` }}
                       />
                     </div>

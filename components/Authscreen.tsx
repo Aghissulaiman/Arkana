@@ -50,7 +50,7 @@ export function AuthScreen({
                 !isLogin ? "scale-100" : "scale-110",
               )}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-900/40 to-transparent mix-blend-multiply" />
+            <div className="absolute inset-0 bg-linear-to-t from-emerald-950/90 via-emerald-900/40 to-transparent mix-blend-multiply" />
 
             <div
               className={cn(
@@ -93,7 +93,7 @@ export function AuthScreen({
                 isLogin ? "scale-100" : "scale-110",
               )}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-900/40 to-transparent mix-blend-multiply" />
+            <div className="absolute inset-0 bg-linear-to-t from-emerald-950/90 via-emerald-900/40 to-transparent mix-blend-multiply" />
 
             <div
               className={cn(

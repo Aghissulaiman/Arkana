@@ -89,7 +89,7 @@ export default function UserTable() {
         onValueChange={setActiveTab}
         className="w-full space-y-6"
       >
-        <TabsList className="grid grid-cols-2 w-full sm:w-[350px] h-12 bg-slate-100  rounded-xl">
+        <TabsList className="grid grid-cols-2 w-full sm:w-87.5 h-12 bg-slate-100  rounded-xl">
           <TabsTrigger
             value="masyarakat"
             className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm font-bold text-slate-600"
@@ -116,9 +116,9 @@ export default function UserTable() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm 
-                             placeholder:text-slate-400 outline-none transition-all
-                             hover:border-slate-300 hover:shadow-sm
-                             focus:border-emerald-500 focus:ring-4 focus:bg-white"
+                  placeholder:text-slate-400 outline-none transition-all
+                    hover:border-slate-300 hover:shadow-sm
+                    focus:border-emerald-500 focus:ring-4 focus:bg-white"
                 />
               </div>
             </div>

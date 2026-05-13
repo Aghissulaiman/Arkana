@@ -149,7 +149,7 @@ export default function HistoryPage() {
                   {/* Timeline dot */}
                   <div className="flex flex-col items-center pt-1">
                     <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${isSuccess ? "bg-primary" : "bg-red-500"}`} />
-                    {i < HISTORY.length - 1 && <div className="w-px flex-1 bg-border mt-1.5 min-h-[20px]" />}
+                    {i < HISTORY.length - 1 && <div className="w-px flex-1 bg-border mt-1.5 min-h-5" />}
                   </div>
 
                   {/* Content */}

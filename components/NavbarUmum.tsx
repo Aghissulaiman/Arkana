@@ -49,8 +49,10 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
   // Ambil data user dari database
   useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (user) {
         // Ambil role dari tabel users
         const { data: userData } = await supabase
@@ -96,7 +98,10 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
   // Close dropdown
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setIsProfileOpen(false);
       }
     };
@@ -157,11 +162,16 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
     { name: "Bantuan", href: "/dashboard/bantuan", icon: HelpCircle },
   ];
 
-  const menu = userRole === "admin" ? adminMenu : userRole === "agent" ? agentMenu : userMenu;
+  const menu =
+    userRole === "admin"
+      ? adminMenu
+      : userRole === "agent"
+        ? agentMenu
+        : userMenu;
 
   // Filter menu berdasarkan search
   const filteredMenu = menu.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -174,7 +184,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div className="h-14 flex items-center px-4 border-b border-sidebar-border">
           <Leaf className="w-6 h-6 text-primary" />
-          <span className="ml-2 font-bold text-lg bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+          <span className="ml-2 font-bold text-lg bg-linear-to-r from-primary to-primary-dark bg-clip-text text-transparent">
             TrashFlow
           </span>
         </div>
@@ -187,12 +197,16 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{userName}</p>
-              <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
+              <p className="text-xs text-muted-foreground capitalize">
+                {userRole}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-muted rounded-lg">
             <Coins className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold">{userPoints.toLocaleString()} Poin</span>
+            <span className="text-sm font-semibold">
+              {userPoints.toLocaleString()} Poin
+            </span>
           </div>
         </div>
 
@@ -216,7 +230,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
               </button>
             )}
           </div>
-          
+
           <button
             onClick={() => setShowFilter(!showFilter)}
             className="flex items-center gap-2 px-3 py-1.5 mt-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -228,7 +242,10 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
           {showFilter && (
             <div className="mt-2 p-2 bg-muted rounded-lg space-y-1">
               {menu.map((item) => (
-                <label key={item.name} className="flex items-center gap-2 text-sm">
+                <label
+                  key={item.name}
+                  className="flex items-center gap-2 text-sm"
+                >
                   <input type="checkbox" className="rounded border-gray-300" />
                   {item.name}
                 </label>
@@ -238,7 +255,10 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Navigation */}
-        <nav className="p-3 space-y-1 overflow-y-auto" style={{ height: "calc(100vh - 200px)" }}>
+        <nav
+          className="p-3 space-y-1 overflow-y-auto"
+          style={{ height: "calc(100vh - 200px)" }}
+        >
           {filteredMenu.length > 0 ? (
             filteredMenu.map((item) => {
               const Icon = item.icon;
@@ -309,7 +329,9 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             {/* Points */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg">
               <Coins className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">{userPoints.toLocaleString()}</span>
+              <span className="text-sm font-medium">
+                {userPoints.toLocaleString()}
+              </span>
             </div>
 
             {/* Notification */}
@@ -331,7 +353,9 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                 <div className="absolute right-0 mt-2 w-56 bg-background border rounded-lg shadow-lg p-1 z-50">
                   <div className="px-3 py-2 border-b">
                     <p className="text-sm font-medium">{userName}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {userRole}
+                    </p>
                   </div>
                   <Link
                     href={`/${userRole}/profile`}
@@ -365,7 +389,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 
         {/* MOBILE SIDEBAR */}
         <aside
-          className={`fixed top-0 left-0 h-full w-[280px] bg-background z-50 transform transition-transform duration-300 lg:hidden shadow-xl ${
+          className={`fixed top-0 left-0 h-full w-70 bg-background z-50 transform transition-transform duration-300 lg:hidden shadow-xl ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -391,12 +415,16 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
               </div>
               <div>
                 <p className="font-medium">{userName}</p>
-                <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {userRole}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-muted rounded-lg">
               <Coins className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">{userPoints.toLocaleString()} Poin</span>
+              <span className="text-sm font-semibold">
+                {userPoints.toLocaleString()} Poin
+              </span>
             </div>
           </div>
 
@@ -415,7 +443,10 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Navigation */}
-          <nav className="p-3 space-y-1 overflow-y-auto" style={{ height: "calc(100vh - 280px)" }}>
+          <nav
+            className="p-3 space-y-1 overflow-y-auto"
+            style={{ height: "calc(100vh - 280px)" }}
+          >
             {filteredMenu.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
@@ -459,9 +490,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Page Content */}
-        <main className="pt-14 p-4 md:p-6 min-w-0 max-w-full">
-          {children}
-        </main>
+        <main className="pt-14 p-4 md:p-6 min-w-0 max-w-full">{children}</main>
       </div>
     </div>
   );

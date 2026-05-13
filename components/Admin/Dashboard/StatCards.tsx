@@ -69,7 +69,7 @@ export function StatCards() {
             </div>
 
             <div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] mb-1">
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">
                 {stat.label}
               </p>
               <h3 className="text-3xl font-black text-slate-900 tracking-tight">
