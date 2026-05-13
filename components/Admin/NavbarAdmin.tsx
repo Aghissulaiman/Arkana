@@ -119,7 +119,7 @@ export default function AdminSidebar({
             </div>
             {!isCollapsed && (
               <span className="font-bold text-slate-900 text-base tracking-tight animate-in fade-in duration-300">
-                Arkana
+                TrashFlow
               </span>
             )}
           </div>
@@ -208,9 +208,6 @@ export default function AdminSidebar({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-sm font-bold text-slate-400 hidden lg:block">
-              Panel Administrasi
-            </h1>
           </div>
 
           <div className="flex items-center gap-4">
@@ -261,16 +258,20 @@ export default function AdminSidebar({
                       Email
                     </p>
                     <p className="text-[12px] font-semibold text-slate-700 truncate">
-                      shyfa@arkana.com
+                      shyfa@TrashFlow.com
                     </p>
                   </div>
 
-                  <button className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors text-left">
-                    <User size={14} /> Profil Saya
-                  </button>
-                  <button className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors text-left">
-                    <Settings size={14} /> Pengaturan
-                  </button>
+                  <Link href="/admin/profile">
+                    <button className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors text-left">
+                      <User size={14} /> Profil Saya
+                    </button>
+                  </Link>
+                  <Link href="/admin/settings">
+                    <button className="flex items-center gap-2.5 w-full px-4 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors text-left">
+                      <Settings size={14} /> Pengaturan
+                    </button>
+                  </Link>
 
                   <div className="h-px bg-slate-50 my-1" />
 
