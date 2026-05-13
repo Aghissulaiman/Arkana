@@ -12,7 +12,9 @@ import {
   Truck,
   Gift,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Filter,
+  Eye
 } from "lucide-react";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import { Toaster, toast } from "sonner";
@@ -49,19 +51,51 @@ const WASTE_LABELS: Record<string, string> = {
   mixed: "Campuran",
 };
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending: { label: "Menunggu", color: "bg-yellow-100 text-yellow-700" },
-  accepted: { label: "Diterima", color: "bg-blue-100 text-blue-700" },
-  picked_up: { label: "Dijemput", color: "bg-purple-100 text-purple-700" },
-  completed: { label: "Selesai", color: "bg-green-100 text-green-700" },
-  cancelled: { label: "Dibatalkan", color: "bg-red-100 text-red-700" },
-  processed: { label: "Diproses", color: "bg-blue-100 text-blue-700" },
+const STATUS_STYLES: Record<string, { label: string; bg: string; text: string; icon: any }> = {
+  pending: { 
+    label: "Menunggu", 
+    bg: "bg-yellow-50", 
+    text: "text-yellow-700",
+    icon: Clock
+  },
+  accepted: { 
+    label: "Diproses", 
+    bg: "bg-blue-50", 
+    text: "text-blue-700",
+    icon: Truck
+  },
+  picked_up: { 
+    label: "Dijemput", 
+    bg: "bg-purple-50", 
+    text: "text-purple-700",
+    icon: Package
+  },
+  completed: { 
+    label: "Selesai", 
+    bg: "bg-green-50", 
+    text: "text-green-700",
+    icon: CheckCircle
+  },
+  cancelled: { 
+    label: "Dibatalkan", 
+    bg: "bg-red-50", 
+    text: "text-red-700",
+    icon: XCircle
+  },
+  processed: { 
+    label: "Diproses", 
+    bg: "bg-blue-50", 
+    text: "text-blue-700",
+    icon: Clock
+  },
 };
 
 export default function RiwayatPage() {
   const supabase = createClientSupabaseClient();
   const [activeTab, setActiveTab] = useState("semua");
+  const [statusFilter, setStatusFilter] = useState("semua");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilter, setShowFilter] = useState(false);
   const [pickups, setPickups] = useState<PickupRequest[]>([]);
   const [redeems, setRedeems] = useState<RedeemRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +112,6 @@ export default function RiwayatPage() {
       return;
     }
 
-    // Ambil riwayat penjemputan
     const { data: pickupData, error: pickupError } = await supabase
       .from("pickup_requests")
       .select(`
@@ -88,9 +121,7 @@ export default function RiwayatPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (pickupError) {
-      console.error("Error fetching pickups:", pickupError);
-    } else {
+    if (!pickupError) {
       const formattedPickups = (pickupData || []).map((p: any) => ({
         ...p,
         agent_name: p.agents?.agent_name,
@@ -99,19 +130,13 @@ export default function RiwayatPage() {
       setPickups(formattedPickups);
     }
 
-    // Ambil riwayat penukaran poin
-    const { data: redeemData, error: redeemError } = await supabase
+    const { data: redeemData } = await supabase
       .from("redeem_requests")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (redeemError) {
-      console.error("Error fetching redeems:", redeemError);
-    } else {
-      setRedeems(redeemData || []);
-    }
-
+    setRedeems(redeemData || []);
     setLoading(false);
   };
 
@@ -126,7 +151,7 @@ export default function RiwayatPage() {
       pointsValue: p.points_earned,
       date: p.created_at,
       status: p.status,
-      code: p.request_code,
+      code: p.request_code || p.id.slice(0, 8),
       isEarn: true,
     }));
 
@@ -139,7 +164,7 @@ export default function RiwayatPage() {
       points: `-${r.points_spent.toLocaleString()}`,
       pointsValue: -r.points_spent,
       date: r.created_at,
-      status: r.status,
+      status: r.status === "pending" ? "processed" : r.status,
       code: r.id.slice(0, 8),
       isEarn: false,
     }));
@@ -149,47 +174,33 @@ export default function RiwayatPage() {
     );
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusInfo = STATUS_LABELS[status];
-    if (!statusInfo) {
-      return <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">{status}</span>;
-    }
-    return (
-      <span className={`text-xs px-2 py-0.5 rounded-full ${statusInfo.color}`}>
-        {statusInfo.label}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const transactions = getAllTransactions();
   
   const filteredTransactions = transactions.filter(t => {
     if (activeTab !== "semua" && t.type !== activeTab) return false;
+    if (statusFilter !== "semua" && t.status !== statusFilter) return false;
     if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
+  const groupedTransactions = {
+    pending: filteredTransactions.filter(t => t.status === "pending" || t.status === "accepted" || t.status === "picked_up"),
+    completed: filteredTransactions.filter(t => t.status === "completed"),
+    cancelled: filteredTransactions.filter(t => t.status === "cancelled"),
+  };
+
   const tabs = [
-    { id: "semua", label: "Semua", icon: Clock },
-    { id: "penjemputan", label: "Penjemputan", icon: Truck },
-    { id: "tukar poin", label: "Tukar Poin", icon: Gift },
+    { id: "semua", label: "Semua", icon: Clock, count: transactions.length },
+    { id: "penjemputan", label: "Penjemputan", icon: Truck, count: pickups.length },
+    { id: "tukar poin", label: "Tukar Poin", icon: Gift, count: redeems.length },
+  ];
+
+  const statusOptions = [
+    { value: "semua", label: "Semua Status" },
+    { value: "pending", label: "Menunggu" },
+    { value: "accepted", label: "Diproses" },
+    { value: "completed", label: "Selesai" },
+    { value: "cancelled", label: "Dibatalkan" },
   ];
 
   if (loading) {
@@ -201,153 +212,241 @@ export default function RiwayatPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Toaster position="top-right" richColors />
       
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Riwayat</h1>
-        <p className="text-sm text-gray-500 mt-1">Riwayat penjemputan dan penukaran poin Anda</p>
-      </div>
-
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Cari transaksi..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-100 mb-5">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-all ${
-                isActive
-                  ? "text-green-600 border-b-2 border-green-600"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Transactions List */}
-      {filteredTransactions.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <AlertCircle className="w-8 h-8 text-gray-400" />
-          </div>
-          <p className="text-gray-500">Tidak ada riwayat transaksi</p>
-          <p className="text-sm text-gray-400 mt-1">
-            {activeTab === "penjemputan" 
-              ? "Belum ada penjemputan sampah. Yuk, jual sampah sekarang!" 
-              : activeTab === "tukar poin" 
-                ? "Belum ada penukaran poin. Kumpulkan poin untuk dapat hadiah!"
-                : "Belum ada aktivitas"}
-          </p>
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Riwayat Transaksi</h1>
+          <p className="text-sm text-gray-500 mt-1">Semua aktivitas penjemputan dan penukaran poin Anda</p>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredTransactions.map((item) => (
-            <div
-              key={`${item.type}-${item.id}`}
-              className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  {/* Header */}
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="text-sm font-semibold text-gray-800">
-                      {item.title}
-                    </span>
-                    {getStatusBadge(item.status)}
-                  </div>
-                  
-                  {/* Subtitle */}
-                  <p className="text-xs text-gray-500 mb-1">{item.subtitle}</p>
-                  
-                  {/* Details */}
-                  {item.details && (
-                    <p className="text-xs text-gray-400">{item.details}</p>
-                  )}
-                  
-                  {/* Date & Code */}
-                  <div className="flex items-center gap-3 mt-2">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs text-gray-500">
-                        {formatDate(item.date)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs text-gray-500">
-                        {formatTime(item.date)}
-                      </span>
-                    </div>
-                    <span className="text-xs text-gray-400 font-mono">
-                      #{item.code}
-                    </span>
-                  </div>
-                </div>
 
-                {/* Points */}
-                <div className="text-right">
-                  {item.points && (
-                    <p className={`text-base font-bold ${item.isEarn ? "text-green-600" : "text-red-600"}`}>
-                      {item.points}
-                    </p>
-                  )}
-                  {item.isEarn && item.pointsValue === 0 && (
-                    <p className="text-xs text-gray-400">Menunggu konfirmasi</p>
-                  )}
+        {/* Search and Filter Bar */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-5">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cari transaksi..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilter(!showFilter)}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            <Filter className="w-4 h-4 text-gray-500" />
+            Filter
+            {statusFilter !== "semua" && (
+              <span className="w-2 h-2 bg-green-500 rounded-full" />
+            )}
+          </button>
+        </div>
+
+        {/* Filter Dropdown */}
+        {showFilter && (
+          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-5 shadow-sm">
+            <p className="text-xs font-semibold text-gray-500 mb-2">Filter Status</p>
+            <div className="flex flex-wrap gap-2">
+              {statusOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setStatusFilter(opt.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    statusFilter === opt.value
+                      ? "bg-green-600 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-gray-200 mb-6">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all ${
+                  isActive
+                    ? "text-green-600 border-b-2 border-green-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+                {tab.count > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Grouped Transactions */}
+        {filteredTransactions.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-10 h-10 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-1">Tidak ada transaksi</h3>
+            <p className="text-sm text-gray-400">
+              {activeTab === "penjemputan" 
+                ? "Belum ada penjemputan sampah" 
+                : activeTab === "tukar poin" 
+                  ? "Belum ada penukaran poin"
+                  : "Belum ada aktivitas"}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Menunggu / Diproses Section */}
+            {groupedTransactions.pending.length > 0 && statusFilter === "semua" && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-5 bg-yellow-500 rounded-full" />
+                  <h2 className="text-sm font-semibold text-gray-600">Menunggu & Diproses</h2>
+                  <span className="text-xs text-gray-400">{groupedTransactions.pending.length} transaksi</span>
+                </div>
+                <div className="space-y-3">
+                  {groupedTransactions.pending.map((item) => (
+                    <TransactionCard key={`${item.type}-${item.id}`} item={item} />
+                  ))}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            )}
 
-      {/* Stats Summary */}
-      {transactions.length > 0 && (
-        <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-xs text-gray-500">Total Penjemputan</p>
-              <p className="text-lg font-bold text-gray-800">
-                {pickups.filter(p => p.status === "completed").length}
-              </p>
-            </div>
-            <div className="w-px h-8 bg-gray-200" />
-            <div>
-              <p className="text-xs text-gray-500">Total Poin Didapat</p>
-              <p className="text-lg font-bold text-green-600">
-                {pickups.reduce((sum, p) => sum + (p.points_earned || 0), 0).toLocaleString()}
-              </p>
-            </div>
-            <div className="w-px h-8 bg-gray-200" />
-            <div>
-              <p className="text-xs text-gray-500">Total Poin Ditukar</p>
-              <p className="text-lg font-bold text-orange-600">
-                {redeems.reduce((sum, r) => sum + r.points_spent, 0).toLocaleString()}
-              </p>
+            {/* Selesai Section */}
+            {groupedTransactions.completed.length > 0 && statusFilter === "semua" && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-5 bg-green-500 rounded-full" />
+                  <h2 className="text-sm font-semibold text-gray-600">Selesai</h2>
+                  <span className="text-xs text-gray-400">{groupedTransactions.completed.length} transaksi</span>
+                </div>
+                <div className="space-y-3">
+                  {groupedTransactions.completed.map((item) => (
+                    <TransactionCard key={`${item.type}-${item.id}`} item={item} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Dibatalkan Section */}
+            {groupedTransactions.cancelled.length > 0 && statusFilter === "semua" && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1 h-5 bg-red-500 rounded-full" />
+                  <h2 className="text-sm font-semibold text-gray-600">Dibatalkan</h2>
+                  <span className="text-xs text-gray-400">{groupedTransactions.cancelled.length} transaksi</span>
+                </div>
+                <div className="space-y-3">
+                  {groupedTransactions.cancelled.map((item) => (
+                    <TransactionCard key={`${item.type}-${item.id}`} item={item} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Jika pakai filter status, tampilkan semua tanpa grouping */}
+            {statusFilter !== "semua" && filteredTransactions.map((item) => (
+              <TransactionCard key={`${item.type}-${item.id}`} item={item} />
+            ))}
+          </div>
+        )}
+
+        {/* Stats Summary */}
+        {transactions.length > 0 && (
+          <div className="mt-8 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-5 text-white">
+            <p className="text-green-100 text-xs mb-3">📊 Ringkasan Aktivitas</p>
+            <div className="flex justify-between items-center">
+              <div className="text-center flex-1">
+                <p className="text-2xl font-bold">{pickups.filter(p => p.status === "completed").length}</p>
+                <p className="text-green-100 text-xs">Penjemputan</p>
+              </div>
+              <div className="w-px h-10 bg-green-500" />
+              <div className="text-center flex-1">
+                <p className="text-2xl font-bold">{pickups.reduce((sum, p) => sum + (p.points_earned || 0), 0).toLocaleString()}</p>
+                <p className="text-green-100 text-xs">Poin Didapat</p>
+              </div>
+              <div className="w-px h-10 bg-green-500" />
+              <div className="text-center flex-1">
+                <p className="text-2xl font-bold">{redeems.reduce((sum, r) => sum + r.points_spent, 0).toLocaleString()}</p>
+                <p className="text-green-100 text-xs">Poin Ditukar</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
-} 
+}
+
+// Komponen Card Transaksi
+function TransactionCard({ item }: { item: any }) {
+  const statusStyle = STATUS_STYLES[item.status] || STATUS_STYLES.pending;
+  const StatusIcon = statusStyle.icon;
+  const date = new Date(item.date);
+
+  return (
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          {/* Header with status badge */}
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <span className="text-sm font-semibold text-gray-800">
+              {item.title}
+            </span>
+            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${statusStyle.bg} ${statusStyle.text}`}>
+              <StatusIcon className="w-3 h-3" />
+              {statusStyle.label}
+            </span>
+          </div>
+          
+          {/* Subtitle */}
+          <p className="text-xs text-gray-500 mb-1">{item.subtitle}</p>
+          
+          {/* Details */}
+          {item.details && (
+            <p className="text-xs text-gray-400">{item.details}</p>
+          )}
+          
+          {/* Date & Code */}
+          <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+            <span>{date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
+            <span>•</span>
+            <span>{date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
+            <span className="font-mono">#{item.code}</span>
+          </div>
+        </div>
+
+        {/* Points */}
+        <div className="text-right ml-4">
+          {item.points && (
+            <p className={`text-lg font-bold ${item.isEarn ? "text-green-600" : "text-orange-600"}`}>
+              {item.points}
+            </p>
+          )}
+          {item.isEarn && item.pointsValue === 0 && (
+            <p className="text-xs text-gray-400">Menunggu</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

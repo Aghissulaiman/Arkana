@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       // Cek apakah user sudah ada di tabel users
       const { data: existingUser } = await supabase
         .from("users")
-        .select("id")
+        .select("id, role")  // ← ambil juga role
         .eq("id", user.id)
         .single();
 
@@ -47,26 +47,42 @@ export async function GET(request: Request) {
           balance_points: 0
         });
 
-        // LANGSUNG REDIRECT KE COMPLETE PROFILE
         console.log("Redirect ke /complete-profile");
         return NextResponse.redirect(new URL("/complete-profile", requestUrl.origin));
       }
       
-      // Jika user sudah ada (login biasa), cek apakah profile lengkap
+      // Jika user sudah ada, cek role untuk redirect
+      const role = existingUser.role || "user";
+      console.log("User role:", role);
+
+      // Cek apakah profile lengkap (opsional, bisa di-skip)
       const { data: profile } = await supabase
         .from("profiles")
         .select("phone, address")
         .eq("user_id", user.id)
         .single();
 
-      if (!profile?.phone && !profile?.address) {
+      // Jika profile belum lengkap dan bukan admin/agent, redirect ke complete-profile
+      if ((!profile?.phone && !profile?.address) && role === "user") {
         console.log("Profile belum lengkap, redirect ke /complete-profile");
         return NextResponse.redirect(new URL("/complete-profile", requestUrl.origin));
+      }
+
+      // REDIRECT BERDASARKAN ROLE
+      console.log("Redirect berdasarkan role:", role);
+      
+      switch (role) {
+        case "admin":
+          return NextResponse.redirect(new URL("/admin", requestUrl.origin));
+        case "agent":
+          return NextResponse.redirect(new URL("/agent", requestUrl.origin));
+        default:
+          return NextResponse.redirect(new URL("/user/home", requestUrl.origin));
       }
     }
   }
 
   // Default redirect ke home
-  console.log("Redirect ke /user/home");
-  return NextResponse.redirect(new URL("/user/home", requestUrl.origin));
+  console.log("Redirect ke /login");
+  return NextResponse.redirect(new URL("/login", requestUrl.origin));
 }
