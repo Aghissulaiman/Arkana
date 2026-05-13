@@ -16,6 +16,35 @@ export default function AgentDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
+
+    // Setup Supabase Realtime agar dashboard langsung update saat ada request baru
+    let channel: any;
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      channel = supabase
+        .channel('agent-dashboard-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', 
+            schema: 'public',
+            table: 'pickup_requests',
+            filter: `agent_id=eq.${user.id}`, 
+          },
+          (payload) => {
+            fetchDashboardData(); 
+          }
+        )
+        .subscribe();
+    };
+
+    setupRealtime();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchDashboardData = async () => {
@@ -31,6 +60,7 @@ export default function AgentDashboard() {
           status,
           pickup_address,
           estimated_weight,
+          total_points,
           created_at,
           user_id
         `)
@@ -74,12 +104,15 @@ export default function AgentDashboard() {
             date: dateStr,
             status: req.status,
             weight: `${totalWeight} kg`,
-            points: `+${totalWeight * 10}`,
+            points: `+${req.total_points ? req.total_points : totalWeight * 10}`,
           };
         });
 
         setActiveTasks(formattedRequests.filter(r => ["pending", "accepted"].includes(r.status)));
         setRecentPickups(formattedRequests.filter(r => r.status === "completed").slice(0, 5));
+      } else {
+        setActiveTasks([]);
+        setRecentPickups([]);
       }
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
@@ -103,7 +136,7 @@ export default function AgentDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading && activeTasks.length === 0) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -113,7 +146,6 @@ export default function AgentDashboard() {
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
-      {/* Tugas Aktif */}
       <Card className="lg:col-span-2 border-0 shadow-sm bg-background">
         <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 pb-4">
           <CardTitle className="text-lg font-bold text-foreground">Tugas Penjemputan</CardTitle>
@@ -182,7 +214,6 @@ export default function AgentDashboard() {
         </CardContent>
       </Card>
 
-      {/* Riwayat Terbaru */}
       <Card className="border-0 shadow-sm bg-background">
         <CardHeader className="border-b border-border/50 pb-4">
           <CardTitle className="text-lg font-bold text-foreground">Riwayat Terbaru</CardTitle>

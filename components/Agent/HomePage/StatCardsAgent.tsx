@@ -29,44 +29,73 @@ export default function StatCardsAgent() {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-
-        const { data: pickups, error } = await supabase
-          .from("pickup_requests")
-          .select("*")
-          .eq("agent_id", user.id);
-
-        if (error) throw error;
-
-        const completed = pickups.filter((item) => item.status === "completed");
-        const today = new Date().toISOString().split("T")[0];
-        const todayTasks = pickups.filter((item) => item.created_at?.split("T")[0] === today);
-        const completedToday = todayTasks.filter((item) => item.status === "completed");
-        const pendingToday = todayTasks.filter((item) => item.status === "pending");
-        const totalWeight = completed.reduce((acc, item) => acc + (item.estimated_weight || 0), 0);
-
-        setStats({
-          completedPickups: completed.length,
-          totalWeight,
-          todayTasks: todayTasks.length,
-          completedToday: completedToday.length,
-          pendingToday: pendingToday.length,
-        });
-      } catch (err) {
-        console.error("Gagal mengambil data:", err);
-      } finally {
+  const fetchStats = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         setLoading(false);
+        return;
       }
+
+      const { data: pickups, error } = await supabase
+        .from("pickup_requests")
+        .select("*")
+        .eq("agent_id", user.id);
+
+      if (error) throw error;
+
+      const completed = pickups.filter((item) => item.status === "completed");
+      const today = new Date().toISOString().split("T")[0];
+      const todayTasks = pickups.filter((item) => item.created_at?.split("T")[0] === today);
+      const completedToday = todayTasks.filter((item) => item.status === "completed");
+      const pendingToday = todayTasks.filter((item) => item.status === "pending" || item.status === "accepted");
+      const totalWeight = completed.reduce((acc, item) => acc + (item.estimated_weight || 0), 0);
+
+      setStats({
+        completedPickups: completed.length,
+        totalWeight,
+        todayTasks: todayTasks.length,
+        completedToday: completedToday.length,
+        pendingToday: pendingToday.length,
+      });
+    } catch (err) {
+      console.error("Gagal mengambil data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+
+    // Supabase Realtime agar stats ikut update saat ada request baru
+    let channel: any;
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      channel = supabase
+        .channel('agent-stats-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', 
+            schema: 'public',
+            table: 'pickup_requests',
+            filter: `agent_id=eq.${user.id}`, 
+          },
+          (payload) => {
+            fetchStats();
+          }
+        )
+        .subscribe();
     };
 
-    fetchStats();
+    setupRealtime();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   const statsData = [
@@ -89,7 +118,7 @@ export default function StatCardsAgent() {
     {
       label: "Tugas Hari Ini",
       value: loading ? "..." : stats.todayTasks,
-      desc: `${stats.completedToday} selesai, ${stats.pendingToday} pending`,
+      desc: `${stats.completedToday} selesai, ${stats.pendingToday} aktif`,
       icon: MapPin,
       color: "text-amber-600",
       bg: "bg-amber-100/50",

@@ -21,7 +21,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Toaster, toast } from "sonner";
 
-// params adalah Promise di Next.js 16
 type PageProps = {
   params: Promise<{ id: string }>;
 };
@@ -78,7 +77,6 @@ export default function RequestPickupPage({ params }: PageProps) {
   const router = useRouter();
   const supabase = createClientSupabaseClient();
   
-  // UNWRAP params dengan use()
   const { id: agentId } = use(params);
   
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -172,6 +170,8 @@ export default function RequestPickupPage({ params }: PageProps) {
     e.preventDefault();
     
     const totalWeight = calculateTotalWeight();
+    const totalPoints = calculateTotalPoints();
+
     if (totalWeight === 0) {
       toast.error("Masukkan minimal satu jenis sampah dengan berat > 0");
       return;
@@ -187,13 +187,18 @@ export default function RequestPickupPage({ params }: PageProps) {
 
     const { data: { user } } = await supabase.auth.getUser();
     
+    const selectedTypes = Object.keys(selectedWaste)
+      .filter(w => selectedWaste[w] > 0)
+      .join(', ');
+
     const { error: requestError } = await supabase
       .from("pickup_requests")
       .insert({
         user_id: user?.id,
         agent_id: agentId,
-        waste_type: Object.keys(selectedWaste).filter(w => selectedWaste[w] > 0)[0] || "mixed",
+        waste_type: selectedTypes || "mixed",
         estimated_weight: totalWeight,
+        total_points: totalPoints, 
         pickup_address: userAddress,
         notes: notes,
         status: "pending",
@@ -251,7 +256,6 @@ export default function RequestPickupPage({ params }: PageProps) {
           <span className="text-sm">Kembali</span>
         </button>
 
-        {/* Agent Info Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6 border border-gray-100">
           <div className="bg-gradient-to-r from-green-600 to-green-500 px-6 py-5">
             <div className="flex justify-between items-start">
@@ -288,7 +292,6 @@ export default function RequestPickupPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Price List Card */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6 border border-gray-100">
           <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 className="font-bold text-lg text-gray-800">💰 Daftar Harga Sampah</h2>
@@ -321,7 +324,6 @@ export default function RequestPickupPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Request Form */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
           <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 className="font-bold text-lg text-gray-800">📝 Form Penjemputan</h2>
