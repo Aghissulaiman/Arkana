@@ -81,7 +81,7 @@ export function LoginForm({
 
     switch (role) {
       case "admin":
-        router.push("/admin/dashboard");
+        router.push("/admin");
         break;
       case "agent":
         router.push("/agent");

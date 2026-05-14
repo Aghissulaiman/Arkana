@@ -89,6 +89,7 @@ export default function AgentSidebar({
       group: "Operasional",
       items: [
         { name: "Tugas Penjemputan", href: "/agent/tasks", icon: MapPin },
+        { name: "Harga Sampah", href: "/agent/prices", icon: ClipboardList },
         { name: "Riwayat Transaksi", href: "/agent/history", icon: History },
       ],
     },

@@ -14,6 +14,8 @@ import {
   X,
   Bell,
   Settings,
+  Wallet,
+  Gift,
 } from "lucide-react";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 
@@ -124,6 +126,8 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
   const profileMenu = [
     { name: "Profile", href: "/user/profile", icon: User },
     { name: "Riwayat", href: "/user/history", icon: History },
+    { name: "Top Up Poin", href: "/user/topup", icon: Wallet },
+    { name: "Tukar Poin", href: "/user/transactions", icon: Gift },
     { name: "Bantuan", href: "/user/help", icon: HelpCircle },
     { name: "Pengaturan", href: "/user/settings/akun", icon: Settings },
   ];

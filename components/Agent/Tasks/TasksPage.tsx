@@ -61,7 +61,7 @@ export default function AgentTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "pending" | "accepted" | "completed"
+    "pending" | "accepted" | "completed" | "rejected"
   >("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [popupTask, setPopupTask] = useState<Task | null>(null);
@@ -302,6 +302,7 @@ export default function AgentTasksPage() {
     pending: tasks.filter((t) => t.status === "pending").length,
     accepted: tasks.filter((t) => t.status === "accepted").length,
     completed: tasks.filter((t) => t.status === "completed").length,
+    rejected: tasks.filter((t) => t.status === "rejected").length,
   };
 
   if (loading) {
@@ -339,7 +340,7 @@ export default function AgentTasksPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
             <p className="text-xs text-gray-400">Menunggu</p>
             <p className="text-xl font-bold text-yellow-600">{stats.pending}</p>
@@ -354,13 +355,17 @@ export default function AgentTasksPage() {
               {stats.completed}
             </p>
           </div>
+          <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
+            <p className="text-xs text-gray-400">Ditolak</p>
+            <p className="text-xl font-bold text-red-500">{stats.rejected}</p>
+          </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-gray-200">
+        <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
           <button
             onClick={() => setActiveTab("pending")}
-            className={`px-4 py-2 text-sm font-medium transition-all ${
+            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${
               activeTab === "pending"
                 ? "text-yellow-600 border-b-2 border-yellow-500"
                 : "text-gray-500 hover:text-gray-700"
@@ -375,7 +380,7 @@ export default function AgentTasksPage() {
           </button>
           <button
             onClick={() => setActiveTab("accepted")}
-            className={`px-4 py-2 text-sm font-medium transition-all ${
+            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${
               activeTab === "accepted"
                 ? "text-blue-600 border-b-2 border-blue-500"
                 : "text-gray-500 hover:text-gray-700"
@@ -390,7 +395,7 @@ export default function AgentTasksPage() {
           </button>
           <button
             onClick={() => setActiveTab("completed")}
-            className={`px-4 py-2 text-sm font-medium transition-all ${
+            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${
               activeTab === "completed"
                 ? "text-green-600 border-b-2 border-green-500"
                 : "text-gray-500 hover:text-gray-700"
@@ -400,6 +405,21 @@ export default function AgentTasksPage() {
             {stats.completed > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-green-500 text-white rounded-full">
                 {stats.completed}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("rejected")}
+            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${
+              activeTab === "rejected"
+                ? "text-red-600 border-b-2 border-red-500"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Ditolak
+            {stats.rejected > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-red-500 text-white rounded-full">
+                {stats.rejected}
               </span>
             )}
           </button>
@@ -427,6 +447,7 @@ export default function AgentTasksPage() {
               {activeTab === "pending" && "Tidak ada tugas menunggu"}
               {activeTab === "accepted" && "Tidak ada tugas diproses"}
               {activeTab === "completed" && "Tidak ada riwayat selesai"}
+              {activeTab === "rejected" && "Tidak ada tugas ditolak"}
             </h3>
             <p className="text-sm text-gray-400">
               {activeTab === "pending" &&
@@ -434,6 +455,8 @@ export default function AgentTasksPage() {
               {activeTab === "accepted" && "Semua tugas sudah diproses"}
               {activeTab === "completed" &&
                 "Riwayat akan muncul setelah tugas selesai"}
+              {activeTab === "rejected" &&
+                "Semua permintaan berhasil diterima"}
             </p>
           </div>
         ) : (
@@ -451,7 +474,9 @@ export default function AgentTasksPage() {
                           ? "bg-yellow-100"
                           : task.status === "accepted"
                             ? "bg-blue-100"
-                            : "bg-green-100"
+                            : task.status === "rejected"
+                              ? "bg-red-100"
+                              : "bg-green-100"
                       }`}
                     >
                       {task.status === "pending" && (
@@ -462,6 +487,9 @@ export default function AgentTasksPage() {
                       )}
                       {task.status === "completed" && (
                         <CheckCircle2 className="w-6 h-6 text-green-600" />
+                      )}
+                      {task.status === "rejected" && (
+                        <XCircle className="w-6 h-6 text-red-500" />
                       )}
                     </div>
 
@@ -533,6 +561,11 @@ export default function AgentTasksPage() {
                     {task.status === "completed" && (
                       <Badge className="bg-green-100 text-green-700">
                         Selesai
+                      </Badge>
+                    )}
+                    {task.status === "rejected" && (
+                      <Badge className="bg-red-100 text-red-700">
+                        Ditolak
                       </Badge>
                     )}
                   </div>

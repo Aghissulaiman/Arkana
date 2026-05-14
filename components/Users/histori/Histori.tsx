@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { 
   Package, 
   Clock, 
@@ -404,49 +405,52 @@ function TransactionCard({ item }: { item: any }) {
   const date = new Date(item.date);
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          {/* Header with status badge */}
-          <div className="flex items-center gap-2 flex-wrap mb-2">
-            <span className="text-sm font-semibold text-gray-800">
-              {item.title}
-            </span>
-            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${statusStyle.bg} ${statusStyle.text}`}>
-              <StatusIcon className="w-3 h-3" />
-              {statusStyle.label}
-            </span>
+    <Link href={`/user/history/${item.id}`} className="block">
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md hover:border-primary/20 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            {/* Header with status badge */}
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <span className="text-sm font-semibold text-gray-800">
+                {item.title}
+              </span>
+              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${statusStyle.bg} ${statusStyle.text}`}>
+                <StatusIcon className="w-3 h-3" />
+                {statusStyle.label}
+              </span>
+            </div>
+            
+            {/* Subtitle */}
+            <p className="text-xs text-gray-500 mb-1">{item.subtitle}</p>
+            
+            {/* Details */}
+            {item.details && (
+              <p className="text-xs text-gray-400">{item.details}</p>
+            )}
+            
+            {/* Date & Code */}
+            <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+              <span>{date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
+              <span>•</span>
+              <span>{date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
+              <span className="font-mono">#{item.code}</span>
+            </div>
           </div>
-          
-          {/* Subtitle */}
-          <p className="text-xs text-gray-500 mb-1">{item.subtitle}</p>
-          
-          {/* Details */}
-          {item.details && (
-            <p className="text-xs text-gray-400">{item.details}</p>
-          )}
-          
-          {/* Date & Code */}
-          <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-            <span>{date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
-            <span>•</span>
-            <span>{date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
-            <span className="font-mono">#{item.code}</span>
-          </div>
-        </div>
 
-        {/* Points */}
-        <div className="text-right ml-4">
-          {item.points && (
-            <p className={`text-lg font-bold ${item.isEarn ? "text-green-600" : "text-orange-600"}`}>
-              {item.points}
-            </p>
-          )}
-          {item.isEarn && item.pointsValue === 0 && (
-            <p className="text-xs text-gray-400">Menunggu</p>
-          )}
+          {/* Points + chevron */}
+          <div className="text-right ml-4 flex flex-col items-end gap-2">
+            {item.points && (
+              <p className={`text-lg font-bold ${item.isEarn ? "text-green-600" : "text-orange-600"}`}>
+                {item.points}
+              </p>
+            )}
+            {item.isEarn && item.pointsValue === 0 && (
+              <p className="text-xs text-gray-400">Menunggu</p>
+            )}
+            <ChevronRight className="w-4 h-4 text-gray-300" />
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
