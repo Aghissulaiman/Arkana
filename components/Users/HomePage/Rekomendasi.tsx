@@ -151,7 +151,7 @@ export default function RedeemPage() {
         <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-5 mb-6 text-white">
           <div className="flex justify-between items-start mb-3">
             <div>
-              <p className="text-green-100 text-sm">✨ Poin Anda</p>
+              <p className="text-green-100 text-sm">Poin Anda</p>
               <p className="text-3xl font-bold">{userPoints.toLocaleString()}</p>
             </div>
             <Sparkles className="w-8 h-8 opacity-50" />
@@ -160,7 +160,7 @@ export default function RedeemPage() {
             <div className="h-full bg-green-300 rounded-full w-2/3" />
           </div>
           <p className="text-green-100 text-xs mt-2">
-            🎉 Terus kumpulkan poin untuk dapat hadiah menarik!
+            Terus kumpulkan poin untuk dapat hadiah menarik!
           </p>
         </div>
 
@@ -271,7 +271,7 @@ export default function RedeemPage() {
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-green-600 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-green-800">💡 Tips Mengumpulkan Poin</p>
+              <p className="text-sm font-semibold text-green-800">Tips Mengumpulkan Poin</p>
               <p className="text-xs text-green-700 mt-1">
                 Jual sampahmu ke agen terdekat! Setiap kg sampah bisa menghasilkan 100-1000 poin. 
                 Kumpulkan sebanyak-banyaknya dan tukarkan dengan hadiah menarik!
