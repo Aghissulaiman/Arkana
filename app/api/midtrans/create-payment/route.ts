@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabaseServer";
 
-const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY?.trim();
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim();
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     console.log("Request body:", body);
+    
+    // Validasi Midtrans key
+    if (!MIDTRANS_SERVER_KEY) {
+      console.error("MIDTRANS_SERVER_KEY is not defined!");
+      return NextResponse.json({ error: "Midtrans configuration error" }, { status: 500 });
+    }
+    
+    console.log("✓ MIDTRANS_SERVER_KEY loaded:", MIDTRANS_SERVER_KEY.substring(0, 10) + "...");
     
     const { amount, points, user_id, payment_method } = body;
 
@@ -62,7 +70,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Request ke Midtrans
-    const auth = Buffer.from(MIDTRANS_SERVER_KEY + ":").toString("base64");
+    console.log("🔑 Creating auth header...");
+    console.log("Server key length:", MIDTRANS_SERVER_KEY?.length);
+    console.log("Server key (first 15 chars):", MIDTRANS_SERVER_KEY?.substring(0, 15));
+    
+    const keyWithColon = MIDTRANS_SERVER_KEY + ":";
+    console.log("Key with colon length:", keyWithColon.length);
+    
+    const auth = Buffer.from(keyWithColon, 'utf-8').toString('base64');
+    console.log("Base64 auth header (first 30 chars):", auth.substring(0, 30));
     
     const midtransPayload = {
       transaction_details: {
@@ -93,18 +109,33 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${auth}`,
+        "Authorization": `Basic ${auth}`,
       },
       body: JSON.stringify(midtransPayload),
     });
 
+    console.log("📡 Midtrans Response Status:", response.status);
+    console.log("📡 Midtrans Response Headers:", Object.fromEntries(response.headers));
+    
     const data = await response.json();
-    console.log("Midtrans response:", data);
+    console.log("📡 Midtrans Response Body:", JSON.stringify(data, null, 2));
 
     if (!response.ok) {
-      console.error("Midtrans error:", data);
-      return NextResponse.json({ error: data.error_messages?.[0] || "Gagal membuat pembayaran di Midtrans" }, { status: 400 });
+      console.error("❌ MIDTRANS ERROR - Status:", response.status);
+      console.error("❌ Error Response:", JSON.stringify(data, null, 2));
+      
+      // Return detailed error for debugging
+      return NextResponse.json({ 
+        error: data.error_messages?.[0] || data.error || "Gagal membuat pembayaran di Midtrans",
+        details: data.error_messages || data,
+        statusCode: response.status
+      }, { status: response.status });
     }
+    
+    console.log("✅ Midtrans token created successfully");
+    console.log("✅ Token:", data.token?.substring(0, 20) + "...");
+    console.log("✅ Redirect URL:", data.redirect_url?.substring(0, 50) + "...");
+
 
     // Update dengan token dan payment URL
     await supabase
