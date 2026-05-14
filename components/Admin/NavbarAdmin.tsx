@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClientSupabaseClient } from "@/lib/supabaseClient"; // Pastikan path ini benar
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import {
   Leaf,
   User,
@@ -13,7 +13,6 @@ import {
   Bell,
   Settings,
   ShieldCheck,
-  BarChart3,
   Users,
   ArrowLeftRight,
   ChevronDown,
@@ -21,6 +20,8 @@ import {
   ChevronRight,
   Tag,
   Loader2,
+  Search,
+  BarChart3,
 } from "lucide-react";
 
 export default function AdminSidebar({
@@ -38,26 +39,29 @@ export default function AdminSidebar({
   const [loading, setLoading] = useState(true);
 
   const profileRef = useRef<HTMLDivElement>(null);
-  const sidebarWidth = isCollapsed ? 80 : 260;
+  const sidebarWidth = isCollapsed ? 88 : 260;
+
+  const getPageTitle = () => {
+    const segment = pathname.split("/").pop();
+    if (!segment || segment === "admin") return "Dashboard Overview";
+    return segment.charAt(0).toUpperCase() + segment.slice(1).replace("-", " ");
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-
       if (session) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("full_name, user_id, users(email, role)")
           .eq("user_id", session.user.id)
           .single();
-
         setUserData(profile);
       }
       setLoading(false);
     };
-
     fetchUser();
 
     const handleClickOutside = (event: MouseEvent) => {
@@ -74,248 +78,221 @@ export default function AdminSidebar({
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.href = "/login"; // Redirect manual setelah logout
+    window.location.href = "/login";
   };
 
   const sidebarMenu = [
     {
-      group: "Utama",
+      group: "Main Menu",
       items: [
         { name: "Dashboard", href: "/admin", icon: Home },
-        { name: "Laporan", href: "/admin/reports", icon: BarChart3 },
+        { name: "Reports", href: "/admin/reports", icon: BarChart3 },
       ],
     },
     {
-      group: "Verifikasi",
+      group: "Operations",
       items: [
         {
           name: "Verifikasi Agent",
           href: "/admin/agent-applications",
           icon: ShieldCheck,
         },
-      ],
-    },
-    {
-      group: "Data Master",
-      items: [
-        { name: "Semua User", href: "/admin/users", icon: Users },
+        { name: "Manajemen User", href: "/admin/users", icon: Users },
         {
-          name: "Transaksi",
+          name: "Data Transaksi",
           href: "/admin/transactions",
           icon: ArrowLeftRight,
         },
+        { name: "Katalog Harga", href: "/admin/priceCatalogs", icon: Tag },
       ],
     },
   ];
 
   return (
-    <div className="h-screen flex bg-[#FDFDFD] font-sans text-slate-900 overflow-hidden">
-      {/* --- SIDEBAR --- */}
-      <aside
-        className="hidden lg:flex flex-col h-full border-r border-slate-100 bg-white z-50 transition-all duration-300 ease-in-out relative shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
-        style={{ width: sidebarWidth }}
-      >
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3.5 top-8 bg-white border border-slate-200 rounded-full p-1.5 text-slate-400 hover:text-emerald-600 shadow-md z-50 transition-all hover:scale-110"
-        >
-          {isCollapsed ? (
-            <ChevronRight size={12} strokeWidth={3} />
-          ) : (
-            <ChevronLeft size={12} strokeWidth={3} />
-          )}
-        </button>
-
+    <div className="h-screen flex bg-[#F8FAFC] font-sans text-slate-600 overflow-hidden">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
         <div
-          className={`h-20 flex items-center shrink-0 transition-all duration-300 ${isCollapsed ? "justify-center px-0" : "px-6"}`}
-        >
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-[2px] z-[60] lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR */}
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 flex flex-col h-full border-r border-slate-200 bg-white z-[70] transition-all duration-300 ease-out
+          ${isSidebarOpen ? "translate-x-0 w-[260px]" : "-translate-x-full lg:translate-x-0"}
+        `}
+        style={{ width: isSidebarOpen ? 260 : sidebarWidth }}
+      >
+        {/* Brand Section */}
+        <div className="h-20 flex items-center px-6 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200 shrink-0">
-              <Leaf className="w-5 h-5 text-white" strokeWidth={2.5} />
+            <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+              <Leaf className="w-5 h-5 text-white" />
             </div>
-            {!isCollapsed && (
-              <span className="font-black text-slate-900 text-lg tracking-tight">
+            {(!isCollapsed || isSidebarOpen) && (
+              <span className="font-bold text-slate-800 text-lg tracking-tight">
                 TrashFlow
               </span>
             )}
           </div>
         </div>
 
-        <nav
-          className={`py-6 flex-1 flex flex-col overflow-y-auto no-scrollbar transition-all duration-300 ${isCollapsed ? "px-3" : "px-4"}`}
-        >
-          <div className="space-y-8">
-            {sidebarMenu.map((section) => (
-              <div key={section.group}>
-                {!isCollapsed && (
-                  <h3 className="text-[10px] uppercase font-black text-slate-300 px-4 mb-3 tracking-[0.2em]">
-                    {section.group}
-                  </h3>
-                )}
-                <div className="space-y-1">
-                  {section.items.map((item) => {
-                    const active = pathname === item.href;
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className={`flex items-center rounded-2xl text-[13px] font-bold transition-all group relative ${
-                          isCollapsed
-                            ? "justify-center py-3"
-                            : "px-4 py-2.5 gap-3"
-                        } ${active ? "bg-emerald-600 text-white shadow-lg shadow-emerald-100" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
-                      >
-                        <item.icon
-                          className={`w-5 h-5 shrink-0 ${active ? "text-white" : "text-slate-400 group-hover:text-emerald-500"}`}
-                          strokeWidth={active ? 2.5 : 2}
-                        />
-                        {!isCollapsed && (
-                          <span className="flex-1 truncate">{item.name}</span>
-                        )}
-                        {isCollapsed && (
-                          <div className="absolute left-full ml-4 px-3 py-2 bg-slate-900 text-white text-[11px] rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-70 shadow-2xl">
-                            {item.name}
-                          </div>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-4 overflow-y-auto no-scrollbar space-y-6">
+          {sidebarMenu.map((group) => (
+            <div key={group.group}>
+              {(!isCollapsed || isSidebarOpen) && (
+                <p className="px-4 text-[10px] font-semibold text-slate-400 uppercase tracking-[0.1em] mb-2">
+                  {group.group}
+                </p>
+              )}
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const active = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group relative
+                        ${
+                          active
+                            ? "bg-emerald-50 text-emerald-700 font-semibold"
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                        }
+                      `}
+                    >
+                      {active && (
+                        <div className="absolute left-0 w-1 h-5 bg-emerald-500 rounded-r-full" />
+                      )}
+                      <item.icon
+                        className={`w-5 h-5 shrink-0 ${active ? "text-emerald-600" : "text-slate-400 group-hover:text-slate-600"}`}
+                      />
+                      {(!isCollapsed || isSidebarOpen) && (
+                        <span className="text-[13.5px]">{item.name}</span>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </nav>
+
+        {/* Collapse Toggle (Desktop Only) */}
+        <div className="p-4 border-t border-slate-100 hidden lg:block">
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="flex items-center justify-center w-full py-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+          >
+            {isCollapsed ? (
+              <ChevronRight size={18} />
+            ) : (
+              <div className="flex items-center gap-2 text-xs font-medium">
+                <ChevronLeft size={16} /> Minimize
+              </div>
+            )}
+          </button>
+        </div>
       </aside>
 
-      {/* --- CONTENT AREA --- */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 z-40 shrink-0 sticky top-0">
+      {/* MAIN CONTENT */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-50">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 text-slate-600"
+              className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
             >
-              <Menu className="w-5 h-5" />
+              <Menu size={22} />
             </button>
-            <div className="hidden lg:block">
-              <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                Workspace
-              </h2>
+
+            <div className="hidden md:flex items-center gap-2 bg-slate-100/50 px-3 py-1.5 rounded-full border border-slate-200/50 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
+              <Search size={15} className="text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="bg-transparent border-none text-xs focus:outline-none w-xs font-medium"
+              />
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <button className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
-            </button>
+          <div className="flex items-center gap-3">
+            <Link href="/admin/notifications">
+              <button className="p-2 text-slate-400 hover:text-emerald-500 transition-colors relative">
+                <Bell size={25} />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+              </button>
+            </Link>
 
-            <div className="h-8 w-px bg-slate-100" />
+            <div className="w-px h-6 bg-slate-200 mx-1" />
 
-            {/* PROFILE DROPDOWN DENGAN DATA DINAMIS */}
+            {/* BADGE PROFILE (CLEAN VERSION) */}
             <div className="relative" ref={profileRef}>
-              <div
-                className="flex items-center gap-3 pl-2 cursor-pointer group"
+              <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-2.5 p-1 pr-3 hover:bg-slate-50 rounded-full transition-all border border-transparent hover:border-slate-200"
               >
-                <div className="flex flex-col items-end leading-tight">
-                  <span className="text-[13px] font-black text-slate-900 group-hover:text-emerald-600 transition-colors">
-                    {loading ? "..." : userData?.full_name || "Admin"}
-                  </span>
-                  <span className="text-[10px] font-black text-emerald-500 mt-0.5 uppercase tracking-tighter">
-                    {loading
-                      ? "Loading"
-                      : userData?.users?.role?.replace("_", " ") ||
-                        "Super Admin"}
-                  </span>
-                </div>
-                <div className="w-10 h-10 rounded-full border-2 border-emerald-50 p-0.5 transition-transform group-hover:scale-105">
-                  <div className="w-full h-full rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-                    ) : (
-                      <User className="w-5 h-5 text-slate-400" />
-                    )}
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    {userData?.full_name?.substring(0, 1) || "A"}
                   </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+                </div>
+                <div className="hidden lg:block text-left">
+                  <p className="text-[13px] font-semibold text-slate-800 leading-none">
+                    {loading ? "..." : userData?.full_name}
+                  </p>
                 </div>
                 <ChevronDown
                   size={14}
-                  className={`text-slate-300 transition-transform duration-300 ${isProfileOpen ? "rotate-180 text-emerald-500" : ""}`}
+                  className={`text-slate-400 transition-transform duration-200 ${isProfileOpen ? "rotate-180" : ""}`}
                 />
-              </div>
+              </button>
 
               {isProfileOpen && (
-                <div className="absolute right-0 mt-4 w-72 bg-white border border-slate-100 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] py-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
-                  <div className="px-6 py-4 border-b border-slate-50 mb-2">
-                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">
-                      Kredensial
+                <div className="absolute right-0 mt-3 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 p-2 z-[100] animate-in fade-in zoom-in-95 duration-200">
+                  <div className="px-4 py-3 border-b border-slate-50 mb-1">
+                    <p className="text-xs font-medium text-slate-400">
+                      Signed in as
                     </p>
-                    <p className="text-[13px] font-bold text-slate-800 truncate">
-                      {userData?.users?.email || "..."}
+                    <p className="text-sm font-semibold text-slate-700 truncate">
+                      {userData?.users?.email}
                     </p>
                   </div>
-
-                  <div className="px-3 space-y-1">
-                    <ProfileMenuItem
-                      icon={<User size={16} />}
-                      label="Profil Saya"
-                      href="/admin/profile"
-                    />
-                    <div className="h-px bg-slate-50 mx-3 my-2" />
-                    <p className="text-[9px] font-black text-slate-300 uppercase px-4 py-2 tracking-[0.2em]">
-                      Sistem
-                    </p>
-                    <ProfileMenuItem
-                      icon={<Settings size={16} />}
-                      label="Pengaturan Umum"
-                      href="/admin/settings"
-                    />
-                    <ProfileMenuItem
-                      icon={<Tag size={16} />}
-                      label="Katalog Harga"
-                      href="/admin/priceCatalogs"
-                    />
-                  </div>
-
-                  <div className="mt-4 px-3">
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-3 w-full px-4 py-3 text-[13px] font-black text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"
-                    >
-                      <LogOut size={16} strokeWidth={3} /> Keluar Aplikasi
+                  <Link href="/admin/profile">
+                    <button className="flex items-center gap-3 w-full px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+                      <User size={16} /> My Profile
                     </button>
-                  </div>
+                  </Link>
+                  <Link href="/admin/settings">
+                    <button className="flex items-center gap-3 w-full px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+                      <Settings size={16} /> Account Settings
+                    </button>
+                  </Link>
+                  <div className="h-px bg-slate-100 my-1 mx-2" />
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 w-full px-3 py-2 text-[13px] text-rose-600 hover:bg-rose-50 rounded-xl transition-all font-medium"
+                  >
+                    <LogOut size={16} /> Sign Out
+                  </button>
                 </div>
               )}
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-[#FDFDFD] p-8 no-scrollbar">
-          <div className="max-w-7xl mx-auto">{children}</div>
+        {/* Content Body */}
+        <main className="flex-1 overflow-y-auto no-scrollbar bg-emerald-50/50">
+          <div className="p-6 lg:p-10">
+            <div className="max-w-7xl mx-auto">{children}</div>
+          </div>
         </main>
       </div>
     </div>
-  );
-}
-
-function ProfileMenuItem({
-  icon,
-  label,
-  href,
-}: {
-  icon: any;
-  label: string;
-  href: string;
-}) {
-  return (
-    <Link href={href}>
-      <button className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-2xl transition-all text-left group">
-        <span className="text-slate-400 group-hover:text-emerald-500">
-          {icon}
-        </span>
-        {label}
-      </button>
-    </Link>
   );
 }

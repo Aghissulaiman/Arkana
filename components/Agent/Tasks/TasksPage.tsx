@@ -6,19 +6,19 @@ import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  MapPin, 
-  Clock, 
-  CheckCircle2, 
-  Loader2, 
-  Truck, 
-  Eye, 
+import {
+  MapPin,
+  Clock,
+  CheckCircle2,
+  Loader2,
+  Truck,
+  Eye,
   Search,
   Calendar,
   Package,
   X,
   Check,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { Toaster, toast } from "sonner";
@@ -60,10 +60,14 @@ export default function AgentTasksPage() {
   const supabase = createClientSupabaseClient();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"pending" | "accepted" | "completed">("pending");
+  const [activeTab, setActiveTab] = useState<
+    "pending" | "accepted" | "completed"
+  >("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [popupTask, setPopupTask] = useState<Task | null>(null);
-  const [popupAction, setPopupAction] = useState<"accept" | "reject" | null>(null);
+  const [popupAction, setPopupAction] = useState<"accept" | "reject" | null>(
+    null,
+  );
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectionNote, setRejectionNote] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -71,8 +75,10 @@ export default function AgentTasksPage() {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         router.push("/login");
         return;
@@ -92,10 +98,12 @@ export default function AgentTasksPage() {
 
       const { data: requests, error } = await supabase
         .from("pickup_requests")
-        .select(`
+        .select(
+          `
           *,
           users!pickup_requests_user_id_fkey (email)
-        `)
+        `,
+        )
         .eq("agent_id", agentData.id)
         .order("created_at", { ascending: false });
 
@@ -108,7 +116,7 @@ export default function AgentTasksPage() {
       }
 
       if (requests && requests.length > 0) {
-        const userIds = [...new Set(requests.map(r => r.user_id))];
+        const userIds = [...new Set(requests.map((r) => r.user_id))];
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, full_name, phone")
@@ -116,21 +124,31 @@ export default function AgentTasksPage() {
 
         const profileMap = new Map();
         const phoneMap = new Map();
-        profiles?.forEach(p => {
+        profiles?.forEach((p) => {
           profileMap.set(p.user_id, p.full_name);
           phoneMap.set(p.user_id, p.phone);
         });
 
-        const formattedTasks: Task[] = requests.map(req => {
+        const formattedTasks: Task[] = requests.map((req) => {
           const date = new Date(req.created_at);
           return {
             id: req.id.slice(0, 8),
             dbId: req.id,
-            customer: profileMap.get(req.user_id) || req.users?.email?.split("@")[0] || "Pengguna",
+            customer:
+              profileMap.get(req.user_id) ||
+              req.users?.email?.split("@")[0] ||
+              "Pengguna",
             phone: phoneMap.get(req.user_id) || "-",
             address: req.pickup_address,
-            date: date.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }),
-            time: date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+            date: date.toLocaleDateString("id-ID", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            }),
+            time: date.toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
             status: req.status,
             weight: `${req.estimated_weight} kg`,
             waste_type: WASTE_LABELS[req.waste_type] || req.waste_type,
@@ -150,100 +168,102 @@ export default function AgentTasksPage() {
   };
 
   // Fungsi acceptTask yang sudah diperbarui
-const acceptTask = async (task: Task) => {
-  setProcessing(true);
-  
-  // 1. Ambil user_id dari pickup request
-  const { data: request } = await supabase
-    .from("pickup_requests")
-    .select("user_id")
-    .eq("id", task.dbId)
-    .single();
-  
-  // 2. Update status pickup request
-  const { error } = await supabase
-    .from("pickup_requests")
-    .update({ status: "accepted" })
-    .eq("id", task.dbId);
+  const acceptTask = async (task: Task) => {
+    setProcessing(true);
 
-  if (error) {
-    toast.error("Gagal menerima tugas: " + error.message);
-  } else {
-    // 3. Buat notifikasi untuk user
-    await supabase.from("notifications").insert({
-      user_id: request?.user_id,
-      type: "pickup_accepted",
-      title: "Penjemputan Diterima 🚚",
-      message: `Pengajuan penjemputan sampah Anda telah diterima. Mitra akan segera mengambil barang ke alamat Anda.`,
-      metadata: {
-        pickup_request_id: task.dbId,
-        agent_name: task.customer, // atau nama agent
-      },
-      is_read: false,
-    });
-    
-    toast.success(`Tugas dari ${task.customer} diterima!`);
-    setPopupTask(null);
-    setPopupAction(null);
-    fetchTasks();
-  }
-  setProcessing(false);
-};
+    // 1. Ambil user_id dari pickup request
+    const { data: request } = await supabase
+      .from("pickup_requests")
+      .select("user_id")
+      .eq("id", task.dbId)
+      .single();
 
-// Fungsi rejectTask yang sudah diperbarui
-const rejectTask = async (task: Task) => {
-  if (!rejectionReason) {
-    toast.error("Pilih alasan penolakan");
-    return;
-  }
+    // 2. Update status pickup request
+    const { error } = await supabase
+      .from("pickup_requests")
+      .update({ status: "accepted" })
+      .eq("id", task.dbId);
 
-  setProcessing(true);
-  
-  // 1. Ambil user_id dari pickup request
-  const { data: request } = await supabase
-    .from("pickup_requests")
-    .select("user_id")
-    .eq("id", task.dbId)
-    .single();
-  
-  const reasonText = REJECTION_REASONS.find(r => r.value === rejectionReason)?.label || rejectionReason;
-  const fullReason = `${reasonText}${rejectionNote ? `: ${rejectionNote}` : ""}`;
-  
-  // 2. Update status pickup request
-  const { error } = await supabase
-    .from("pickup_requests")
-    .update({ 
-      status: "rejected",
-      rejection_reason: fullReason,
-      rejected_at: new Date().toISOString()
-    })
-    .eq("id", task.dbId);
+    if (error) {
+      toast.error("Gagal menerima tugas: " + error.message);
+    } else {
+      // 3. Buat notifikasi untuk user
+      await supabase.from("notifications").insert({
+        user_id: request?.user_id,
+        type: "pickup_accepted",
+        title: "Penjemputan Diterima 🚚",
+        message: `Pengajuan penjemputan sampah Anda telah diterima. Mitra akan segera mengambil barang ke alamat Anda.`,
+        metadata: {
+          pickup_request_id: task.dbId,
+          agent_name: task.customer, // atau nama agent
+        },
+        is_read: false,
+      });
 
-  if (error) {
-    toast.error("Gagal menolak tugas: " + error.message);
-  } else {
-    // 3. Buat notifikasi untuk user
-    await supabase.from("notifications").insert({
-      user_id: request?.user_id,
-      type: "pickup_rejected",
-      title: "Penjemputan Ditolak ❌",
-      message: `Pengajuan penjemputan sampah Anda ditolak. Alasan: ${fullReason}. Silakan ajukan kembali.`,
-      metadata: {
-        pickup_request_id: task.dbId,
+      toast.success(`Tugas dari ${task.customer} diterima!`);
+      setPopupTask(null);
+      setPopupAction(null);
+      fetchTasks();
+    }
+    setProcessing(false);
+  };
+
+  // Fungsi rejectTask yang sudah diperbarui
+  const rejectTask = async (task: Task) => {
+    if (!rejectionReason) {
+      toast.error("Pilih alasan penolakan");
+      return;
+    }
+
+    setProcessing(true);
+
+    // 1. Ambil user_id dari pickup request
+    const { data: request } = await supabase
+      .from("pickup_requests")
+      .select("user_id")
+      .eq("id", task.dbId)
+      .single();
+
+    const reasonText =
+      REJECTION_REASONS.find((r) => r.value === rejectionReason)?.label ||
+      rejectionReason;
+    const fullReason = `${reasonText}${rejectionNote ? `: ${rejectionNote}` : ""}`;
+
+    // 2. Update status pickup request
+    const { error } = await supabase
+      .from("pickup_requests")
+      .update({
+        status: "rejected",
         rejection_reason: fullReason,
-      },
-      is_read: false,
-    });
-    
-    toast.info(`Tugas dari ${task.customer} ditolak`);
-    setPopupTask(null);
-    setPopupAction(null);
-    setRejectionReason("");
-    setRejectionNote("");
-    fetchTasks();
-  }
-  setProcessing(false);
-};
+        rejected_at: new Date().toISOString(),
+      })
+      .eq("id", task.dbId);
+
+    if (error) {
+      toast.error("Gagal menolak tugas: " + error.message);
+    } else {
+      // 3. Buat notifikasi untuk user
+      await supabase.from("notifications").insert({
+        user_id: request?.user_id,
+        type: "pickup_rejected",
+        title: "Penjemputan Ditolak ❌",
+        message: `Pengajuan penjemputan sampah Anda ditolak. Alasan: ${fullReason}. Silakan ajukan kembali.`,
+        metadata: {
+          pickup_request_id: task.dbId,
+          rejection_reason: fullReason,
+        },
+        is_read: false,
+      });
+
+      toast.info(`Tugas dari ${task.customer} ditolak`);
+      setPopupTask(null);
+      setPopupAction(null);
+      setRejectionReason("");
+      setRejectionNote("");
+      fetchTasks();
+    }
+    setProcessing(false);
+  };
 
   const openPopup = (task: Task, action: "accept" | "reject") => {
     setPopupTask(task);
@@ -265,7 +285,7 @@ const rejectTask = async (task: Task) => {
     fetchTasks();
   }, []);
 
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = tasks.filter((task) => {
     if (task.status !== activeTab) return false;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -279,9 +299,9 @@ const rejectTask = async (task: Task) => {
   });
 
   const stats = {
-    pending: tasks.filter(t => t.status === "pending").length,
-    accepted: tasks.filter(t => t.status === "accepted").length,
-    completed: tasks.filter(t => t.status === "completed").length,
+    pending: tasks.filter((t) => t.status === "pending").length,
+    accepted: tasks.filter((t) => t.status === "accepted").length,
+    completed: tasks.filter((t) => t.status === "completed").length,
   };
 
   if (loading) {
@@ -295,16 +315,24 @@ const rejectTask = async (task: Task) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" richColors />
-      
+
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Tugas Penjemputan</h1>
-            <p className="text-sm text-gray-500 mt-1">Kelola permintaan penjemputan sampah</p>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Tugas Penjemputan
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Kelola permintaan penjemputan sampah
+            </p>
           </div>
-          <Button variant="outline" onClick={fetchTasks} size="sm" className="gap-2">
+          <Button
+            variant="outline"
+            onClick={fetchTasks}
+            size="sm"
+            className="gap-2"
+          >
             <Loader2 className="w-3.5 h-3.5" />
             Refresh
           </Button>
@@ -322,7 +350,9 @@ const rejectTask = async (task: Task) => {
           </div>
           <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
             <p className="text-xs text-gray-400">Selesai</p>
-            <p className="text-xl font-bold text-green-600">{stats.completed}</p>
+            <p className="text-xl font-bold text-green-600">
+              {stats.completed}
+            </p>
           </div>
         </div>
 
@@ -399,37 +429,57 @@ const rejectTask = async (task: Task) => {
               {activeTab === "completed" && "Tidak ada riwayat selesai"}
             </h3>
             <p className="text-sm text-gray-400">
-              {activeTab === "pending" && "Belum ada permintaan penjemputan baru"}
+              {activeTab === "pending" &&
+                "Belum ada permintaan penjemputan baru"}
               {activeTab === "accepted" && "Semua tugas sudah diproses"}
-              {activeTab === "completed" && "Riwayat akan muncul setelah tugas selesai"}
+              {activeTab === "completed" &&
+                "Riwayat akan muncul setelah tugas selesai"}
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {filteredTasks.map((task) => (
-              <Card key={task.id} className="overflow-hidden hover:shadow-md transition-all">
+              <Card
+                key={task.id}
+                className="overflow-hidden hover:shadow-md transition-all"
+              >
                 <CardContent className="p-4">
                   <div className="flex flex-col md:flex-row gap-4 md:items-center">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
-                      task.status === "pending" ? "bg-yellow-100" :
-                      task.status === "accepted" ? "bg-blue-100" : "bg-green-100"
-                    }`}>
-                      {task.status === "pending" && <Clock className="w-6 h-6 text-yellow-600" />}
-                      {task.status === "accepted" && <Truck className="w-6 h-6 text-blue-600" />}
-                      {task.status === "completed" && <CheckCircle2 className="w-6 h-6 text-green-600" />}
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+                        task.status === "pending"
+                          ? "bg-yellow-100"
+                          : task.status === "accepted"
+                            ? "bg-blue-100"
+                            : "bg-green-100"
+                      }`}
+                    >
+                      {task.status === "pending" && (
+                        <Clock className="w-6 h-6 text-yellow-600" />
+                      )}
+                      {task.status === "accepted" && (
+                        <Truck className="w-6 h-6 text-blue-600" />
+                      )}
+                      {task.status === "completed" && (
+                        <CheckCircle2 className="w-6 h-6 text-green-600" />
+                      )}
                     </div>
 
                     <div className="flex-1 space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-gray-800">{task.customer}</span>
-                        <span className="text-xs text-gray-400 font-mono">#{task.id}</span>
+                        <span className="font-semibold text-gray-800">
+                          {task.customer}
+                        </span>
+                        <span className="text-xs text-gray-400 font-mono">
+                          #{task.id}
+                        </span>
                       </div>
-                      
+
                       <div className="flex items-start gap-2 text-sm text-gray-600">
                         <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
                         <span className="line-clamp-1">{task.address}</span>
                       </div>
-                      
+
                       <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5" />
@@ -439,7 +489,10 @@ const rejectTask = async (task: Task) => {
                           <Clock className="w-3.5 h-3.5" />
                           {task.time}
                         </span>
-                        <Badge variant="outline" className="text-[10px] bg-gray-50">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] bg-gray-50"
+                        >
                           {task.weight}
                         </Badge>
                       </div>
@@ -454,20 +507,20 @@ const rejectTask = async (task: Task) => {
                         </Button>
                       </Link>
                     )}
-                    
+
                     {task.status === "pending" && (
                       <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="gap-2 bg-yellow-500 hover:bg-yellow-600 text-white"
                           onClick={() => openPopup(task, "accept")}
                         >
                           <Check className="w-4 h-4" />
                           Terima
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="gap-2 border-red-300 text-red-600 hover:bg-red-50"
                           onClick={() => openPopup(task, "reject")}
                         >
@@ -478,7 +531,9 @@ const rejectTask = async (task: Task) => {
                     )}
 
                     {task.status === "completed" && (
-                      <Badge className="bg-green-100 text-green-700">Selesai</Badge>
+                      <Badge className="bg-green-100 text-green-700">
+                        Selesai
+                      </Badge>
                     )}
                   </div>
                 </CardContent>
@@ -494,14 +549,19 @@ const rejectTask = async (task: Task) => {
           <div className="bg-white rounded-2xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Terima Tugas?</h3>
-              <button onClick={closePopup} className="p-1 hover:bg-gray-100 rounded-lg">
+              <button
+                onClick={closePopup}
+                className="p-1 hover:bg-gray-100 rounded-lg"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="space-y-3 mb-6">
               <div className="bg-yellow-50 p-3 rounded-lg">
-                <p className="text-sm text-yellow-800">Anda akan menerima tugas dari:</p>
+                <p className="text-sm text-yellow-800">
+                  Anda akan menerima tugas dari:
+                </p>
               </div>
               <div className="space-y-2">
                 <p className="font-semibold">{popupTask.customer}</p>
@@ -516,7 +576,7 @@ const rejectTask = async (task: Task) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={closePopup}
@@ -542,19 +602,26 @@ const rejectTask = async (task: Task) => {
           <div className="bg-white rounded-2xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Tolak Tugas</h3>
-              <button onClick={closePopup} className="p-1 hover:bg-gray-100 rounded-lg">
+              <button
+                onClick={closePopup}
+                className="p-1 hover:bg-gray-100 rounded-lg"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="space-y-4 mb-6">
               <div className="bg-red-50 p-3 rounded-lg">
-                <p className="text-sm text-red-800">Anda akan menolak tugas dari:</p>
+                <p className="text-sm text-red-800">
+                  Anda akan menolak tugas dari:
+                </p>
                 <p className="font-semibold mt-1">{popupTask.customer}</p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium mb-2">Alasan Penolakan</label>
+                <label className="block text-sm font-medium mb-2">
+                  Alasan Penolakan
+                </label>
                 <div className="space-y-2">
                   {REJECTION_REASONS.map((reason) => (
                     <label
@@ -579,9 +646,11 @@ const rejectTask = async (task: Task) => {
                   ))}
                 </div>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium mb-2">Catatan Tambahan (Opsional)</label>
+                <label className="block text-sm font-medium mb-2">
+                  Catatan Tambahan (Opsional)
+                </label>
                 <textarea
                   rows={2}
                   value={rejectionNote}
@@ -591,7 +660,7 @@ const rejectTask = async (task: Task) => {
                 />
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={closePopup}

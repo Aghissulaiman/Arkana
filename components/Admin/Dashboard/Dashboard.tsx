@@ -16,8 +16,6 @@ import {
   ShieldCheck,
   ArrowRight,
   Loader2,
-  Eye,
-  Check,
   Users,
   Package,
   TrendingUp,
@@ -91,12 +89,18 @@ const WASTE_LABELS: Record<string, string> = {
   mixed: "Campuran",
 };
 
-const CATEGORIES = ["Semua", "Plastik & Botol", "Kertas & Kardus", "Logam", "Elektronik"];
+const CATEGORIES = [
+  "Semua",
+  "Plastik & Botol",
+  "Kertas & Kardus",
+  "Logam",
+  "Elektronik",
+];
 
 export default function AdminDashboard() {
   const router = useRouter();
   const supabase = createClientSupabaseClient();
-  
+
   const [applications, setApplications] = useState<AgentApplication[]>([]);
   const [pickups, setPickups] = useState<PickupRequest[]>([]);
   const [topAgents, setTopAgents] = useState<AgentStats[]>([]);
@@ -117,7 +121,9 @@ export default function AdminDashboard() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         router.push("/login");
         return;
@@ -137,10 +143,12 @@ export default function AdminDashboard() {
       // 1. Ambil pending agent applications
       const { data: appData } = await supabase
         .from("agent_applications")
-        .select(`
+        .select(
+          `
           *,
           users!agent_applications_user_id_fkey (email)
-        `)
+        `,
+        )
         .eq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(5);
@@ -159,11 +167,13 @@ export default function AdminDashboard() {
       // 2. Ambil recent pickup requests
       const { data: pickupData } = await supabase
         .from("pickup_requests")
-        .select(`
+        .select(
+          `
           *,
           users!pickup_requests_user_id_fkey (email),
           agents!pickup_requests_agent_id_fkey (agent_name)
-        `)
+        `,
+        )
         .order("created_at", { ascending: false })
         .limit(10);
 
@@ -193,14 +203,14 @@ export default function AdminDashboard() {
             .select("*", { count: "exact", head: true })
             .eq("agent_id", agent.id)
             .eq("status", "completed");
-          
+
           return {
             id: agent.id,
             agent_name: agent.agent_name,
             total_pickups: count || 0,
             avg_rating: agent.avg_rating || 4.5,
           };
-        })
+        }),
       );
       setTopAgents(topAgentsWithStats);
 
@@ -214,8 +224,10 @@ export default function AdminDashboard() {
         .select("status, total_points");
 
       const totalPickups = allPickups?.length || 0;
-      const totalPoints = allPickups?.reduce((sum, p) => sum + (p.total_points || 0), 0) || 0;
-      const pendingPickups = allPickups?.filter(p => p.status === "pending").length || 0;
+      const totalPoints =
+        allPickups?.reduce((sum, p) => sum + (p.total_points || 0), 0) || 0;
+      const pendingPickups =
+        allPickups?.filter((p) => p.status === "pending").length || 0;
 
       setStats({
         totalAgents: totalAgents || 0,
@@ -223,7 +235,6 @@ export default function AdminDashboard() {
         totalPoints,
         pendingPickups,
       });
-
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Gagal memuat data dashboard");
@@ -233,18 +244,26 @@ export default function AdminDashboard() {
   };
 
   const getStatusType = (status: string): StatusType => {
-    switch(status) {
-      case "pending": return "Menunggu";
-      case "accepted": return "Diproses";
-      case "completed": return "Selesai";
-      case "rejected": return "Ditolak";
-      default: return "Menunggu";
+    switch (status) {
+      case "pending":
+        return "Menunggu";
+      case "accepted":
+        return "Diproses";
+      case "completed":
+        return "Selesai";
+      case "rejected":
+        return "Ditolak";
+      default:
+        return "Menunggu";
     }
   };
 
-  const filteredPickups = pickups.filter(p => {
-    if (searchQuery && !p.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !p.agent_name?.toLowerCase().includes(searchQuery.toLowerCase())) {
+  const filteredPickups = pickups.filter((p) => {
+    if (
+      searchQuery &&
+      !p.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !p.agent_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    ) {
       return false;
     }
     if (categoryFilter !== "Semua" && p.waste_type !== categoryFilter) {
@@ -262,11 +281,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 p-6 bg-[#FAFBFC] min-h-screen font-sans">
+    <div className="max-w-7xl space-y-3 mx-auto  min-h-screen font-sans">
       <Toaster position="top-right" richColors />
-      
+
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-slate-200 pb-8">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-slate-200 pb-8">
         <div className="w-full md:w-auto">
           <div className="flex items-center gap-2 text-emerald-600 mb-2">
             <ShieldCheck className="w-5 h-5" />
@@ -290,7 +309,7 @@ export default function AdminDashboard() {
           >
             Lihat Pendaftaran
           </Button>
-          <Button 
+          <Button
             onClick={fetchAllData}
             className="flex-1 md:flex-none bg-emerald-600 text-white rounded-xl px-6 h-11 font-bold shadow-xs shadow-emerald-100 transition-all hover:bg-emerald-700"
           >
@@ -305,7 +324,9 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Total Agent</p>
-              <p className="text-3xl font-bold text-slate-800">{stats.totalAgents}</p>
+              <p className="text-3xl font-bold text-slate-800">
+                {stats.totalAgents}
+              </p>
             </div>
             <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
               <Users className="w-6 h-6 text-emerald-600" />
@@ -316,7 +337,9 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Total Penjemputan</p>
-              <p className="text-3xl font-bold text-slate-800">{stats.totalPickups}</p>
+              <p className="text-3xl font-bold text-slate-800">
+                {stats.totalPickups}
+              </p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
               <Package className="w-6 h-6 text-blue-600" />
@@ -327,7 +350,9 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Total Poin Diberikan</p>
-              <p className="text-3xl font-bold text-slate-800">{stats.totalPoints.toLocaleString()}</p>
+              <p className="text-3xl font-bold text-slate-800">
+                {stats.totalPoints.toLocaleString()}
+              </p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-yellow-600" />
@@ -338,7 +363,9 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Menunggu Konfirmasi</p>
-              <p className="text-3xl font-bold text-amber-600">{stats.pendingPickups}</p>
+              <p className="text-3xl font-bold text-amber-600">
+                {stats.pendingPickups}
+              </p>
             </div>
             <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
               <Clock className="w-6 h-6 text-amber-600" />
@@ -393,7 +420,9 @@ export default function AdminDashboard() {
                         {app.agent_name}
                       </h4>
                       <div className="flex items-center gap-3 mt-1">
-                        <p className="text-[11px] text-slate-400 font-medium">{app.service_area}</p>
+                        <p className="text-[11px] text-slate-400 font-medium">
+                          {app.service_area}
+                        </p>
                         <span className="text-slate-200 text-[10px]">|</span>
                         <p className="text-[11px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">
                           {app.waste_categories?.length || 0} Jenis Sampah
@@ -405,10 +434,11 @@ export default function AdminDashboard() {
                   <div className="flex gap-2 items-center justify-end">
                     <Button
                       variant="outline"
-                      onClick={() => router.push(`/admin/agent-applications/${app.id}`)}
+                      onClick={() =>
+                        router.push(`/admin/agent-applications/${app.id}`)
+                      }
                       className="h-10 px-5 rounded-xl border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-100"
                     >
-                      <Eye className="w-3.5 h-3.5 mr-1" />
                       Detail
                     </Button>
                   </div>
@@ -421,7 +451,9 @@ export default function AdminDashboard() {
         {/* TOP PERFORMANCE */}
         <div className="space-y-6">
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-slate-800">Top Performance</h2>
+            <h2 className="text-xl font-bold text-slate-800">
+              Top Performance
+            </h2>
             <p className="text-xs text-slate-400 font-medium">
               Agent dengan produktivitas tertinggi bulan ini.
             </p>
@@ -439,11 +471,15 @@ export default function AdminDashboard() {
                   className="group p-5 bg-white rounded-3xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg transition-all cursor-default"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`px-3 py-1 rounded-full font-black text-[10px] border uppercase tracking-widest ${
-                      i === 0 ? "text-amber-500 bg-amber-50 border-amber-100" :
-                      i === 1 ? "text-emerald-500 bg-emerald-50 border-emerald-100" :
-                      "text-blue-500 bg-blue-50 border-blue-100"
-                    }`}>
+                    <div
+                      className={`px-3 py-1 rounded-full font-black text-[10px] border uppercase tracking-widest ${
+                        i === 0
+                          ? "text-amber-500 bg-amber-50 border-amber-100"
+                          : i === 1
+                            ? "text-emerald-500 bg-emerald-50 border-emerald-100"
+                            : "text-blue-500 bg-blue-50 border-blue-100"
+                      }`}
+                    >
                       Rank #{i + 1}
                     </div>
                     <div className="flex items-center gap-1 text-xs font-black text-slate-700">
@@ -474,98 +510,118 @@ export default function AdminDashboard() {
 
       {/* ACTIVITY MONITORING */}
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Aktivitas Terkini</h2>
-        </div>
+        <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+          Aktivitas Terkini
+        </h2>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input
-              placeholder="Cari transaksi atau user..."
-              className="pl-11 rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white h-11"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+        {/* Card Utama Wrapping Search, Filter, dan List */}
+        <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+          {/* Header Dalam Card (Search & Filter) */}
+          <div className="p-6 border-b border-slate-50 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              {/* Search Bar */}
+              <div className="relative grow md:max-w-sm">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Cari transaksi atau user..."
+                  className="pl-11 rounded-2xl border-slate-100 bg-slate-50/50 focus:bg-white h-11 transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat)}
-                className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
-                  categoryFilter === cat
-                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-100"
-                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid gap-4">
-          {filteredPickups.length === 0 ? (
-            <div className="bg-white rounded-2xl p-10 text-center border border-slate-100">
-              <p className="text-slate-400">Tidak ada aktivitas</p>
+              {/* Filter Categories */}
+              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar items-center">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoryFilter(cat)}
+                    className={`px-5 py-2.5 rounded-2xl text-[11px] font-bold transition-all whitespace-nowrap border ${
+                      categoryFilter === cat
+                        ? "bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-100"
+                        : "bg-white border-slate-100 text-slate-500 hover:bg-slate-50"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
-          ) : (
-            filteredPickups.map((trx) => {
-              const statusType = getStatusType(trx.status);
-              const s = STATUS_STYLE[statusType];
-              const timeAgo = new Date(trx.created_at).toLocaleTimeString("id-ID", {
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-              
-              return (
-                <div
-                  key={trx.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-[28px] border border-slate-100 bg-white hover:border-emerald-200 hover:shadow-xl transition-all cursor-pointer group gap-4"
-                >
-                  <div className="flex items-center gap-5">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${s.color} bg-opacity-10 transition-all group-hover:scale-105 border`}>
-                      {s.icon}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.15em]">
-                          {trx.request_code?.slice(0, 8) || trx.id.slice(0, 8)}
-                        </span>
-                        <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase border ${s.color}`}>
-                          {s.label}
-                        </span>
-                      </div>
-                      <h4 className="text-base font-bold text-slate-800 leading-none">
-                        {trx.user_name}{" "}
-                        <span className="text-slate-300 font-medium mx-1 text-sm">
-                          mengirim ke
-                        </span>{" "}
-                        {trx.agent_name}
-                      </h4>
-                      <p className="text-xs text-slate-400 font-medium mt-1.5">
-                        {trx.waste_type} •{" "}
-                        <span className="text-emerald-600 font-bold">
-                          {trx.estimated_weight} kg
-                        </span>
-                      </p>
-                    </div>
-                  </div>
+          </div>
 
-                  <div className="flex items-center justify-between sm:justify-end sm:gap-8 border-t sm:border-none pt-3 sm:pt-0">
-                    <div className="text-left sm:text-right">
-                      <p className="text-[11px] font-bold text-slate-400">{timeAgo}</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-600 group-hover:text-white transition-all transform group-hover:rotate-45">
-                      <ArrowUpRight className="w-5 h-5" />
-                    </div>
-                  </div>
+          {/* Body Dalam Card (List) */}
+          <div className="p-6">
+            <div className="grid gap-3">
+              {filteredPickups.length === 0 ? (
+                <div className="py-20 text-center">
+                  <p className="text-sm font-bold text-slate-300">
+                    Tidak ada aktivitas ditemukan
+                  </p>
                 </div>
-              );
-            })
-          )}
+              ) : (
+                filteredPickups.map((trx) => {
+                  const statusType = getStatusType(trx.status);
+                  const s = STATUS_STYLE[statusType];
+                  const timeAgo = new Date(trx.created_at).toLocaleTimeString(
+                    "id-ID",
+                    { hour: "2-digit", minute: "2-digit" },
+                  );
+
+                  return (
+                    <div
+                      key={trx.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-3xl border border-transparent hover:border-emerald-100 hover:bg-emerald-50/30 transition-all cursor-pointer group gap-4"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-12 h-12 rounded-2xl flex items-center justify-center ${s.color} bg-opacity-10 transition-all group-hover:scale-105 border border-current/20`}
+                        >
+                          {s.icon}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                              {trx.request_code?.slice(0, 8) ||
+                                trx.id.slice(0, 8)}
+                            </span>
+                            <span
+                              className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase border ${s.color}`}
+                            >
+                              {s.label}
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-700 leading-none">
+                            {trx.user_name}{" "}
+                            <span className="text-slate-400 font-medium mx-0.5">
+                              →
+                            </span>{" "}
+                            {trx.agent_name}
+                          </h4>
+                          <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tight">
+                            {trx.waste_type} •{" "}
+                            <span className="text-emerald-600">
+                              {trx.estimated_weight} kg
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end sm:gap-6">
+                        <div className="text-left sm:text-right">
+                          <p className="text-[10px] font-black text-slate-400">
+                            {timeAgo}
+                          </p>
+                        </div>
+                        <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-600 group-hover:text-white transition-all transform group-hover:translate-x-1">
+                          <ArrowUpRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

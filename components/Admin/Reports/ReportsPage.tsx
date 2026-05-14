@@ -18,7 +18,6 @@ import {
   Users,
   Truck,
   Coins,
-  CalendarDays,
   Award,
   ChevronRight,
   Loader2,
@@ -58,7 +57,9 @@ export default function ReportsPage() {
   const [topUsers, setTopUsers] = useState<TopUser[]>([]);
   const [summaryStats, setSummaryStats] = useState<SummaryStat[]>([]);
   const [totalWaste, setTotalWaste] = useState(0);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7),
+  );
 
   useEffect(() => {
     fetchReportData();
@@ -67,7 +68,9 @@ export default function ReportsPage() {
   const fetchReportData = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // 1. Ambil data pickup requests untuk chart bulanan
@@ -89,16 +92,22 @@ export default function ReportsPage() {
         .lt("created_at", endDate.toISOString());
 
       // 3. Hitung data bulanan
-      const totalWeight = pickups?.reduce((sum, p) => sum + (p.estimated_weight || 0), 0) || 0;
+      const totalWeight =
+        pickups?.reduce((sum, p) => sum + (p.estimated_weight || 0), 0) || 0;
       const totalTransactions = pickups?.length || 0;
       const newUsersCount = newUsers?.length || 0;
 
-      setMonthlyData([{
-        month: new Date(selectedMonth).toLocaleDateString("id-ID", { month: "short", year: "numeric" }),
-        sampah: totalWeight,
-        transaksi: totalTransactions,
-        user: newUsersCount,
-      }]);
+      setMonthlyData([
+        {
+          month: new Date(selectedMonth).toLocaleDateString("id-ID", {
+            month: "short",
+            year: "numeric",
+          }),
+          sampah: totalWeight,
+          transaksi: totalTransactions,
+          user: newUsersCount,
+        },
+      ]);
 
       setTotalWaste(totalWeight);
 
@@ -117,7 +126,11 @@ export default function ReportsPage() {
             .eq("user_id", profile.user_id)
             .eq("status", "completed");
 
-          const totalWeight = userPickups?.reduce((sum, p) => sum + (p.estimated_weight || 0), 0) || 0;
+          const totalWeight =
+            userPickups?.reduce(
+              (sum, p) => sum + (p.estimated_weight || 0),
+              0,
+            ) || 0;
           const transactionCount = userPickups?.length || 0;
 
           return {
@@ -127,7 +140,7 @@ export default function ReportsPage() {
             sampah: `${totalWeight} kg`,
             transaksi: transactionCount,
           };
-        })
+        }),
       );
 
       setTopUsers(topUsersData);
@@ -145,9 +158,15 @@ export default function ReportsPage() {
         .from("redeem_requests")
         .select("points_spent");
 
-      const totalRedeemed = redeemedPoints?.reduce((sum, r) => sum + r.points_spent, 0) || 0;
+      const totalRedeemed =
+        redeemedPoints?.reduce((sum, r) => sum + r.points_spent, 0) || 0;
       const totalPickups = allPickups?.length || 0;
-      const totalWasteAll = allPickups?.reduce((sum, p) => sum + (p.estimated_weight || 0), 0) || 0;
+      const completedPickups =
+        allPickups?.filter((p) => p.status === "completed").length || 0;
+      const efficiencyRate =
+        totalPickups > 0 ? (completedPickups / totalPickups) * 100 : 0;
+      const totalWasteAll =
+        allPickups?.reduce((sum, p) => sum + (p.estimated_weight || 0), 0) || 0;
 
       setSummaryStats([
         {
@@ -169,9 +188,9 @@ export default function ReportsPage() {
           up: true,
         },
         {
-          label: "Total Pengiriman",
-          value: `${totalPickups}`,
-          change: "+38",
+          label: "Efisiensi Sistem",
+          value: `${efficiencyRate.toFixed(1)}%`,
+          change: "Optimal",
           icon: Truck,
           color: "text-amber-600",
           bg: "bg-amber-50",
@@ -187,7 +206,6 @@ export default function ReportsPage() {
           up: false,
         },
       ]);
-
     } catch (error) {
       console.error("Error fetching report data:", error);
       toast.error("Gagal memuat data laporan");
@@ -198,9 +216,16 @@ export default function ReportsPage() {
 
   const exportToCSV = () => {
     const headers = ["Bulan", "Total Sampah (kg)", "Transaksi", "User Baru"];
-    const rows = monthlyData.map(d => [d.month, d.sampah, d.transaksi, d.user]);
-    
-    const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+    const rows = monthlyData.map((d) => [
+      d.month,
+      d.sampah,
+      d.transaksi,
+      d.user,
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.join(","))
+      .join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -211,7 +236,7 @@ export default function ReportsPage() {
     toast.success("Laporan berhasil diexport");
   };
 
-  const MAX_SAMPAH = Math.max(...monthlyData.map(d => d.sampah), 1000);
+  const MAX_SAMPAH = Math.max(...monthlyData.map((d) => d.sampah), 1000);
 
   if (loading) {
     return (
@@ -224,11 +249,11 @@ export default function ReportsPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-0">
       <Toaster position="top-right" richColors />
-      
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b pb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">
             Laporan Analitik
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -299,7 +324,11 @@ export default function ReportsPage() {
             <CardHeader className="flex flex-row items-center justify-between pb-8">
               <div className="space-y-1">
                 <CardTitle className="text-lg font-bold text-slate-800">
-                  Volume Sampah {new Date(selectedMonth).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}
+                  Volume Sampah{" "}
+                  {new Date(selectedMonth).toLocaleDateString("id-ID", {
+                    month: "long",
+                    year: "numeric",
+                  })}
                 </CardTitle>
                 <CardDescription>
                   Data pengumpulan sampah periode ini
@@ -348,7 +377,9 @@ export default function ReportsPage() {
                     <span className="text-slate-400 uppercase tracking-tighter mr-2">
                       Total
                     </span>
-                    <span className="font-bold text-slate-800">{totalWaste.toFixed(1)} kg</span>
+                    <span className="font-bold text-slate-800">
+                      {totalWaste.toFixed(1)} kg
+                    </span>
                   </div>
                 </div>
                 <Button
@@ -428,59 +459,6 @@ export default function ReportsPage() {
                     </div>
                   ))
                 )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Metrics Card */}
-          <Card className="bg-slate-900 text-white border-none shadow-lg shadow-slate-200">
-            <CardContent className="p-6">
-              <h3 className="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">
-                Efisiensi Sistem
-              </h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-300">
-                    Rata-rata/Transaksi
-                  </span>
-                  <span className="text-sm font-bold">
-                    {monthlyData[0]?.transaksi > 0 
-                      ? (monthlyData[0]?.sampah / monthlyData[0]?.transaksi).toFixed(1) 
-                      : 0} kg
-                  </span>
-                </div>
-                <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-emerald-500 rounded-full" 
-                    style={{ 
-                      width: `${Math.min(100, (monthlyData[0]?.sampah / monthlyData[0]?.transaksi / 10) * 100)}%` 
-                    }} 
-                  />
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-300">
-                    Konversi Sampah
-                  </span>
-                  <span className="text-sm font-bold">
-                    {monthlyData[0]?.transaksi > 0 
-                      ? ((monthlyData[0]?.transaksi / (monthlyData[0]?.user || 1)) * 10).toFixed(1) 
-                      : 0}%
-                  </span>
-                </div>
-                <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-500 rounded-full" 
-                    style={{ 
-                      width: `${Math.min(100, (monthlyData[0]?.transaksi / (monthlyData[0]?.user || 1)) * 20)}%` 
-                    }} 
-                  />
-                </div>
-                <Button 
-                  onClick={() => window.location.href = "/admin/reports/detail"}
-                  className="w-full mt-4 bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs uppercase tracking-tighter h-9"
-                >
-                  Buka Analitik Lanjutan
-                </Button>
               </div>
             </CardContent>
           </Card>

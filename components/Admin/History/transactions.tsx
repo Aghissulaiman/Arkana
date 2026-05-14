@@ -62,7 +62,18 @@ export default function AdminFinanceHistory() {
   const [activeFilter, setActiveFilter] = useState("Semua");
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 p-6 font-sans bg-[#FAFBFC]">
+    <div className="max-w-7xl mx-auto space-y-6 font-sans">
+      <div className="md:flex-row items-start gap-4 border-b pb-6">
+        <h1 className="text-3xl font-black tracking-tight text-slate-900">
+          Riwayat Transaksi
+        </h1>
+        <div>
+          <p className="text-muted-foreground mt-1">
+            Pantau performa pengelolaan sampah dan partisipasi pengguna.
+          </p>
+        </div>
+      </div>
+
       {/* 1. Stats Overview - Card Style */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
@@ -112,7 +123,7 @@ export default function AdminFinanceHistory() {
             />
           </div>
 
-          <div className="h-8 w-[1px] bg-slate-100 hidden lg:block" />
+          <div className="h-8 w-px bg-slate-100 hidden lg:block" />
 
           {/* Quick Filter Buttons */}
           <div className="flex p-1 gap-1 overflow-x-auto w-full lg:w-auto">
@@ -131,7 +142,7 @@ export default function AdminFinanceHistory() {
             ))}
           </div>
 
-          <div className="h-8 w-[1px] bg-slate-100 hidden lg:block" />
+          <div className="h-8 w-px bg-slate-100 hidden lg:block" />
 
           {/* Action Buttons */}
           <div className="flex gap-2 p-1 w-full lg:w-auto">
