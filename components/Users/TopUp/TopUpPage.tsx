@@ -6,7 +6,6 @@ import { Toaster, toast } from "sonner";
 import {
   Loader2,
   Wallet,
-  CreditCard,
   Building2,
   Smartphone,
   QrCode,
@@ -16,37 +15,39 @@ import {
   X,
   ArrowRight,
   Info,
+  CreditCard,
 } from "lucide-react";
+import Script from "next/script";
 
-const TOP_UP_AMOUNTS = [10000, 25000, 50000, 100000, 250000, 500000];
-
+// Payment methods for Midtrans
 const PAYMENT_METHODS = [
   {
-    id: "bca",
+    id: "credit_card",
+    name: "Kartu Kredit",
+    icon: CreditCard,
+    color: "bg-blue-600",
+    desc: "Visa / Mastercard / JCB",
+  },
+  {
+    id: "bank_transfer_bca",
     name: "Transfer BCA",
     icon: Building2,
     color: "bg-blue-600",
     desc: "Via ATM / Mobile Banking BCA",
-    accountNo: "1234567890",
-    accountName: "PT Arkana Digital",
   },
   {
-    id: "mandiri",
+    id: "bank_transfer_mandiri",
     name: "Transfer Mandiri",
     icon: Building2,
     color: "bg-yellow-600",
     desc: "Via ATM / Mobile Banking Mandiri",
-    accountNo: "0987654321",
-    accountName: "PT Arkana Digital",
   },
   {
-    id: "gopay",
-    name: "GoPay",
-    icon: Smartphone,
-    color: "bg-green-600",
-    desc: "Scan QR atau transfer ke nomor",
-    accountNo: "0811-2345-6789",
-    accountName: "PT Arkana Digital",
+    id: "bank_transfer_bri",
+    name: "Transfer BRI",
+    icon: Building2,
+    color: "bg-red-600",
+    desc: "Via ATM / Mobile Banking BRI",
   },
   {
     id: "qris",
@@ -54,13 +55,24 @@ const PAYMENT_METHODS = [
     icon: QrCode,
     color: "bg-purple-600",
     desc: "Scan QR dengan aplikasi apapun",
-    accountNo: null,
-    accountName: null,
+  },
+  {
+    id: "gopay",
+    name: "GoPay",
+    icon: Smartphone,
+    color: "bg-green-600",
+    desc: "Bayar dengan GoPay",
   },
 ];
 
 // Exchange rate: 1 poin = Rp 10
 const RATE = 10;
+
+declare global {
+  interface Window {
+    snap: any;
+  }
+}
 
 export default function TopUpPage() {
   const supabase = createClientSupabaseClient();
@@ -72,17 +84,37 @@ export default function TopUpPage() {
   const [step, setStep] = useState<"select" | "payment" | "success">("select");
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [snapLoaded, setSnapLoaded] = useState(false);
+  const [orderData, setOrderData] = useState<{
+    order_id: string;
+    amount: number;
+    points: number;
+  } | null>(null);
+
+  const MIDTRANS_CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
 
   useEffect(() => {
     fetchBalance();
   }, []);
 
+  useEffect(() => {
+    // Load Midtrans Snap script
+    if (!document.querySelector('#midtrans-snap-script')) {
+      const script = document.createElement('script');
+      script.id = 'midtrans-snap-script';
+      script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+      script.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY || '');
+      script.onload = () => setSnapLoaded(true);
+      document.body.appendChild(script);
+    } else {
+      setSnapLoaded(true);
+    }
+  }, [MIDTRANS_CLIENT_KEY]);
+
   const fetchBalance = async () => {
     setLoading(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data } = await supabase
@@ -111,37 +143,116 @@ export default function TopUpPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSubmitPayment = async () => {
+  const handlePaymentWithMidtrans = async () => {
+    const amount = getAmount();
+    const points = getPointsEarned();
+
+    if (amount < 10000) {
+      toast.error("Minimal top up Rp 10.000");
+      return;
+    }
+
+    if (!selectedMethod) {
+      toast.error("Pilih metode pembayaran terlebih dahulu");
+      return;
+    }
+
     setSubmitting(true);
+
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not found");
 
-      const amount = getAmount();
-      const points = getPointsEarned();
-      const method = PAYMENT_METHODS.find((m) => m.id === selectedMethod);
-
-      // Record top up request in DB
-      const { error } = await supabase.from("topup_requests").insert({
-        user_id: user.id,
-        amount: amount,
-        points_to_add: points,
-        payment_method: selectedMethod,
-        status: "pending",
-        created_at: new Date().toISOString(),
+      // Panggil API untuk create payment
+      const response = await fetch("/api/midtrans/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          points,
+          user_id: user.id,
+          payment_method: selectedMethod,
+        }),
       });
 
-      if (error) {
-        // If table doesn't exist, just show success (will be processed manually)
-        console.warn("topup_requests table may not exist:", error);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal membuat pembayaran");
       }
 
+      setOrderData({
+        order_id: data.order_id,
+        amount,
+        points,
+      });
+
+      // Open Midtrans Snap popup
+      if (snapLoaded && window.snap) {
+        window.snap.pay(data.token, {
+          onSuccess: (result: any) => {
+            console.log("Payment success:", result);
+            handlePaymentSuccess(data.order_id, amount, points);
+          },
+          onPending: (result: any) => {
+            console.log("Payment pending:", result);
+            toast.info("Pembayaran pending, silakan selesaikan pembayaran");
+            setStep("payment");
+          },
+          onError: (result: any) => {
+            console.error("Payment error:", result);
+            toast.error("Pembayaran gagal, silakan coba lagi");
+            setSubmitting(false);
+          },
+          onClose: () => {
+            console.log("Payment popup closed");
+            setSubmitting(false);
+          },
+        });
+      } else {
+        // Fallback: redirect ke payment URL
+        if (data.payment_url) {
+          window.location.href = data.payment_url;
+        }
+      }
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      toast.error(err.message || "Terjadi kesalahan");
+      setSubmitting(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (orderId: string, amount: number, points: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Update status topup request
+      await supabase
+        .from("topup_requests")
+        .update({ status: "success", completed_at: new Date().toISOString() })
+        .eq("order_id", orderId);
+
+      // Tambah poin ke user
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("balance_points")
+        .eq("user_id", user.id)
+        .single();
+
+      const newBalance = (profile?.balance_points || 0) + points;
+
+      await supabase
+        .from("profiles")
+        .update({ balance_points: newBalance })
+        .eq("user_id", user.id);
+
+      setBalance(newBalance);
       setStep("success");
+      toast.success(`Top up berhasil! +${points.toLocaleString()} poin`);
     } catch (err) {
-      console.error(err);
-      // Show success anyway since this is a manual process
+      console.error("Error updating balance:", err);
+      toast.error("Poin akan ditambahkan dalam beberapa saat");
       setStep("success");
     } finally {
       setSubmitting(false);
@@ -166,11 +277,10 @@ export default function TopUpPage() {
           <CheckCircle className="w-10 h-10 text-primary" />
         </div>
         <h2 className="text-2xl font-bold text-gray-800 mb-2">
-          Konfirmasi Terkirim!
+          Top Up Berhasil!
         </h2>
         <p className="text-gray-500 mb-4">
-          Pembayaran Anda sedang diverifikasi. Poin akan ditambahkan dalam{" "}
-          <strong>1x24 jam</strong> setelah konfirmasi.
+          Selamat! Poin Anda telah bertambah.
         </p>
         <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left space-y-2">
           <div className="flex justify-between text-sm">
@@ -186,8 +296,10 @@ export default function TopUpPage() {
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Metode</span>
-            <span className="font-semibold">{currentMethod?.name}</span>
+            <span className="text-gray-500">Saldo Sekarang</span>
+            <span className="font-semibold">
+              {balance.toLocaleString()} poin
+            </span>
           </div>
         </div>
         <button
@@ -209,6 +321,11 @@ export default function TopUpPage() {
     return (
       <div className="max-w-md mx-auto px-4 py-6">
         <Toaster position="top-right" richColors />
+        <Script 
+          src="https://app.sandbox.midtrans.com/snap/snap.js"
+          data-client-key={MIDTRANS_CLIENT_KEY}
+          strategy="lazyOnload"
+        />
 
         <div className="flex items-center gap-3 mb-6">
           <button
@@ -220,9 +337,8 @@ export default function TopUpPage() {
           <h1 className="text-xl font-bold">Detail Pembayaran</h1>
         </div>
 
-        {/* Summary */}
         <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-5 text-white mb-6">
-          <p className="text-white/70 text-sm">Total Transfer</p>
+          <p className="text-white/70 text-sm">Total Pembayaran</p>
           <p className="text-3xl font-bold my-1">
             Rp {getAmount().toLocaleString("id-ID")}
           </p>
@@ -231,7 +347,6 @@ export default function TopUpPage() {
           </p>
         </div>
 
-        {/* Payment Info */}
         <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4 mb-6">
           <div className="flex items-center gap-3">
             <div
@@ -245,69 +360,28 @@ export default function TopUpPage() {
             </div>
           </div>
 
-          {currentMethod.id === "qris" ? (
-            <div className="text-center py-6">
-              <div className="w-48 h-48 bg-gray-100 rounded-xl mx-auto flex items-center justify-center">
-                <QrCode className="w-24 h-24 text-gray-300" />
-              </div>
-              <p className="text-xs text-gray-400 mt-3">
-                Scan QR Code di atas untuk membayar
-              </p>
-            </div>
-          ) : (
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <div>
-                <p className="text-xs text-gray-400">No. Rekening / Nomor</p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-lg font-bold font-mono tracking-wider text-gray-800">
-                    {currentMethod.accountNo}
-                  </p>
-                  <button
-                    onClick={() => handleCopy(currentMethod.accountNo!)}
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                      copied
-                        ? "bg-primary/10 text-primary"
-                        : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                    }`}
-                  >
-                    {copied ? (
-                      <>
-                        <CheckCircle className="w-3.5 h-3.5" /> Disalin
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" /> Salin
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">Nama Rekening</p>
-                <p className="font-semibold text-gray-800">
-                  {currentMethod.accountName}
-                </p>
-              </div>
-            </div>
-          )}
+          <div className="bg-blue-50 rounded-xl p-4 text-center">
+            <p className="text-sm text-blue-800">
+              Anda akan diarahkan ke halaman pembayaran Midtrans
+            </p>
+          </div>
         </div>
 
-        {/* Instructions */}
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
           <div className="flex items-start gap-2">
             <Info className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
             <div className="text-xs text-amber-700 space-y-1">
-              <p className="font-semibold">Petunjuk:</p>
-              <p>1. Transfer tepat sesuai jumlah (jangan dibulatkan)</p>
-              <p>2. Simpan bukti transfer Anda</p>
-              <p>3. Klik tombol "Konfirmasi Pembayaran" di bawah</p>
-              <p>4. Poin akan masuk dalam 1x24 jam</p>
+              <p className="font-semibold">Informasi:</p>
+              <p>1. Klik tombol "Lanjutkan Pembayaran" di bawah</p>
+              <p>2. Anda akan diarahkan ke halaman Midtrans</p>
+              <p>3. Pilih metode pembayaran yang diinginkan</p>
+              <p>4. Poin akan langsung bertambah setelah pembayaran sukses</p>
             </div>
           </div>
         </div>
 
         <button
-          onClick={handleSubmitPayment}
+          onClick={handlePaymentWithMidtrans}
           disabled={submitting}
           className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
@@ -315,7 +389,7 @@ export default function TopUpPage() {
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <>
-              Konfirmasi Pembayaran
+              Lanjutkan Pembayaran
               <ArrowRight className="w-4 h-4" />
             </>
           )}
@@ -325,7 +399,7 @@ export default function TopUpPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
       <Toaster position="top-right" richColors />
 
       {/* Header */}
@@ -342,7 +416,7 @@ export default function TopUpPage() {
           <Wallet className="w-5 h-5 text-white/70" />
           <p className="text-white/70 text-sm">Saldo Poin Anda</p>
         </div>
-        <p className="text-4xl font-bold">{balance.toLocaleString()}</p>
+        <p className="text-3xl font-bold">{balance.toLocaleString()}</p>
         <p className="text-white/60 text-sm mt-1">
           ≈ Rp {(balance * RATE).toLocaleString("id-ID")}
         </p>
@@ -356,95 +430,96 @@ export default function TopUpPage() {
         </p>
       </div>
 
-      {/* Amount Selection */}
-      <div className="space-y-3">
-        <p className="text-sm font-semibold text-gray-700">Pilih Nominal</p>
-        <div className="grid grid-cols-3 gap-2">
-          {TOP_UP_AMOUNTS.map((amount) => (
-            <button
-              key={amount}
-              onClick={() => {
-                setSelectedAmount(amount);
-                setCustomAmount("");
-              }}
-              className={`py-3 rounded-xl text-sm font-semibold transition-all ${
-                selectedAmount === amount
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "bg-white border border-gray-200 text-gray-700 hover:border-primary/50"
-              }`}
-            >
-              {amount >= 1000
-                ? `Rp ${(amount / 1000).toLocaleString()}k`
-                : `Rp ${amount}`}
-            </button>
-          ))}
-        </div>
-
-        {/* Custom Amount */}
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-sm">
-            Rp
-          </span>
-          <input
-            type="text"
-            value={customAmount}
-            onChange={(e) => {
-              const raw = e.target.value.replace(/\D/g, "");
-              setCustomAmount(raw);
-              setSelectedAmount(null);
-            }}
-            placeholder="Nominal lainnya..."
-            className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-          />
-        </div>
-
-        {/* Preview */}
-        {getAmount() > 0 && (
-          <div className="bg-gray-50 rounded-xl p-3 flex justify-between text-sm">
-            <span className="text-gray-500">Poin yang didapat</span>
-            <span className="font-bold text-primary">
-              +{getPointsEarned().toLocaleString()} poin
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Payment Method */}
-      <div className="space-y-3">
-        <p className="text-sm font-semibold text-gray-700">
-          Pilih Metode Pembayaran
-        </p>
-        <div className="space-y-2">
-          {PAYMENT_METHODS.map((method) => (
-            <button
-              key={method.id}
-              onClick={() => setSelectedMethod(method.id)}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                selectedMethod === method.id
-                  ? "border-primary bg-primary/5"
-                  : "border-gray-200 bg-white hover:border-gray-300"
-              }`}
-            >
-              <div
-                className={`w-10 h-10 ${method.color} rounded-xl flex items-center justify-center shrink-0`}
-              >
-                <method.icon className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-800">
-                  {method.name}
-                </p>
-                <p className="text-xs text-gray-400">{method.desc}</p>
-              </div>
-              <ChevronRight
-                className={`w-4 h-4 transition-colors ${
-                  selectedMethod === method.id
-                    ? "text-primary"
-                    : "text-gray-300"
+      {/* Two Column Layout untuk Desktop */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Left: Amount Selection */}
+        <div className="space-y-4">
+          <p className="text-sm font-semibold text-gray-700">Pilih Nominal</p>
+          <div className="grid grid-cols-3 gap-2">
+            {[10000, 25000, 50000, 100000, 250000, 500000].map((amount) => (
+              <button
+                key={amount}
+                onClick={() => {
+                  setSelectedAmount(amount);
+                  setCustomAmount("");
+                }}
+                className={`py-3 rounded-xl text-sm font-semibold transition-all ${
+                  selectedAmount === amount
+                    ? "bg-primary text-white shadow-md shadow-primary/20"
+                    : "bg-white border border-gray-200 text-gray-700 hover:border-primary/50"
                 }`}
-              />
-            </button>
-          ))}
+              >
+                {amount >= 1000
+                  ? `Rp ${(amount / 1000).toLocaleString()}k`
+                  : `Rp ${amount}`}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-sm">
+              Rp
+            </span>
+            <input
+              type="text"
+              value={customAmount}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "");
+                setCustomAmount(raw);
+                setSelectedAmount(null);
+              }}
+              placeholder="Nominal lainnya..."
+              className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+            />
+          </div>
+
+          {getAmount() > 0 && (
+            <div className="bg-gray-50 rounded-xl p-3 flex justify-between text-sm">
+              <span className="text-gray-500">Poin yang didapat</span>
+              <span className="font-bold text-primary">
+                +{getPointsEarned().toLocaleString()} poin
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Payment Method */}
+        <div className="space-y-4">
+          <p className="text-sm font-semibold text-gray-700">
+            Pilih Metode Pembayaran
+          </p>
+          <div className="space-y-2">
+            {PAYMENT_METHODS.map((method) => (
+              <button
+                key={method.id}
+                onClick={() => setSelectedMethod(method.id)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                  selectedMethod === method.id
+                    ? "border-primary bg-primary/5"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 ${method.color} rounded-xl flex items-center justify-center shrink-0`}
+                >
+                  <method.icon className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-800">
+                    {method.name}
+                  </p>
+                  <p className="text-xs text-gray-400">{method.desc}</p>
+                </div>
+                <ChevronRight
+                  className={`w-4 h-4 transition-colors ${
+                    selectedMethod === method.id
+                      ? "text-primary"
+                      : "text-gray-300"
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
