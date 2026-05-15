@@ -477,7 +477,7 @@ export default function ProfilePage() {
             <CardContent className="grid grid-cols-2 gap-3">
               <Button
                 variant="outline"
-                onClick={() => router.push("/user/jual_sampah")}
+                onClick={() => router.push("/user")}
               >
                 Jual Sampah
               </Button>
