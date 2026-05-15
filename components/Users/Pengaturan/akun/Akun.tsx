@@ -10,11 +10,47 @@ import {
   ChevronRight,
   CheckCircle,
   Globe,
-  Shield
+  Shield,
+  Loader2
 } from "lucide-react";
+import { createClientSupabaseClient } from "@/lib/supabaseClient";
+import { useEffect } from "react";
 
 export default function AkunSaya() {
-  const [isSaved, setIsSaved] = useState(false);
+  const supabase = createClientSupabaseClient();
+  const [profile, setProfile] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setLoading(true);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        setUser(authUser);
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", authUser.id)
+          .single();
+        setProfile(profileData);
+      }
+      setLoading(false);
+    };
+    fetchUserData();
+  }, [supabase]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const initials = profile?.full_name 
+    ? profile.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+    : user?.email?.[0].toUpperCase() || "U";
 
   return (
     <div className="max-w-3xl">
@@ -29,7 +65,7 @@ export default function AkunSaya() {
       {/* Login as */}
       <div className="mb-6 p-4 bg-muted/30 rounded-lg">
         <p className="text-sm text-muted-foreground">Login sebagai</p>
-        <p className="text-base font-medium text-foreground">ecowarrior@TrashFlow.com</p>
+        <p className="text-base font-medium text-foreground">{user?.email}</p>
       </div>
 
       {/* Akun TrashFlow Anda */}
@@ -39,10 +75,10 @@ export default function AkunSaya() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-sm font-semibold text-primary">EW</span>
+                <span className="text-sm font-semibold text-primary">{initials}</span>
               </div>
               <div>
-                <p className="font-medium text-foreground">Eco Warrior</p>
+                <p className="font-medium text-foreground">{profile?.full_name || "Eco Warrior"}</p>
                 <p className="text-xs text-muted-foreground">Ini adalah kehadiran publik Anda di TrashFlow</p>
               </div>
             </div>
@@ -59,8 +95,8 @@ export default function AkunSaya() {
             <div className="flex items-center gap-3">
               <Mail className="w-5 h-5 text-primary" />
               <div>
-                <p className="font-medium text-foreground">Akun Google</p>
-                <p className="text-xs text-muted-foreground">ecowarrior@TrashFlow.com</p>
+                <p className="font-medium text-foreground">Akun Google / Email</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />

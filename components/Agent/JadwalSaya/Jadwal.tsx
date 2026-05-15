@@ -250,7 +250,7 @@ export default function JadwalPage() {
           <div>
             <p className="text-sm font-medium text-primary">Informasi Jadwal</p>
             <p className="text-xs text-primary/70 mt-1">
-              User hanya bisa mengajukan penjemputan saat Anda buka. 
+              User hanya bisa mengajukan penjemputan saat Anda buka.
               Anda bisa mengatur jam operasional per hari dan jam istirahat.
             </p>
           </div>
@@ -279,11 +279,10 @@ export default function JadwalPage() {
                 <button
                   key={day.value}
                   onClick={() => toggleCopyDay(day.value)}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
-                    copyToDays.includes(day.value)
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-all ${copyToDays.includes(day.value)
                       ? "bg-primary text-white"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   {day.short}
                 </button>
@@ -326,11 +325,10 @@ export default function JadwalPage() {
                       <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => updateSchedule(schedule.day_of_week, "is_open", !schedule.is_open)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                            isActive
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${isActive
                               ? "bg-green-100 text-green-700 hover:bg-green-200"
                               : "bg-red-100 text-red-700 hover:bg-red-200"
-                          }`}
+                            }`}
                         >
                           {isActive ? (
                             <><CheckCircle className="w-3 h-3" /> Buka</>
@@ -407,7 +405,7 @@ export default function JadwalPage() {
             <div>
               <p className="text-sm font-semibold text-gray-800">Ringkasan Jadwal</p>
               <p className="text-xs text-gray-600">
-                {schedules.filter(s => s.is_open).length} hari buka • 
+                {schedules.filter(s => s.is_open).length} hari buka •
                 Rata-rata jam operasional: {
                   (() => {
                     const openHours = schedules.filter(s => s.is_open);

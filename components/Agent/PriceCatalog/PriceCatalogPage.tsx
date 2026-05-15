@@ -29,6 +29,7 @@ const WASTE_INFO: Record<string, { label: string; emoji: string; color: string }
   aluminium: { label: "Aluminium", emoji: "🥫", color: "bg-gray-100 text-gray-700" },
   metal: { label: "Logam", emoji: "⚙️", color: "bg-slate-100 text-slate-700" },
   electronic: { label: "Elektronik", emoji: "💻", color: "bg-purple-100 text-purple-700" },
+  organik: { label: "Organik", emoji: "🍃", color: "bg-emerald-100 text-emerald-700" },
   mixed: { label: "Campuran", emoji: "🗑️", color: "bg-orange-100 text-orange-700" },
 };
 
@@ -109,9 +110,9 @@ export default function AgentPriceCatalogPage() {
 
       // Merge: agent prices override global
       const merged: PriceEntry[] = [];
-      wasteTypes.forEach((wasteType) => {
-        const agentPrice = agentPrices?.find((p) => p.waste_type === wasteType);
-        const globalPrice = globalData?.find((p) => p.waste_type === wasteType);
+      wasteTypes.forEach((wasteType: string) => {
+        const agentPrice = agentPrices?.find((p: any) => p.waste_type === wasteType);
+        const globalPrice = globalData?.find((p: any) => p.waste_type === wasteType);
         
         if (agentPrice) {
           merged.push({ ...agentPrice, is_custom: true });

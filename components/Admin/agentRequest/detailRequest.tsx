@@ -13,6 +13,7 @@ import {
   Phone,
   Package,
   Calendar,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 import { Toaster, toast } from "sonner";
@@ -168,140 +169,196 @@ export default function AgentDetailPage({ id }: Props) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-5xl mx-auto px-4 py-8 font-sans">
       <Toaster position="top-right" richColors />
 
-      {/* Back Button */}
-      <button
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Kembali</span>
-      </button>
-
-      {/* Header */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
-        <div className="bg-linear-to-r from-green-600 to-green-500 px-6 py-4">
-          <div className="flex justify-between items-start">
-            <h1 className="text-xl font-bold text-white">
-              {application.agent_name}
-            </h1>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}
-            >
-              {statusInfo.label}
-            </span>
+      {/* Breadcrumb & Navigation */}
+      <div className="mb-8 flex items-center justify-between">
+        <button
+          onClick={() => router.back()}
+          className="group flex items-center gap-2 text-slate-500 hover:text-emerald-600 transition-all font-medium text-sm"
+        >
+          <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center group-hover:border-emerald-200 group-hover:bg-emerald-50 transition-all">
+            <ArrowLeft className="w-4 h-4" />
           </div>
-          <p className="text-green-100 text-sm mt-1">Pendaftaran Agen</p>
+          Kembali ke Daftar
+        </button>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status:</span>
+          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusInfo.color}`}>
+            {statusInfo.label}
+          </span>
         </div>
+      </div>
 
-        <div className="p-6 space-y-4">
-          <div className="flex items-start gap-3">
-            <Building2 className="w-5 h-5 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-sm text-gray-500">Nama Agen</p>
-              <p className="font-medium">{application.agent_name}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-sm text-gray-500">Nomor Telepon</p>
-              <p className="font-medium">{application.phone || "-"}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-sm text-gray-500">Alamat</p>
-              <p className="font-medium">{application.address || "-"}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-sm text-gray-500">Wilayah Layanan</p>
-              <p className="font-medium">{application.service_area || "-"}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <Package className="w-5 h-5 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-sm text-gray-500">Jenis Sampah</p>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {application.waste_categories?.map((w) => (
-                  <span
-                    key={w}
-                    className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full"
-                  >
-                    {WASTE_LABELS[w] || w}
-                  </span>
-                ))}
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Left Column: Profile Card */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/40 p-8 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-24 bg-emerald-500/5 -z-0" />
+            
+            <div className="relative z-10">
+              <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+                <Building2 className="w-10 h-10 text-emerald-600" />
+              </div>
+              <h2 className="text-xl font-black text-slate-800 leading-tight">
+                {application.agent_name}
+              </h2>
+              <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mt-2">Calon Mitra Agen</p>
+              
+              <div className="mt-8 pt-8 border-t border-slate-50 space-y-4 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
+                    <Mail className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Email Akun</p>
+                    <p className="text-xs font-medium text-slate-700">{application.user_email || "-"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Nomor WhatsApp</p>
+                    <p className="text-xs font-medium text-slate-700">{application.phone || "-"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Terdaftar Pada</p>
+                    <p className="text-xs font-medium text-slate-700">
+                      {new Date(application.created_at).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-start gap-3">
-            <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-sm text-gray-500">Tanggal Daftar</p>
-              <p className="font-medium">
-                {new Date(application.created_at).toLocaleDateString("id-ID", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+          {/* Action Summary Card if approved/rejected */}
+          {application.status !== "pending" && (
+            <div className={`rounded-3xl p-6 border text-center ${
+              application.status === "approved" 
+                ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
+                : "bg-rose-50 border-rose-100 text-rose-700"
+            }`}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3 bg-white/50">
+                {application.status === "approved" ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+              </div>
+              <p className="text-sm font-bold">
+                {application.status === "approved"
+                  ? "Pendaftaran Telah Disetujui"
+                  : "Pendaftaran Telah Ditolak"}
+              </p>
+              <p className="text-xs mt-1 opacity-80">
+                Keputusan dibuat oleh Admin pada sistem Arkana.
               </p>
             </div>
+          )}
+        </div>
+
+        {/* Right Column: Details Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Operational Details Card */}
+          <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/30">
+              <h3 className="text-lg font-bold text-slate-800">Detail Operasional</h3>
+              <p className="text-xs font-medium text-slate-400">Informasi cakupan wilayah dan jenis layanan</p>
+            </div>
+            
+            <div className="p-8 grid md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin className="w-4 h-4 text-emerald-500" />
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Wilayah Layanan</label>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p className="text-sm font-bold text-slate-700">{application.service_area || "Tidak dispesifikasikan"}</p>
+                    <p className="text-[10px] text-slate-400 mt-1 italic">Radius operasional penjemputan sampah</p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin className="w-4 h-4 text-emerald-500" />
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alamat Lengkap</label>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p className="text-sm font-medium text-slate-600 leading-relaxed">
+                      {application.address || "Alamat belum diisi"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Package className="w-4 h-4 text-emerald-500" />
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Jenis Sampah Diterima</label>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {application.waste_categories?.length > 0 ? (
+                      application.waste_categories.map((w) => (
+                        <div
+                          key={w}
+                          className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100 flex items-center gap-2"
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          {WASTE_LABELS[w] || w}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Tidak ada kategori yang dipilih</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Action Section (Pending Only) */}
+          {application.status === "pending" && (
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={handleApprove}
+                disabled={processing}
+                className="flex-1 py-4 bg-emerald-500 text-white rounded-[20px] font-black text-sm hover:bg-emerald-600 shadow-xl shadow-emerald-200 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+              >
+                {processing ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <CheckCircle className="w-5 h-5" />
+                )}
+                Terima Sebagai Mitra
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={processing}
+                className="flex-1 py-4 bg-white text-rose-600 border-2 border-rose-100 rounded-[20px] font-black text-sm hover:bg-rose-50 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+              >
+                {processing ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <XCircle className="w-5 h-5" />
+                )}
+                Tolak Pendaftaran
+              </button>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Action Buttons (only for pending) */}
-      {application.status === "pending" && (
-        <div className="flex gap-4">
-          <button
-            onClick={handleApprove}
-            disabled={processing}
-            className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {processing ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <CheckCircle className="w-5 h-5" />
-            )}
-            Setujui Pendaftaran
-          </button>
-          <button
-            onClick={handleReject}
-            disabled={processing}
-            className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {processing ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <XCircle className="w-5 h-5" />
-            )}
-            Tolak Pendaftaran
-          </button>
-        </div>
-      )}
-
-      {/* Info for approved/rejected */}
-      {application.status !== "pending" && (
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
-          <p className="text-sm text-gray-600">
-            {application.status === "approved"
-              ? "✅ Pendaftaran ini telah disetujui. Pengguna sekarang dapat login sebagai agen."
-              : "❌ Pendaftaran ini telah ditolak."}
-          </p>
-        </div>
-      )}
     </div>
   );
 }

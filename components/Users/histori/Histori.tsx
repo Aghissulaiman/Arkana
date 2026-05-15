@@ -17,8 +17,9 @@ import {
   Filter,
   Eye
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Toaster } from "sonner";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
-import { Toaster, toast } from "sonner";
 
 type PickupRequest = {
   id: string;
@@ -92,6 +93,7 @@ const STATUS_STYLES: Record<string, { label: string; bg: string; text: string; i
 };
 
 export default function RiwayatPage() {
+  const router = useRouter();
   const supabase = createClientSupabaseClient();
   const [activeTab, setActiveTab] = useState("semua");
   const [statusFilter, setStatusFilter] = useState("semua");
@@ -299,7 +301,7 @@ export default function RiwayatPage() {
           })}
         </div>
 
-        {/* Grouped Transactions */}
+        {/* Grouped Transactions - TABLE VIEW */}
         {filteredTransactions.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -310,64 +312,75 @@ export default function RiwayatPage() {
               {activeTab === "penjemputan" 
                 ? "Belum ada penjemputan sampah" 
                 : activeTab === "tukar poin" 
-                  ? "Belum ada penukaran poin"
-                  : "Belum ada aktivitas"}
+                   ? "Belum ada penukaran poin"
+                   : "Belum ada aktivitas"}
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Menunggu / Diproses Section */}
-            {groupedTransactions.pending.length > 0 && statusFilter === "semua" && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1 h-5 bg-yellow-500 rounded-full" />
-                  <h2 className="text-sm font-semibold text-gray-600">Menunggu & Diproses</h2>
-                  <span className="text-xs text-gray-400">{groupedTransactions.pending.length} transaksi</span>
-                </div>
-                <div className="space-y-3">
-                  {groupedTransactions.pending.map((item) => (
-                    <TransactionCard key={`${item.type}-${item.id}`} item={item} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Selesai Section */}
-            {groupedTransactions.completed.length > 0 && statusFilter === "semua" && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1 h-5 bg-green-500 rounded-full" />
-                  <h2 className="text-sm font-semibold text-gray-600">Selesai</h2>
-                  <span className="text-xs text-gray-400">{groupedTransactions.completed.length} transaksi</span>
-                </div>
-                <div className="space-y-3">
-                  {groupedTransactions.completed.map((item) => (
-                    <TransactionCard key={`${item.type}-${item.id}`} item={item} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Dibatalkan Section */}
-            {groupedTransactions.cancelled.length > 0 && statusFilter === "semua" && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1 h-5 bg-red-500 rounded-full" />
-                  <h2 className="text-sm font-semibold text-gray-600">Dibatalkan</h2>
-                  <span className="text-xs text-gray-400">{groupedTransactions.cancelled.length} transaksi</span>
-                </div>
-                <div className="space-y-3">
-                  {groupedTransactions.cancelled.map((item) => (
-                    <TransactionCard key={`${item.type}-${item.id}`} item={item} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Jika pakai filter status, tampilkan semua tanpa grouping */}
-            {statusFilter !== "semua" && filteredTransactions.map((item) => (
-              <TransactionCard key={`${item.type}-${item.id}`} item={item} />
-            ))}
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-gray-50/50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Transaksi</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Detail</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tanggal</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Poin</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredTransactions.map((item) => {
+                    const statusStyle = STATUS_STYLES[item.status] || STATUS_STYLES.pending;
+                    const StatusIcon = statusStyle.icon;
+                    const date = new Date(item.date);
+                    
+                    return (
+                      <tr 
+                        key={`${item.type}-${item.id}`}
+                        className="hover:bg-gray-50/50 transition-colors cursor-pointer group"
+                        onClick={() => router.push(`/user/history/${item.id}`)}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${item.type === "penjemputan" ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"}`}>
+                              {item.type === "penjemputan" ? <Truck className="w-4 h-4" /> : <Gift className="w-4 h-4" />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-800">{item.title}</p>
+                              <p className="text-[10px] text-gray-400 font-mono">#{item.code}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-xs text-gray-600">{item.subtitle}</p>
+                          {item.details && <p className="text-[10px] text-gray-400">{item.details}</p>}
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-xs text-gray-700">
+                            {date.toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                          </p>
+                          <p className="text-[10px] text-gray-400">
+                            {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${statusStyle.bg} ${statusStyle.text}`}>
+                            <StatusIcon className="w-3 h-3" />
+                            {statusStyle.label}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <p className={`text-sm font-black ${item.isEarn ? "text-green-600" : "text-orange-600"}`}>
+                            {item.points || "0"}
+                          </p>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

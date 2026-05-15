@@ -118,16 +118,15 @@ export default function AgentSidebar({
     {
       group: "Operasional",
       items: [
-        { name: "Tugas Penjemputan", href: "/agent/tasks", icon: MapPin },
+        { name: "Permintaan & Pesanan", href: "/agent/tasks", icon: MapPin },
         { name: "Harga Sampah", href: "/agent/price-catalog", icon: ClipboardList },
         { name: "Riwayat Transaksi", href: "/agent/history", icon: History },
       ],
     },
     {
-      group: "Katalog & Penukaran",
+      group: "Katalog",
       items: [
         { name: "Daftar Produk", href: "/agent/reward", icon: Package },
-        { name: "Pesanan Reward", href: "/agent/reward-orders", icon: ClipboardList },
       ],
     },
   ];
@@ -144,10 +143,10 @@ export default function AgentSidebar({
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 flex flex-col h-full border-r border-slate-200 bg-white z-[70] transition-all duration-300 ease-out
-          ${isSidebarOpen ? "translate-x-0 w-[260px]" : "-translate-x-full lg:translate-x-0"}
+        className={`fixed inset-y-0 left-0 flex flex-col h-full border-r border-slate-200 bg-white z-[80] transition-all duration-300 ease-in-out lg:static
+          ${isSidebarOpen ? "translate-x-0 w-[280px]" : "-translate-x-full lg:translate-x-0"}
         `}
-        style={{ width: isSidebarOpen ? 260 : sidebarWidth }}
+        style={{ width: (typeof window !== 'undefined' && window.innerWidth < 1024) ? (isSidebarOpen ? 280 : 0) : sidebarWidth }}
       >
         {/* Brand Section */}
         <div className="h-20 flex items-center px-6 shrink-0">

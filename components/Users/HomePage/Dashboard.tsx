@@ -91,9 +91,9 @@ function checkAgentOpenStatus(schedules: AgentSchedule[]): { is_open: boolean; s
   const dayOfWeek = now.getDay(); // 0=Minggu, 1=Senin, ...
   // Konversi ke 0=Senin, 6=Minggu
   const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  
+
   const todaySchedule = schedules.find(s => s.day_of_week === dayIndex);
-  
+
   if (!todaySchedule || !todaySchedule.is_open) {
     return {
       is_open: false,
@@ -101,11 +101,11 @@ function checkAgentOpenStatus(schedules: AgentSchedule[]): { is_open: boolean; s
       message: "Tutup hari ini",
     };
   }
-  
+
   const currentTime = now.getHours() * 60 + now.getMinutes();
   const openTime = parseTimeToMinutes(todaySchedule.open_time);
   const closeTime = parseTimeToMinutes(todaySchedule.close_time);
-  
+
   if (currentTime < openTime) {
     return {
       is_open: false,
@@ -113,7 +113,7 @@ function checkAgentOpenStatus(schedules: AgentSchedule[]): { is_open: boolean; s
       message: `Buka pukul ${todaySchedule.open_time}`,
     };
   }
-  
+
   if (currentTime > closeTime) {
     return {
       is_open: false,
@@ -121,12 +121,12 @@ function checkAgentOpenStatus(schedules: AgentSchedule[]): { is_open: boolean; s
       message: `Tutup pukul ${todaySchedule.close_time}`,
     };
   }
-  
+
   // Cek jam istirahat
   if (todaySchedule.break_start && todaySchedule.break_end) {
     const breakStart = parseTimeToMinutes(todaySchedule.break_start);
     const breakEnd = parseTimeToMinutes(todaySchedule.break_end);
-    
+
     if (currentTime >= breakStart && currentTime <= breakEnd) {
       return {
         is_open: false,
@@ -135,7 +135,7 @@ function checkAgentOpenStatus(schedules: AgentSchedule[]): { is_open: boolean; s
       };
     }
   }
-  
+
   return {
     is_open: true,
     status: "open",
@@ -179,7 +179,7 @@ function DashboardContent() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      
+
       // Ambil agent
       const { data: agentsData } = await supabase
         .from("agents")
@@ -212,7 +212,7 @@ function DashboardContent() {
       const processedAgents = (agentsData || []).map(agent => {
         const schedules = schedulesByAgent.get(agent.id) || [];
         const openStatus = checkAgentOpenStatus(schedules);
-        
+
         return {
           ...agent,
           rating: getRandomRating(),
@@ -303,11 +303,10 @@ function DashboardContent() {
               <button
                 key={chip}
                 onClick={() => setActiveChip(chip)}
-                className={`shrink-0 px-5 py-2 rounded-full text-[11px] font-bold transition-all duration-300 border ${
-                  isActive
+                className={`shrink-0 px-5 py-2 rounded-full text-[11px] font-bold transition-all duration-300 border ${isActive
                     ? "bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-100"
                     : "bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600"
-                }`}
+                  }`}
               >
                 {WASTE_LABELS[chip] || chip}
               </button>
@@ -344,7 +343,7 @@ function DashboardContent() {
                       alt={agent.agent_name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                    
+
                     {/* Status Badge (Open/Closed/Break) */}
                     <div className="absolute top-3 left-3 flex gap-2">
                       {agent.open_status === "open" && (
@@ -365,14 +364,14 @@ function DashboardContent() {
                           Istirahat
                         </Badge>
                       )}
-                      
+
                       {agent.rating && agent.rating >= 4.8 && (
                         <Badge className="bg-amber-400 text-white text-[9px] border-none px-2 py-0.5">
                           <Star className="w-2.5 h-2.5 fill-white mr-1" /> Unggulan
                         </Badge>
                       )}
                     </div>
-                    
+
                     <div className="absolute bottom-3 right-3">
                       <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
                         <p className="text-[10px] font-black text-emerald-700">
@@ -380,7 +379,7 @@ function DashboardContent() {
                         </p>
                       </div>
                     </div>
-                    
+
                     {/* Overlay if closed */}
                     {!agent.is_open && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -429,15 +428,14 @@ function DashboardContent() {
                           </span>
                         </p>
                       </div>
-                      <div className={`p-2 rounded-lg transition-all duration-300 ${
-                        agent.is_open 
-                          ? "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white" 
+                      <div className={`p-2 rounded-lg transition-all duration-300 ${agent.is_open
+                          ? "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white"
                           : "bg-gray-100 text-gray-400"
-                      }`}>
+                        }`}>
                         <ArrowRight className="w-4 h-4" />
                       </div>
                     </div>
-                    
+
                     {/* Info jadwal jika tutup */}
                     {!agent.is_open && agent.open_message && (
                       <p className="text-[9px] text-red-500 mt-2 text-center">

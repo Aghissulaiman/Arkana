@@ -164,37 +164,56 @@ export default function AdminDashboard() {
       }));
       setApplications(formattedApps);
 
-      // 2. Ambil recent pickup requests
-      const { data: pickupData } = await supabase
-        .from("pickup_requests")
-        .select(
-          `
-          *,
-          users!pickup_requests_user_id_fkey (email),
-          agents!pickup_requests_agent_id_fkey (agent_name)
-        `,
-        )
-        .order("created_at", { ascending: false })
-        .limit(10);
+      // 2. Ambil recent activities (Pickup, Redeem, Topup)
+      const [pickupRes, redeemRes, topupRes] = await Promise.all([
+        supabase.from("pickup_requests").select(`*, users!pickup_requests_user_id_fkey (email), agents!pickup_requests_agent_id_fkey (agent_name)`).order("created_at", { ascending: false }).limit(10),
+        supabase.from("redeem_requests").select(`*, users!redeem_requests_user_id_fkey (email)`).order("created_at", { ascending: false }).limit(5),
+        supabase.from("topup_requests").select(`*, users!topup_requests_user_id_fkey (email)`).order("created_at", { ascending: false }).limit(5)
+      ]);
 
-      const formattedPickups = (pickupData || []).map((p: any) => ({
-        id: p.id,
-        request_code: p.request_code,
-        user_name: p.users?.email?.split("@")[0] || "User",
-        agent_name: p.agents?.agent_name || "-",
-        waste_type: WASTE_LABELS[p.waste_type] || p.waste_type,
-        estimated_weight: p.estimated_weight,
-        status: p.status,
-        created_at: p.created_at,
-      }));
-      setPickups(formattedPickups);
+      const mergedActivities = [
+        ...(pickupRes.data || []).map((p: any) => ({
+          id: p.id,
+          request_code: p.request_code,
+          user_name: p.users?.email?.split("@")[0] || "User",
+          agent_name: p.agents?.agent_name || "-",
+          waste_type: WASTE_LABELS[p.waste_type] || p.waste_type,
+          estimated_weight: p.estimated_weight,
+          status: p.status,
+          type: "pickup",
+          created_at: p.created_at,
+        })),
+        ...(redeemRes.data || []).map((r: any) => ({
+          id: r.id,
+          request_code: r.id.slice(0, 8),
+          user_name: r.users?.email?.split("@")[0] || "User",
+          agent_name: "Arkana Reward",
+          waste_type: r.reward_name,
+          estimated_weight: 0,
+          status: r.status,
+          type: "redeem",
+          created_at: r.created_at,
+        })),
+        ...(topupRes.data || []).map((t: any) => ({
+          id: t.id,
+          request_code: t.id.slice(0, 8),
+          user_name: t.users?.email?.split("@")[0] || "User",
+          agent_name: "Arkana Wallet",
+          waste_type: "Top Up Poin",
+          estimated_weight: 0,
+          status: t.status,
+          type: "topup",
+          created_at: t.created_at,
+        }))
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 15);
 
-      // 3. Ambil top agents
+      setPickups(mergedActivities);
+
+      // 3. Ambil top agents (Produktifitas berdasarkan jumlah pickup sukses)
       const { data: agentsData } = await supabase
         .from("agents")
         .select("id, agent_name, avg_rating")
-        .order("avg_rating", { ascending: false })
-        .limit(3);
+        .limit(10);
 
       const topAgentsWithStats = await Promise.all(
         (agentsData || []).map(async (agent) => {
@@ -208,31 +227,37 @@ export default function AdminDashboard() {
             id: agent.id,
             agent_name: agent.agent_name,
             total_pickups: count || 0,
-            avg_rating: agent.avg_rating || 4.5,
+            avg_rating: agent.avg_rating || 0,
           };
         }),
       );
-      setTopAgents(topAgentsWithStats);
+      
+      // Sort manually by pickups, then rating
+      const sortedAgents = topAgentsWithStats
+        .sort((a, b) => b.total_pickups - a.total_pickups || b.avg_rating - a.avg_rating)
+        .slice(0, 3);
+
+      setTopAgents(sortedAgents);
 
       // 4. Ambil statistik
       const { count: totalAgents } = await supabase
         .from("agents")
         .select("*", { count: "exact", head: true });
 
-      const { data: allPickups } = await supabase
-        .from("pickup_requests")
-        .select("status, total_points");
+      const [totalPickupRes, totalRedeemRes, totalTopupRes] = await Promise.all([
+        supabase.from("pickup_requests").select("status, total_points"),
+        supabase.from("redeem_requests").select("points_spent"),
+        supabase.from("topup_requests").select("amount")
+      ]);
 
-      const totalPickups = allPickups?.length || 0;
-      const totalPoints =
-        allPickups?.reduce((sum, p) => sum + (p.total_points || 0), 0) || 0;
-      const pendingPickups =
-        allPickups?.filter((p) => p.status === "pending").length || 0;
+      const totalPickups = totalPickupRes.data?.length || 0;
+      const totalPointsGiven = totalPickupRes.data?.reduce((sum, p) => sum + (p.total_points || 0), 0) || 0;
+      const pendingPickups = totalPickupRes.data?.filter((p) => p.status === "pending").length || 0;
 
       setStats({
         totalAgents: totalAgents || 0,
         totalPickups,
-        totalPoints,
+        totalPoints: totalPointsGiven,
         pendingPickups,
       });
     } catch (error) {

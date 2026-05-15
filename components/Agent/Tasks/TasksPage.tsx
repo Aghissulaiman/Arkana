@@ -26,6 +26,7 @@ import { Toaster, toast } from "sonner";
 type Task = {
   id: string;
   dbId: string;
+  type: "pickup" | "order";
   customer: string;
   address: string;
   time: string;
@@ -96,69 +97,76 @@ export default function AgentTasksPage() {
         return;
       }
 
-      const { data: requests, error } = await supabase
+      // 1. Fetch Pickup Requests
+      const { data: pickupRequests } = await supabase
         .from("pickup_requests")
-        .select(
-          `
-          *,
-          users!pickup_requests_user_id_fkey (email)
-        `,
-        )
+        .select(`*, users!pickup_requests_user_id_fkey (email)`)
         .eq("agent_id", agentData.id)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error:", error);
-        toast.error("Gagal memuat data");
-        setTasks([]);
-        setLoading(false);
-        return;
-      }
+      // 2. Fetch Redeem Requests (Product Orders)
+      // Note: We'll include these as "orders" if there's no specific agent_id in redeem_requests, 
+      // but usually agents only manage their own products if they exist. 
+      // For now, we'll fetch all pending redeems as "Product Orders" for the agent.
+      const { data: redeemRequests } = await supabase
+        .from("redeem_requests")
+        .select(`*, users!redeem_requests_user_id_fkey (email)`)
+        .order("created_at", { ascending: false });
 
-      if (requests && requests.length > 0) {
-        const userIds = [...new Set(requests.map((r) => r.user_id))];
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, phone")
-          .in("user_id", userIds);
+      const userIds = [
+        ...new Set([
+          ...(pickupRequests || []).map(r => r.user_id),
+          ...(redeemRequests || []).map(r => r.user_id)
+        ])
+      ];
 
-        const profileMap = new Map();
-        const phoneMap = new Map();
-        profiles?.forEach((p) => {
-          profileMap.set(p.user_id, p.full_name);
-          phoneMap.set(p.user_id, p.phone);
-        });
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, phone")
+        .in("user_id", userIds);
 
-        const formattedTasks: Task[] = requests.map((req) => {
-          const date = new Date(req.created_at);
-          return {
-            id: req.id.slice(0, 8),
-            dbId: req.id,
-            customer:
-              profileMap.get(req.user_id) ||
-              req.users?.email?.split("@")[0] ||
-              "Pengguna",
-            phone: phoneMap.get(req.user_id) || "-",
-            address: req.pickup_address,
-            date: date.toLocaleDateString("id-ID", {
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
-            }),
-            time: date.toLocaleTimeString("id-ID", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            status: req.status,
-            weight: `${req.estimated_weight} kg`,
-            waste_type: WASTE_LABELS[req.waste_type] || req.waste_type,
-          };
-        });
+      const profileMap = new Map();
+      profiles?.forEach(p => profileMap.set(p.user_id, { name: p.full_name, phone: p.phone }));
 
-        setTasks(formattedTasks);
-      } else {
-        setTasks([]);
-      }
+      // Format Pickup Tasks
+      const formattedPickups: Task[] = (pickupRequests || []).map((req) => {
+        const date = new Date(req.created_at);
+        const profile = profileMap.get(req.user_id);
+        return {
+          id: req.id.slice(0, 8),
+          dbId: req.id,
+          type: "pickup",
+          customer: profile?.name || req.users?.email?.split("@")[0] || "Pengguna",
+          phone: profile?.phone || "-",
+          address: req.pickup_address,
+          date: date.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }),
+          time: date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+          status: req.status,
+          weight: `${req.estimated_weight} kg`,
+          waste_type: WASTE_LABELS[req.waste_type] || req.waste_type,
+        };
+      });
+
+      // Format Redeem Tasks (Product Orders)
+      const formattedRedeems: Task[] = (redeemRequests || []).map((req) => {
+        const date = new Date(req.created_at);
+        const profile = profileMap.get(req.user_id);
+        return {
+          id: req.id.slice(0, 8),
+          dbId: req.id,
+          type: "order",
+          customer: profile?.name || req.users?.email?.split("@")[0] || "Pengguna",
+          phone: profile?.phone || "-",
+          address: "Ambil di Lokasi Agen / Kirim",
+          date: date.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }),
+          time: date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+          status: req.status, // pending, completed, rejected
+          weight: req.reward_name, // Gunakan field weight untuk nama produk
+          waste_type: "Pesanan Produk",
+        };
+      });
+
+      setTasks([...formattedPickups, ...formattedRedeems]);
     } catch (err) {
       console.error("Error:", err);
       toast.error("Terjadi kesalahan");
@@ -322,10 +330,10 @@ export default function AgentTasksPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              Tugas Penjemputan
+              Permintaan & Pesanan
             </h1>
             <p className="text-sm text-gray-500 mt-1">
-              Kelola permintaan penjemputan sampah
+              Kelola penjemputan sampah dan pesanan produk
             </p>
           </div>
           <Button

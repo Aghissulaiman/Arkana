@@ -31,6 +31,7 @@ const WASTE_LABELS: Record<string, string> = {
   aluminium: "Aluminium",
   metal: "Logam",
   electronic: "Elektronik",
+  organik: "Organik",
   mixed: "Campuran",
 };
 
@@ -89,7 +90,7 @@ export default function PricingPage() {
     }
 
     setSaving(true);
-    const price = parseInt(formData.price_per_kg);
+    const price = parseFloat(formData.price_per_kg);
 
     if (wasteModal.data) {
       const { error } = await supabase
