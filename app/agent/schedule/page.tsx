@@ -1,10 +1,10 @@
+import Jadwal from "@/components/Agent/JadwalSaya/Jadwal";
 
-export default function subcription() {
+export default function JadwalSaya() {
   return (
     <>
-      <h1>
-jadwal penjemputan sesuai tanggal permintaan penjemputan
-</h1>
+    <Jadwal/>
+
     </>
-  );
+  )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import {
@@ -21,6 +22,9 @@ import {
   CalendarDays,
   Package,
   ClipboardList,
+  Coins,
+  Wallet,
+  TrendingUp,
 } from "lucide-react";
 
 export default function AgentSidebar({
@@ -36,6 +40,8 @@ export default function AgentSidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [userData, setUserData] = useState<any>(null);
+  const [agentData, setAgentData] = useState<any>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const profileRef = useRef<HTMLDivElement>(null);
@@ -43,15 +49,33 @@ export default function AgentSidebar({
 
   useEffect(() => {
     const fetchUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        // Ambil data dari auth.users untuk avatar Google
+        const { data: authUser } = await supabase.auth.getUser();
+        const googleAvatar = authUser?.user?.user_metadata?.avatar_url || 
+                             authUser?.user?.user_metadata?.picture;
+        setAvatarUrl(googleAvatar || null);
+
+        // Ambil data profile
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name, user_id, users(email, role)")
+          .select("full_name, user_id, avatar_url")
           .eq("user_id", session.user.id)
           .single();
+        
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
+        }
+
+        // Ambil data agent (termasuk balance_income)
+        const { data: agent } = await supabase
+          .from("agents")
+          .select("id, agent_name, balance_income, is_active")
+          .eq("user_id", session.user.id)
+          .single();
+
+        setAgentData(agent);
         setUserData(profile);
       }
       setLoading(false);
@@ -75,33 +99,35 @@ export default function AgentSidebar({
     window.location.href = "/login";
   };
 
-  // Ganti variabel sidebarMenu di dalam komponen AgentSidebar dengan ini:
+  const formatBalance = (balance: number) => {
+    if (!balance) return "0";
+    if (balance >= 1000000) {
+      return (balance / 1000000).toFixed(1) + "jt";
+    }
+    return balance.toLocaleString("id-ID");
+  };
 
   const sidebarMenu = [
     {
       group: "Main Menu",
       items: [
         { name: "Dashboard", href: "/agent", icon: Home },
-        { name: "Jadwal Saya", href: "/agent/schedule", icon: CalendarDays }, // Menu Baru
+        { name: "Jadwal Saya", href: "/agent/schedule", icon: CalendarDays },
       ],
     },
     {
       group: "Operasional",
       items: [
         { name: "Tugas Penjemputan", href: "/agent/tasks", icon: MapPin },
-        { name: "Harga Sampah", href: "/agent/prices", icon: ClipboardList },
+        { name: "Harga Sampah", href: "/agent/price-catalog", icon: ClipboardList },
         { name: "Riwayat Transaksi", href: "/agent/history", icon: History },
       ],
     },
     {
       group: "Katalog & Penukaran",
       items: [
-        { name: "Daftar Produk", href: "/agent/reward", icon: Package }, // Menu Baru
-        {
-          name: "Pesanan Reward",
-          href: "/agent/reward-orders",
-          icon: ClipboardList,
-        }, // Menu Baru
+        { name: "Daftar Produk", href: "/agent/reward", icon: Package },
+        { name: "Pesanan Reward", href: "/agent/reward-orders", icon: ClipboardList },
       ],
     },
   ];
@@ -222,6 +248,17 @@ export default function AgentSidebar({
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Points Badge - Di Header */}
+            {!loading && agentData && (
+              <div className="hidden md:flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
+                <Coins className="w-4 h-4 text-amber-500" />
+                <span className="text-sm font-bold text-amber-700">
+                  {formatBalance(agentData.balance_income || 0)}
+                </span>
+                <span className="text-[10px] text-amber-500">poin</span>
+              </div>
+            )}
+
             <button className="p-2 text-slate-400 hover:text-emerald-500 transition-colors relative">
               <Bell size={25} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
@@ -236,14 +273,24 @@ export default function AgentSidebar({
                 className="flex items-center gap-2.5 p-1 pr-3 hover:bg-slate-50 rounded-full transition-all border border-transparent hover:border-slate-200"
               >
                 <div className="relative">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                    {userData?.full_name?.substring(0, 1) || "A"}
-                  </div>
+                  {avatarUrl ? (
+                    <Image
+                      src={avatarUrl}
+                      alt="Profile"
+                      width={36}
+                      height={36}
+                      className="w-9 h-9 rounded-full object-cover ring-2 ring-emerald-100"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                      {userData?.full_name?.substring(0, 1) || "A"}
+                    </div>
+                  )}
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
                 </div>
                 <div className="hidden lg:block text-left">
                   <p className="text-[13px] font-semibold text-slate-800 leading-none">
-                    {loading ? "..." : userData?.full_name}
+                    {loading ? "..." : userData?.full_name || "Agent"}
                   </p>
                   <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-wider">
                     Agent Portal
@@ -256,14 +303,28 @@ export default function AgentSidebar({
               </button>
 
               {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 p-2 z-[100] animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute right-0 mt-3 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 p-2 z-[100] animate-in fade-in zoom-in-95 duration-200">
                   <div className="px-4 py-3 border-b border-slate-50 mb-1">
                     <p className="text-xs font-medium text-slate-400">
                       Terautentikasi sebagai
                     </p>
                     <p className="text-sm font-semibold text-slate-700 truncate">
-                      {userData?.users?.email}
+                      {userData?.users?.email || "Loading..."}
                     </p>
+                    {/* Points di dropdown */}
+                    <div className="flex items-center justify-between mt-2 pt-1">
+                      <div className="flex items-center gap-1">
+                        <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                        <span className="text-xs text-slate-500">Pendapatan</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Coins className="w-4 h-4 text-amber-500" />
+                        <span className="text-sm font-bold text-amber-700">
+                          {formatBalance(agentData?.balance_income || 0)}
+                        </span>
+                        <span className="text-[10px] text-amber-500">poin</span>
+                      </div>
+                    </div>
                   </div>
                   <Link href="/agent/profile">
                     <button className="flex items-center gap-3 w-full px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
