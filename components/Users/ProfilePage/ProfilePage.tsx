@@ -7,19 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Coins, 
-  Edit2, 
-  Save, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Coins,
+  Edit2,
+  Save,
   X,
   Loader2,
   Calendar,
   History,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -40,7 +40,7 @@ type UserProfile = {
 export default function ProfilePage() {
   const router = useRouter();
   const supabase = createClientSupabaseClient();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -59,8 +59,11 @@ export default function ProfilePage() {
     setLoading(true);
     try {
       // Ambil user yang login
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
       if (userError || !user) {
         router.push("/login");
         return;
@@ -112,7 +115,7 @@ export default function ProfilePage() {
       let totalPoints = 0;
 
       if (requests && !requestsError) {
-        requests.forEach(req => {
+        requests.forEach((req) => {
           totalPoints += req.points_earned || 0;
           totalWaste += req.actual_weight || 0;
         });
@@ -132,7 +135,9 @@ export default function ProfilePage() {
         address: profileData?.address || "",
         balance_points: profileData?.balance_points || 0,
         role: userData?.role || "user",
-        joined_date: user.created_at ? new Date(user.created_at).toLocaleDateString("id-ID") : "-",
+        joined_date: user.created_at
+          ? new Date(user.created_at).toLocaleDateString("id-ID")
+          : "-",
         total_requests: totalRequests || 0,
         total_waste_collected: totalWaste,
         total_points_earned: totalPoints,
@@ -143,7 +148,6 @@ export default function ProfilePage() {
         phone: profileData?.phone || "",
         address: profileData?.address || "",
       });
-
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
@@ -154,36 +158,42 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         alert("User tidak ditemukan");
         return;
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({
+      const { error } = await supabase.from("profiles").upsert(
+        {
           user_id: user.id,
           full_name: editForm.full_name,
           phone: editForm.phone || null,
           address: editForm.address || null,
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id',
-        });
+        },
+        {
+          onConflict: "user_id",
+        },
+      );
 
       if (error) throw error;
 
-      setProfile(prev => prev ? {
-        ...prev,
-        full_name: editForm.full_name,
-        phone: editForm.phone,
-        address: editForm.address,
-      } : null);
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              full_name: editForm.full_name,
+              phone: editForm.phone,
+              address: editForm.address,
+            }
+          : null,
+      );
 
       setIsEditing(false);
       alert("Profil berhasil disimpan!");
-      
     } catch (error: any) {
       console.error("Error:", error);
       alert("Error: " + error?.message);
@@ -243,16 +253,28 @@ export default function ProfilePage() {
         </div>
         <div className="flex gap-2">
           {!isEditing ? (
-            <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
+            <Button
+              onClick={() => setIsEditing(true)}
+              variant="outline"
+              className="gap-2"
+            >
               <Edit2 className="w-4 h-4" /> Edit Profil
             </Button>
           ) : (
             <>
-              <Button onClick={handleCancel} variant="outline" className="gap-2">
+              <Button
+                onClick={handleCancel}
+                variant="outline"
+                className="gap-2"
+              >
                 <X className="w-4 h-4" /> Batal
               </Button>
               <Button onClick={handleSave} disabled={saving} className="gap-2">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
                 Simpan
               </Button>
             </>
@@ -271,13 +293,19 @@ export default function ProfilePage() {
             <CardContent className="p-6 text-center">
               <Avatar className="w-24 h-24 mx-auto mb-4">
                 <AvatarFallback className="text-2xl bg-primary text-white">
-                  {profile.full_name?.charAt(0) || profile.email?.charAt(0) || "U"}
+                  {profile.full_name?.charAt(0) ||
+                    profile.email?.charAt(0) ||
+                    "U"}
                 </AvatarFallback>
               </Avatar>
               {!isEditing ? (
                 <>
-                  <h2 className="text-xl font-semibold">{profile.full_name || "Belum diisi"}</h2>
-                  <p className="text-sm text-muted-foreground">{profile.email}</p>
+                  <h2 className="text-xl font-semibold">
+                    {profile.full_name || "Belum diisi"}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {profile.email}
+                  </p>
                   <div className="mt-4 p-3 bg-primary/10 rounded-lg">
                     <p className="text-sm text-muted-foreground">Total Poin</p>
                     <p className="text-2xl font-bold text-primary">
@@ -291,7 +319,9 @@ export default function ProfilePage() {
                     <Label>Nama Lengkap</Label>
                     <Input
                       value={editForm.full_name}
-                      onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, full_name: e.target.value })
+                      }
                       placeholder="Masukkan nama lengkap"
                     />
                   </div>
@@ -315,7 +345,7 @@ export default function ProfilePage() {
                   <p className="text-sm">{profile.email}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-muted-foreground mt-0.5" />
                 <div className="flex-1">
@@ -325,7 +355,9 @@ export default function ProfilePage() {
                   ) : (
                     <Input
                       value={editForm.phone}
-                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, phone: e.target.value })
+                      }
                       placeholder="Masukkan nomor telepon"
                       className="mt-1"
                     />
@@ -338,11 +370,15 @@ export default function ProfilePage() {
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground">Alamat</p>
                   {!isEditing ? (
-                    <p className="text-sm">{profile.address || "Belum diisi"}</p>
+                    <p className="text-sm">
+                      {profile.address || "Belum diisi"}
+                    </p>
                   ) : (
                     <textarea
                       value={editForm.address}
-                      onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, address: e.target.value })
+                      }
                       placeholder="Masukkan alamat lengkap"
                       className="w-full p-2 text-sm border rounded-md mt-1"
                       rows={3}
@@ -362,19 +398,25 @@ export default function ProfilePage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">Total Penjemputan</p>
-                    <p className="text-2xl font-bold">{profile.total_requests}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Total Penjemputan
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {profile.total_requests}
+                    </p>
                   </div>
                   <History className="w-8 h-8 text-primary/50" />
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">Total Sampah</p>
+                    <p className="text-xs text-muted-foreground">
+                      Total Sampah
+                    </p>
                     <p className="text-2xl font-bold">
                       {profile.total_waste_collected.toLocaleString("id-ID")}
                       <span className="text-sm ml-1">kg</span>
@@ -384,12 +426,14 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">Poin Dikumpulkan</p>
+                    <p className="text-xs text-muted-foreground">
+                      Poin Dikumpulkan
+                    </p>
                     <p className="text-2xl font-bold">
                       {profile.total_points_earned.toLocaleString("id-ID")}
                     </p>
@@ -418,7 +462,9 @@ export default function ProfilePage() {
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-muted-foreground">User ID</span>
-                <span className="font-mono text-xs">{profile.id.slice(0, 8)}...</span>
+                <span className="font-mono text-xs">
+                  {profile.id.slice(0, 8)}...
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -429,10 +475,16 @@ export default function ProfilePage() {
               <CardTitle className="text-lg">Aksi Cepat</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-3">
-              <Button variant="outline" onClick={() => router.push("/dashboard/jual-sampah")}>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/user/jual_sampah")}
+              >
                 Jual Sampah
               </Button>
-              <Button variant="outline" onClick={() => router.push("/dashboard/riwayat")}>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/user/history")}
+              >
                 Lihat Riwayat
               </Button>
             </CardContent>

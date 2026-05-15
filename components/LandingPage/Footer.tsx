@@ -10,68 +10,54 @@ import {
   FaPhoneAlt,
   FaEnvelope,
   FaMapMarkerAlt,
-  FaClock,
 } from "react-icons/fa";
 
 export default function Footer() {
   return (
-    <footer className="mt-20 border-t border-border bg-muted/30">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* MAIN CONTENT - 4 Columns with better spacing */}
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
-          {/* COLUMN 1 - BRAND & DESCRIPTION */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex size-8 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
-                <Leaf className="size-5" />
+    <footer className="mt-20 border-t border-white/10 bg-[#020617] text-white">
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        {/* MAIN CONTENT - 3 COLUMNS */}
+        <div className="grid md:grid-cols-3 gap-16 mb-12">
+          {/* COLUMN 1 - BRAND & MISSION */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/20">
+                <Leaf className="size-6" />
               </div>
-              <span className="font-semibold text-lg text-foreground">
-                Trash<span className="text-primary">Flow</span>
+              <span className="font-bold text-2xl tracking-tight">
+                Trash<span className="text-emerald-500">Flow</span>
               </span>
             </div>
-
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Platform yang membantu mengelola sampah menjadi lebih bernilai
-              dengan sistem yang transparan dan berkelanjutan.
+            <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
+              Menghubungkan masyarakat dan pengepul lokal untuk ekosistem
+              pengelolaan sampah yang lebih cerdas, transparan, dan bernilai
+              ekonomi.
             </p>
-
-            {/* Social Media Icons */}
-            <div className="flex gap-3 mt-6">
-              <a
-                href="#"
-                className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition"
-              >
-                <FaFacebookF size={14} />
-              </a>
-              <a
-                href="#"
-                className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition"
-              >
-                <FaTwitter size={14} />
-              </a>
-              <a
-                href="#"
-                className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition"
-              >
-                <FaInstagram size={14} />
-              </a>
-              <a
-                href="#"
-                className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition"
-              >
-                <FaLinkedinIn size={14} />
-              </a>
+            <div className="flex gap-3 pt-2">
+              {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn].map(
+                (Icon, idx) => (
+                  <a
+                    key={idx}
+                    href="#"
+                    className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all duration-300 border border-white/10"
+                  >
+                    <Icon size={16} />
+                  </a>
+                ),
+              )}
             </div>
           </div>
 
-          {/* COLUMN 2 - NAVIGASI */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-4">Navigasi</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+          {/* COLUMN 2 - QUICK LINKS */}
+          <div className="md:justify-self-center">
+            <h4 className="font-bold text-white mb-6 uppercase tracking-[0.15em] text-xs">
+              Navigasi
+            </h4>
+            <ul className="space-y-4 text-sm text-slate-400">
               <li>
                 <Link
                   href="#AboutSection"
-                  className="hover:text-primary transition"
+                  className="hover:text-emerald-400 transition-colors"
                 >
                   Tentang Kami
                 </Link>
@@ -79,72 +65,64 @@ export default function Footer() {
               <li>
                 <Link
                   href="#cara-kerja"
-                  className="hover:text-primary transition"
+                  className="hover:text-emerald-400 transition-colors"
                 >
                   Cara Kerja
                 </Link>
               </li>
               <li>
-                <Link href="#mitra" className="hover:text-primary transition">
-                  Mitra
+                <Link
+                  href="#mitra"
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  Mitra Agen
                 </Link>
               </li>
               <li>
-                <Link href="#kontak" className="hover:text-primary transition">
-                  Kontak
+                <Link
+                  href="#kontak"
+                  className="hover:text-emerald-400 transition-colors"
+                >
+                  Kontak Kami
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* COLUMN 3 - KONTAK */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-4">Kontak</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li className="flex items-center gap-3">
-                <FaEnvelope className="text-primary text-sm" />
-                <span>support@TrashFlow.id</span>
+          {/* COLUMN 3 - CONTACT INFO */}
+          <div className="md:justify-self-end">
+            <h4 className="font-bold text-white mb-6 uppercase tracking-[0.15em] text-xs">
+              Hubungi Kami
+            </h4>
+            <ul className="space-y-5 text-sm text-slate-400">
+              <li className="flex items-center gap-4">
+                <FaEnvelope className="text-emerald-500" />
+                <span className="hover:text-white transition-colors">
+                  support@trashflow.id
+                </span>
               </li>
-              <li className="flex items-center gap-3">
-                <FaPhoneAlt className="text-primary text-sm" />
+              <li className="flex items-center gap-4">
+                <FaPhoneAlt className="text-emerald-500" />
                 <span>+62 812 3456 7890</span>
               </li>
-              <li className="flex items-center gap-3">
-                <FaMapMarkerAlt className="text-primary text-sm" />
-                <span>Bekasi, Indonesia</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* COLUMN 4 - JAM OPERASIONAL */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-4">
-              Jam Operasional
-            </h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li className="flex items-center gap-3">
-                <FaClock className="text-primary text-sm" />
-                <div>
-                  <p>Senin - Jumat : 08:00 - 17:00</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">
-                    Sabtu - Minggu : Tutup
-                  </p>
-                </div>
+              <li className="flex items-center gap-4">
+                <FaMapMarkerAlt className="text-emerald-500" />
+                <span>Kota Depok, Jawa Barat</span>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* BOTTOM SECTION */}
-        <div className="pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-3">
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} TrashFlow. All rights reserved.
+        {/* BOTTOM BAR */}
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-[11px] font-medium text-slate-500 tracking-wide">
+            © {new Date().getFullYear()} TRASHFLOW TEAM. ALL RIGHTS RESERVED.
           </p>
-          <div className="flex gap-5 text-xs text-muted-foreground">
-            <Link href="#" className="hover:text-primary transition">
+          <div className="flex gap-8 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+            <Link href="#" className="hover:text-emerald-400 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="#" className="hover:text-primary transition">
+            <Link href="#" className="hover:text-emerald-400 transition-colors">
               Terms of Service
             </Link>
           </div>
@@ -153,3 +131,4 @@ export default function Footer() {
     </footer>
   );
 }
+  

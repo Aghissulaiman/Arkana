@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  allowedDevOrigins: ["dash-bullion-daffodil.ngrok-free.dev"],
 };
 
 export default nextConfig;

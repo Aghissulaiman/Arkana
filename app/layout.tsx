@@ -13,7 +13,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body suppressHydrationWarning>{children}</body>
+      <body
+        suppressHydrationWarning
+        style={{ fontFamily: "Times New Roman, Times, serif" }}
+      >
+        {children}
+      </body>
     </html>
   );
 }
