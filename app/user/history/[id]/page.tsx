@@ -1,4 +1,4 @@
-import TransactionDetailPage from "@/components/Users/history/TransactionDetail";
+import TransactionDetailPage from "@/components/Users/histori/TransactionDetail";
 
 export default function UserTransactionDetailRoute() {
   return <TransactionDetailPage />;

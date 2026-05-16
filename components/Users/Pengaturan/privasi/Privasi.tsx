@@ -39,9 +39,7 @@ export default function Privasi() {
     <div className="max-w-3xl ">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl mt-5 font-bold text-foreground">
-          Privasi & Data
-        </h1>
+
         <p className="text-sm text-muted-foreground mt-1">
           Kelola privasi akun dan data Anda
         </p>

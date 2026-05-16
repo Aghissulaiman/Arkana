@@ -15,13 +15,13 @@ import {
 export default function Footer() {
   return (
     <footer className="mt-20 border-t border-white/10 bg-[#020617] text-white">
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <div className="max-w-7xl mx-auto px-24 py-16">
         {/* MAIN CONTENT - 3 COLUMNS */}
         <div className="grid md:grid-cols-3 gap-16 mb-12">
           {/* COLUMN 1 - BRAND & MISSION */}
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/20">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/20">
                 <Leaf className="size-6" />
               </div>
               <span className="font-bold text-2xl tracking-tight">
@@ -131,4 +131,3 @@ export default function Footer() {
     </footer>
   );
 }
-  

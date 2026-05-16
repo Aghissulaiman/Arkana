@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import {
@@ -105,7 +105,8 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
 
-  const fetchNotifications = async () => {
+  // MEMOIZATION: Membungkus fetch dengan useCallback agar dependency array di useEffect aman dari infinite loop
+  const fetchNotifications = useCallback(async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -118,7 +119,7 @@ export default function NotificationsPage() {
 
     setNotifications(data || []);
     setLoading(false);
-  };
+  }, [supabase]);
 
   useEffect(() => {
     fetchNotifications();
@@ -141,8 +142,10 @@ export default function NotificationsPage() {
       )
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
-  }, []);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, fetchNotifications]); // FIX: Dependency array yang lengkap mencegah memory leak & stale data
 
   const markAsRead = async (id: string) => {
     await supabase.from("notifications").update({ is_read: true }).eq("id", id);
@@ -161,6 +164,14 @@ export default function NotificationsPage() {
     await supabase.from("notifications").delete().eq("id", id);
     setNotifications(prev => prev.filter(n => n.id !== id));
     toast.success("Notifikasi dihapus");
+  };
+
+  // UX FIX: Fungsi jembatan agar ketika card di-klik, modal terbuka SEKALIGUS menembak fungsi markAsRead database
+  const handleNotificationClick = (notif: Notification) => {
+    setSelectedNotif(notif);
+    if (!notif.is_read) {
+      markAsRead(notif.id);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -267,7 +278,8 @@ export default function NotificationsPage() {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedNotif(notif)}>
+                    {/* FIX: onClick diganti ke handleNotificationClick agar status 'is_read' terupdate otomatis saat buka modal */}
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleNotificationClick(notif)}>
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className={`text-sm font-semibold ${isUnread ? "text-gray-900" : "text-gray-600"}`}>
                           {notif.title}

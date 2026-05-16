@@ -56,7 +56,6 @@ export default function AkunSaya() {
     <div className="max-w-3xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Akun</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Pilih cara Anda ditampilkan dan konten yang Anda lihat di TrashFlow
         </p>

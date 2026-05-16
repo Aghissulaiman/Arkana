@@ -19,6 +19,7 @@ import {
   Clock,
   Coffee,
   XCircle,
+  Filter,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -86,13 +87,17 @@ function getRandomRating() {
   return +(4 + Math.random() * 0.9).toFixed(1);
 }
 
-function checkAgentOpenStatus(schedules: AgentSchedule[]): { is_open: boolean; status: "open" | "closed" | "break"; message: string } {
+function checkAgentOpenStatus(schedules: AgentSchedule[]): {
+  is_open: boolean;
+  status: "open" | "closed" | "break";
+  message: string;
+} {
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0=Minggu, 1=Senin, ...
   // Konversi ke 0=Senin, 6=Minggu
   const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
-  const todaySchedule = schedules.find(s => s.day_of_week === dayIndex);
+  const todaySchedule = schedules.find((s) => s.day_of_week === dayIndex);
 
   if (!todaySchedule || !todaySchedule.is_open) {
     return {
@@ -156,10 +161,28 @@ function DashboardContent() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState("Depok");
+  const [searchQuery, setSearchQuery] = useState(search);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      if (searchQuery) {
+        params.set("q", searchQuery);
+      } else {
+        params.delete("q");
+      }
+      // Mengupdate URL tanpa reload halaman
+      window.history.replaceState(null, "", `?${params.toString()}`);
+    }, 300); // Tunggu 300ms setelah user berhenti mengetik
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchUserLocation = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
@@ -168,7 +191,8 @@ function DashboardContent() {
           .single();
 
         if (profile?.address) {
-          const city = profile.address.split(",").slice(-2)[0]?.trim() || "Lokasi Anda";
+          const city =
+            profile.address.split(",").slice(-2)[0]?.trim() || "Lokasi Anda";
           setUserLocation(city);
         }
       }
@@ -193,7 +217,7 @@ function DashboardContent() {
         .is("agent_id", null); // Ambil harga global
 
       // Ambil jadwal untuk semua agent
-      const agentIds = agentsData?.map(a => a.id) || [];
+      const agentIds = agentsData?.map((a) => a.id) || [];
       const { data: schedulesData } = await supabase
         .from("agent_schedules")
         .select("*")
@@ -201,7 +225,7 @@ function DashboardContent() {
 
       // Group schedules by agent_id
       const schedulesByAgent = new Map<string, AgentSchedule[]>();
-      schedulesData?.forEach(s => {
+      schedulesData?.forEach((s) => {
         if (!schedulesByAgent.has(s.agent_id)) {
           schedulesByAgent.set(s.agent_id, []);
         }
@@ -209,7 +233,7 @@ function DashboardContent() {
       });
 
       // Proses agent
-      const processedAgents = (agentsData || []).map(agent => {
+      const processedAgents = (agentsData || []).map((agent) => {
         const schedules = schedulesByAgent.get(agent.id) || [];
         const openStatus = checkAgentOpenStatus(schedules);
 
@@ -218,7 +242,8 @@ function DashboardContent() {
           rating: getRandomRating(),
           distance_km: +(Math.random() * 5 + 0.5).toFixed(1),
           price_per_kg: agent.waste_categories?.[0]
-            ? priceData?.find(p => p.waste_type === agent.waste_categories[0])?.price_per_kg || 500
+            ? priceData?.find((p) => p.waste_type === agent.waste_categories[0])
+                ?.price_per_kg || 500
             : 500,
           is_open: openStatus.is_open,
           open_status: openStatus.status,
@@ -226,7 +251,9 @@ function DashboardContent() {
         };
       });
 
-      processedAgents.sort((a, b) => (a.distance_km || 999) - (b.distance_km || 999));
+      processedAgents.sort(
+        (a, b) => (a.distance_km || 999) - (b.distance_km || 999),
+      );
       setAgents(processedAgents);
       setLoading(false);
     };
@@ -236,7 +263,7 @@ function DashboardContent() {
 
   const filteredAgents = agents.filter((agent) => {
     const matchSearch =
-      search === "" ||
+      searchQuery === "" ||
       agent.agent_name.toLowerCase().includes(search.toLowerCase()) ||
       agent.service_area?.toLowerCase().includes(search.toLowerCase());
 
@@ -244,7 +271,7 @@ function DashboardContent() {
       activeChip === "Semua" ||
       activeChip === "Terdekat" ||
       agent.waste_categories?.some(
-        (w) => w.toLowerCase() === activeChip.toLowerCase()
+        (w) => w.toLowerCase() === activeChip.toLowerCase(),
       );
 
     return matchSearch && matchChip;
@@ -263,37 +290,33 @@ function DashboardContent() {
 
   return (
     <div className="w-full min-h-screen bg-[#FBFDFB] font-sans text-slate-900 pb-20">
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 space-y-10">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 space-y-8">
         {/* HEADER SECTION */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-emerald-600 font-bold tracking-widest uppercase text-[10px]">
-              <Navigation className="w-3 h-3" />
-              <span>Lokasi Penjemputan</span>
-            </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">
-              {userLocation}
-              <span className="text-emerald-500">.</span>
-            </h1>
-            <p className="text-slate-500 text-sm">
-              Mari kelola sampahmu bersama agen terdekat.
-            </p>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-emerald-600 font-bold tracking-widest uppercase text-[10px]">
+            <Navigation className="w-3 h-3" />
+            <span>Lokasi Penjemputan Anda</span>
           </div>
+          <h1 className="text-3xl font-black tracking-tight text-slate-800">
+            {userLocation}
+            <span className="text-emerald-500">.</span>
+          </h1>
+        </div>
 
-          <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-emerald-50 shadow-sm">
-            <div className="bg-emerald-50 p-2 rounded-xl">
-              <Globe className="w-4 h-4 text-emerald-600" />
+        {/* BIG SEARCH BAR */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1 group">
+            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+              <Search className="w-6 h-6 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
             </div>
-            <div className="pr-4">
-              <p className="text-[10px] uppercase font-bold text-slate-400 leading-none mb-1">
-                Total Agen
-              </p>
-              <p className="text-sm font-bold text-slate-700">
-                {agents.length} Tersedia
-              </p>
-            </div>
+            <input
+              className="pl-14 pr-6 py-3 rounded-2xl bg-white border border-slate-200 text-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all w-full shadow-sm placeholder:text-slate-400 font-medium"
+              placeholder="Cari agen terdekat..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-        </header>
+        </div>
 
         {/* FILTER SECTION */}
         <div className="flex gap-2.5 overflow-x-auto pb-4 scrollbar-hide">
@@ -303,10 +326,11 @@ function DashboardContent() {
               <button
                 key={chip}
                 onClick={() => setActiveChip(chip)}
-                className={`shrink-0 px-5 py-2 rounded-full text-[11px] font-bold transition-all duration-300 border ${isActive
+                className={`shrink-0 px-5 py-2 rounded-full text-[11px] font-bold transition-all duration-300 border ${
+                  isActive
                     ? "bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-100"
                     : "bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600"
-                  }`}
+                }`}
               >
                 {WASTE_LABELS[chip] || chip}
               </button>
@@ -367,7 +391,8 @@ function DashboardContent() {
 
                       {agent.rating && agent.rating >= 4.8 && (
                         <Badge className="bg-amber-400 text-white text-[9px] border-none px-2 py-0.5">
-                          <Star className="w-2.5 h-2.5 fill-white mr-1" /> Unggulan
+                          <Star className="w-2.5 h-2.5 fill-white mr-1" />{" "}
+                          Unggulan
                         </Badge>
                       )}
                     </div>
@@ -428,10 +453,13 @@ function DashboardContent() {
                           </span>
                         </p>
                       </div>
-                      <div className={`p-2 rounded-lg transition-all duration-300 ${agent.is_open
-                          ? "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white"
-                          : "bg-gray-100 text-gray-400"
-                        }`}>
+                      <div
+                        className={`p-2 rounded-lg transition-all duration-300 ${
+                          agent.is_open
+                            ? "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white"
+                            : "bg-gray-100 text-gray-400"
+                        }`}
+                      >
                         <ArrowRight className="w-4 h-4" />
                       </div>
                     </div>

@@ -53,7 +53,15 @@ const CATEGORY_COLOR_MAP: Record<string, string> = {
   donation: "text-rose-500 bg-rose-100",
 };
 
-const CATEGORY_CHIPS = ["Semua", "Voucher", "Pulsa", "E-Money", "Product", "Cash", "Donation"];
+const CATEGORY_CHIPS = [
+  "Semua",
+  "Voucher",
+  "Pulsa",
+  "E-Money",
+  "Product",
+  "Cash",
+  "Donation",
+];
 
 export default function TukarPoin() {
   const supabase = createClientSupabaseClient();
@@ -260,7 +268,7 @@ export default function TukarPoin() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 font-sans py-10">
+    <div className="w-full min-h-screen  font-sans py-10">
       <Toaster position="top-right" richColors />
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 space-y-10">
@@ -305,23 +313,7 @@ export default function TukarPoin() {
         </div>
 
         {/* Search & Filter */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1 group">
-            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-              <Search className="w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
-            </div>
-            <Input
-              className="pl-14 pr-6 py-7 rounded-2xl bg-white border-slate-200 text-lg focus-visible:ring-2 focus-visible:ring-primary transition-all w-full shadow-sm"
-              placeholder="Cari voucher, pulsa, atau produk..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button className="h-[60px] px-8 rounded-2xl gap-3 text-base font-bold shadow-sm bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors border">
-            <SlidersHorizontal className="w-5 h-5 text-primary" />
-            Filter
-          </Button>
-        </div>
+    
 
         {/* Category Chips */}
         <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
@@ -489,12 +481,17 @@ export default function TukarPoin() {
               </div>
               <div className="flex justify-between text-red-500">
                 <span>Poin digunakan</span>
-                <span>- {selectedReward.points_required.toLocaleString()} pts</span>
+                <span>
+                  - {selectedReward.points_required.toLocaleString()} pts
+                </span>
               </div>
               <div className="flex justify-between border-t pt-2 text-primary font-bold">
                 <span>Sisa poin</span>
                 <span>
-                  {(userPoints - selectedReward.points_required).toLocaleString()} pts
+                  {(
+                    userPoints - selectedReward.points_required
+                  ).toLocaleString()}{" "}
+                  pts
                 </span>
               </div>
             </div>

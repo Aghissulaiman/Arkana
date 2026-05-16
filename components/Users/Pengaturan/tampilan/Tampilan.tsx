@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  Monitor, 
-  Moon, 
+import {
+  Monitor,
+  Moon,
   Sun,
   ChevronRight,
   CheckCircle,
-  Globe
+  Globe,
 } from "lucide-react";
 
 export default function Tampilan() {
@@ -100,7 +100,6 @@ export default function Tampilan() {
     <div className="max-w-3xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Tampilan</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Sesuaikan tampilan aplikasi sesuai preferensi Anda
         </p>
@@ -116,13 +115,17 @@ export default function Tampilan() {
 
       {/* Mode Tampilan */}
       <div className="mb-4 border border-border rounded-lg overflow-hidden">
-        <div 
+        <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition"
           onClick={() => setShowMode(!showMode)}
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-              {isDarkMode ? <Moon className="w-4 h-4 text-primary" /> : <Sun className="w-4 h-4 text-primary" />}
+              {isDarkMode ? (
+                <Moon className="w-4 h-4 text-primary" />
+              ) : (
+                <Sun className="w-4 h-4 text-primary" />
+              )}
             </div>
             <div>
               <h2 className="font-medium text-foreground">Mode Tampilan</h2>
@@ -131,7 +134,9 @@ export default function Tampilan() {
               </p>
             </div>
           </div>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showMode ? "rotate-90" : ""}`} />
+          <ChevronRight
+            className={`w-4 h-4 text-muted-foreground transition-transform ${showMode ? "rotate-90" : ""}`}
+          />
         </div>
 
         {showMode && (
@@ -139,7 +144,9 @@ export default function Tampilan() {
             <div className="grid grid-cols-2 gap-3">
               <div
                 className={`p-3 rounded-lg border cursor-pointer transition ${
-                  !isDarkMode ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"
+                  !isDarkMode
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-muted/30"
                 }`}
                 onClick={() => {
                   if (isDarkMode) toggleDarkMode();
@@ -147,15 +154,21 @@ export default function Tampilan() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Sun className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-medium text-foreground">Mode Terang</span>
+                  <span className="text-sm font-medium text-foreground">
+                    Mode Terang
+                  </span>
                 </div>
                 <div className="w-full h-20 rounded bg-white border shadow-sm" />
-                <p className="text-xs text-muted-foreground mt-2">Putih terang</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Putih terang
+                </p>
               </div>
 
               <div
                 className={`p-3 rounded-lg border cursor-pointer transition ${
-                  isDarkMode ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"
+                  isDarkMode
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-muted/30"
                 }`}
                 onClick={() => {
                   if (!isDarkMode) toggleDarkMode();
@@ -163,10 +176,14 @@ export default function Tampilan() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Moon className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">Mode Gelap</span>
+                  <span className="text-sm font-medium text-foreground">
+                    Mode Gelap
+                  </span>
                 </div>
                 <div className="w-full h-20 rounded bg-gray-900 border shadow-sm" />
-                <p className="text-xs text-muted-foreground mt-2">Lebih nyaman di malam hari</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Lebih nyaman di malam hari
+                </p>
               </div>
             </div>
 
@@ -182,7 +199,7 @@ export default function Tampilan() {
 
       {/* Ukuran Font */}
       <div className="mb-4 border border-border rounded-lg overflow-hidden">
-        <div 
+        <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition"
           onClick={() => setShowFont(!showFont)}
         >
@@ -193,11 +210,14 @@ export default function Tampilan() {
             <div>
               <h2 className="font-medium text-foreground">Ukuran Font</h2>
               <p className="text-xs text-muted-foreground">
-                {fontOptions.find(f => f.value === fontSize)?.label} • Sesuaikan kenyamanan baca
+                {fontOptions.find((f) => f.value === fontSize)?.label} •
+                Sesuaikan kenyamanan baca
               </p>
             </div>
           </div>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showFont ? "rotate-90" : ""}`} />
+          <ChevronRight
+            className={`w-4 h-4 text-muted-foreground transition-transform ${showFont ? "rotate-90" : ""}`}
+          />
         </div>
 
         {showFont && (
@@ -207,13 +227,19 @@ export default function Tampilan() {
                 <div
                   key={option.value}
                   className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition ${
-                    fontSize === option.value ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"
+                    fontSize === option.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/30"
                   }`}
                   onClick={() => handleFontChange(option.value)}
                 >
                   <div>
-                    <p className={`${option.size} font-medium text-foreground`}>Contoh teks</p>
-                    <p className="text-xs text-muted-foreground mt-1">{option.label}</p>
+                    <p className={`${option.size} font-medium text-foreground`}>
+                      Contoh teks
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {option.label}
+                    </p>
                   </div>
                   {fontSize === option.value && (
                     <CheckCircle className="w-4 h-4 text-primary" />
@@ -234,7 +260,7 @@ export default function Tampilan() {
 
       {/* Bahasa */}
       <div className="mb-4 border border-border rounded-lg overflow-hidden">
-        <div 
+        <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition"
           onClick={() => setShowLanguage(!showLanguage)}
         >
@@ -245,11 +271,14 @@ export default function Tampilan() {
             <div>
               <h2 className="font-medium text-foreground">Bahasa</h2>
               <p className="text-xs text-muted-foreground">
-                {languageOptions.find(l => l.value === language)?.label} • Pilih bahasa aplikasi
+                {languageOptions.find((l) => l.value === language)?.label} •
+                Pilih bahasa aplikasi
               </p>
             </div>
           </div>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showLanguage ? "rotate-90" : ""}`} />
+          <ChevronRight
+            className={`w-4 h-4 text-muted-foreground transition-transform ${showLanguage ? "rotate-90" : ""}`}
+          />
         </div>
 
         {showLanguage && (
@@ -259,13 +288,17 @@ export default function Tampilan() {
                 <div
                   key={option.value}
                   className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition ${
-                    language === option.value ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"
+                    language === option.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/30"
                   }`}
                   onClick={() => handleLanguageChange(option.value)}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-xl">{option.flag}</span>
-                    <span className="text-sm text-foreground">{option.label}</span>
+                    <span className="text-sm text-foreground">
+                      {option.label}
+                    </span>
                   </div>
                   {language === option.value && (
                     <CheckCircle className="w-4 h-4 text-primary" />

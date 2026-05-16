@@ -1,336 +1,98 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  User,
-  Coins,
-  Bell,
-  Settings,
-  Bot,
-  Send,
-  Shield,
-  Moon,
-  Lock,
-  Globe,
-  HelpCircle,
-  ArrowLeft,
-  Menu,
-  X,
-  LogOut
-} from "lucide-react";
+import Link from "next/link";
+import { User, Lock, Bell, Moon, Shield, ArrowLeft } from "lucide-react";
 
-export default function SidebarSettings({ children }: { children: React.ReactNode }) {
+export default function SidebarSettings({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isAiOpen, setIsAiOpen] = useState(false);
-
-  const [sidebarWidth, setSidebarWidth] = useState(240);
-  const [isResizing, setIsResizing] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  const [points] = useState(1250);
-
-  const [messages, setMessages] = useState([
-    { role: "ai", text: "Halo 👋, saya AI TrashFlow." },
-  ]);
-  const [input, setInput] = useState("");
-
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = isSidebarOpen ? "hidden" : "auto";
-  }, [isSidebarOpen]);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-    window.addEventListener("mousedown", handleClick);
-    return () => window.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  useEffect(() => {
-    const move = (e: MouseEvent) => {
-      if (isResizing) {
-        const w = Math.min(Math.max(e.clientX, 200), 320);
-        setSidebarWidth(w);
-      }
-    };
-    const up = () => setIsResizing(false);
-
-    if (isResizing) {
-      window.addEventListener("mousemove", move);
-      window.addEventListener("mouseup", up);
-    }
-
-    return () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
-    };
-  }, [isResizing]);
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", text: input },
-      { role: "ai", text: "AI belum connect 🤖" },
-    ]);
-    setInput("");
-  };
-
   const menu = [
-    { name: "Akun Saya", href: "/dashboard/pengaturan/akun", icon: User },
-    { name: "Keamanan", href: "/dashboard/pengaturan/keamanan", icon: Lock },
-    { name: "Notifikasi", href: "/dashboard/pengaturan/notifikasi", icon: Bell },
-    { name: "Tampilan", href: "/dashboard/pengaturan/tampilan", icon: Moon },
-    { name: "Privasi", href: "/dashboard/pengaturan/privasi", icon: Shield },
-    { name: "Bantuan", href: "/dashboard/pengaturan/bantuan", icon: HelpCircle },
+    { name: "Akun Saya", href: "/user/settings/akun", icon: User },
+    { name: "Keamanan", href: "/user/settings/keamanan", icon: Lock },
+    { name: "Notifikasi", href: "/user/settings/notifikasi", icon: Bell },
+    { name: "Tampilan", href: "/user/settings/tampilan", icon: Moon },
+    { name: "Privasi", href: "/user/settings/privasi", icon: Shield },
   ];
 
-  const isActive = (href: string) => {
-    return pathname === href;
-  };
+  const isActive = (href: string) => pathname === href;
+
+  // Ambil nama menu yang sedang aktif untuk judul header
+  const activeMenuName = menu.find((m) => isActive(m.href))?.name || "Settings";
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* DESKTOP LAYOUT - Flex row */}
-      <div className="hidden lg:flex min-h-screen">
-        {/* SIDEBAR */}
-        <aside
-          className="fixed top-0 left-0 h-full border-r bg-background"
-          style={{ width: sidebarWidth }}
-        >
-          <div className="h-14 flex items-center justify-between px-4 border-b">
-            <div className="flex items-center gap-2">
-              <ArrowLeft 
-                className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-primary transition" 
-                onClick={() => router.push("/dashboard")}
-              />
-              <span className="font-semibold">Pengaturan</span>
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-80px)] bg-slate-50/50">
+      {/* SIDEBAR NAVIGATION */}
+      <aside className="w-full lg:w-72 bg-white lg:min-h-screen border-b lg:border-r border-slate-200 sticky top-16 sm:top-20 z-30">
+        <nav className="flex lg:flex-col overflow-x-auto lg:overflow-x-visible no-scrollbar px-4 lg:px-3 py-4 lg:py-6 gap-1.5">
+          {menu.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 ${
+                  active
+                    ? "bg-primary/10 text-primary shadow-sm shadow-primary/5"
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                }`}
+              >
+                <Icon
+                  className={`w-4 h-4 ${active ? "text-primary" : "text-slate-400"}`}
+                />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 p-6 md:p-10 lg:p-14 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="max-w-4xl mx-auto">
+          {/* DYNAMIC HEADER - Muncul di semua ukuran layar */}
+          <header className="mb-8 lg:mb-12">
+            <div className="flex items-center gap-4 mb-2">
+              <button
+                onClick={() => router.push("/user/home")}
+                className="lg:hidden p-2 bg-white border border-slate-200 rounded-lg shadow-sm"
+              >
+                <ArrowLeft className="w-4 h-4 text-slate-600" />
+              </button>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
+                {activeMenuName}
+              </h2>
             </div>
-          </div>
+            <div className="h-1.5 w-16 lg:w-24 bg-primary rounded-full" />
+            <p className="mt-4 text-sm lg:text-base text-slate-500 font-medium">
+              Atur dan kelola preferensi {activeMenuName.toLowerCase()} untuk
+              akun TrashFlow kamu.
+            </p>
+          </header>
 
-          <nav className="p-3 space-y-1">
-            {menu.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
-                    active
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-        </aside>
-
-        {/* RESIZE HANDLE */}
-        <div
-          className="fixed top-0 bottom-0 w-1 cursor-ew-resize hover:bg-primary/50 transition z-50"
-          style={{ left: sidebarWidth }}
-          onMouseDown={() => setIsResizing(true)}
-        />
-
-        {/* MAIN CONTENT DESKTOP */}
-        <main
-          className="flex-1 min-h-screen"
-          style={{ marginLeft: sidebarWidth }}
-        >
-          <div className="p-6">
+          {/* Konten dari masing-masing page settings */}
+          <div className="bg-white lg:bg-transparent rounded-3xl lg:rounded-none">
             {children}
           </div>
-        </main>
-      </div>
-
-      {/* MOBILE LAYOUT */}
-      <div className="lg:hidden">
-        {/* MOBILE NAVBAR */}
-        <div className="fixed top-0 left-0 right-0 z-40 h-14 border-b bg-background flex items-center px-4">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-muted"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
-          <div className="flex-1" />
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsAiOpen(true)}
-              className="w-9 h-9 bg-primary text-white rounded-lg flex items-center justify-center"
-            >
-              <Bot className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-lg text-sm">
-              <Coins className="w-4 h-4 text-primary" />
-              {points}
-            </div>
-
-            <button className="relative w-9 h-9 bg-muted rounded-lg flex items-center justify-center">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
-
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center"
-              >
-                <User className="w-4 h-4" />
-              </button>
-
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-background border rounded-lg shadow p-1">
-                  <Link href="/profil" className="block px-3 py-2 hover:bg-muted rounded">
-                    Profile
-                  </Link>
-                  <Link href="/dashboard/tracking" className="block px-3 py-2 hover:bg-muted rounded">
-                    Tracking
-                  </Link>
-                  <Link href="/dashboard/pengaturan" className="block px-3 py-2 hover:bg-muted rounded">
-                    Pengaturan
-                  </Link>
-                  <div className="border-t my-1" />
-                  <button className="px-3 py-2 text-red-500 w-full text-left hover:bg-muted rounded">
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
+      </main>
 
-        {/* MOBILE SIDEBAR */}
-        <aside
-          className={`fixed top-0 left-0 h-full w-[260px] bg-background z-50 transform transition duration-300 shadow-lg ${
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="p-4 flex justify-between items-center border-b">
-            <div className="flex items-center gap-2">
-              <ArrowLeft 
-                className="w-5 h-5 text-muted-foreground cursor-pointer" 
-                onClick={() => {
-                  setIsSidebarOpen(false);
-                  router.push("/dashboard");
-                }}
-              />
-              <span className="font-semibold">Pengaturan</span>
-            </div>
-            <button onClick={() => setIsSidebarOpen(false)} className="p-1 rounded hover:bg-muted">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="p-4 border-b">
-            <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg w-fit text-sm">
-              <Coins className="w-4 h-4 text-primary" />
-              {points} poin
-            </div>
-          </div>
-
-          <nav className="p-3 space-y-1">
-            {menu.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
-                    active
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="absolute bottom-0 left-0 right-0 p-3 border-t">
-            <button className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-red-500 hover:bg-muted text-sm">
-              <LogOut className="w-4 h-4" />
-              Keluar
-            </button>
-          </div>
-        </aside>
-
-        {/* OVERLAY */}
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/40 z-40"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
-
-        {/* MOBILE CONTENT */}
-        <main className="pt-14 p-4 min-h-screen">
-          {children}
-        </main>
-      </div>
-
-      {/* AI CHAT - Sama untuk desktop & mobile */}
-      {isAiOpen && (
-        <div className="fixed inset-0 bg-black/30 flex justify-end items-end p-4 z-50">
-          <div className="w-full max-w-sm h-[500px] bg-background rounded-xl shadow flex flex-col">
-            <div className="p-3 border-b flex justify-between">
-              <span>AI TrashFlow</span>
-              <button onClick={() => setIsAiOpen(false)}><X className="w-4 h-4" /></button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {messages.map((m, i) => (
-                <div key={i} className={`p-2 rounded text-sm max-w-[80%] ${m.role === "user" ? "bg-primary text-white ml-auto" : "bg-muted"}`}>
-                  {m.text}
-                </div>
-              ))}
-            </div>
-            <div className="p-3 border-t flex gap-2">
-              <input 
-                value={input} 
-                onChange={(e) => setInput(e.target.value)} 
-                placeholder="Tanya sesuatu..."
-                className="flex-1 border px-3 py-2 rounded-lg text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <button onClick={handleSend} className="bg-primary text-white px-4 rounded-lg">
-                <Send className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }

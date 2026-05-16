@@ -4,7 +4,17 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
-import { Loader2, Coins, ShoppingBag, Ticket, DollarSign, Heart, Sparkles, TrendingUp, ChevronRight } from "lucide-react";
+import {
+  Loader2,
+  Coins,
+  ShoppingBag,
+  Ticket,
+  DollarSign,
+  Heart,
+  Sparkles,
+  TrendingUp,
+  ChevronRight,
+} from "lucide-react";
 
 type Reward = {
   id: string;
@@ -21,7 +31,7 @@ type Reward = {
 export default function RedeemPage() {
   const router = useRouter();
   const supabase = createClientSupabaseClient();
-  
+
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [userPoints, setUserPoints] = useState(0);
@@ -35,8 +45,10 @@ export default function RedeemPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    
-    const { data: { user } } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       router.push("/login");
       return;
@@ -57,9 +69,9 @@ export default function RedeemPage() {
       .order("points_required", { ascending: true });
 
     // Generate placeholder image jika tidak ada gambar
-    const rewardsWithImages = (rewardsData || []).map(reward => ({
+    const rewardsWithImages = (rewardsData || []).map((reward) => ({
       ...reward,
-      image_url: reward.image_url || getPlaceholderImage(reward.category)
+      image_url: reward.image_url || getPlaceholderImage(reward.category),
     }));
 
     setRewards(rewardsWithImages);
@@ -68,17 +80,22 @@ export default function RedeemPage() {
 
   const getPlaceholderImage = (category: string): string => {
     const placeholders: Record<string, string> = {
-      product: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=200&h=200&fit=crop",
-      voucher: "https://images.unsplash.com/photo-1556742049-0cfed2f4b3b2?w=200&h=200&fit=crop",
+      product:
+        "https://images.unsplash.com/photo-1544816155-12df9643f363?w=200&h=200&fit=crop",
+      voucher:
+        "https://images.unsplash.com/photo-1556742049-0cfed2f4b3b2?w=200&h=200&fit=crop",
       cash: "https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?w=200&h=200&fit=crop",
-      donation: "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=200&h=200&fit=crop",
+      donation:
+        "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=200&h=200&fit=crop",
     };
     return placeholders[category] || placeholders.product;
   };
 
   const handleRedeem = (reward: Reward) => {
     if (userPoints < reward.points_required) {
-      alert(`Poin tidak cukup! Butuh ${reward.points_required.toLocaleString()} poin`);
+      alert(
+        `Poin tidak cukup! Butuh ${reward.points_required.toLocaleString()} poin`,
+      );
       return;
     }
     setSelectedReward(reward);
@@ -86,11 +103,13 @@ export default function RedeemPage() {
 
   const confirmRedeem = async () => {
     if (!selectedReward) return;
-    
+
     setRedeeming(true);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const { data, error } = await supabase.rpc("redeem_points", {
       p_user_id: user?.id,
       p_points_spent: selectedReward.points_required,
@@ -106,7 +125,7 @@ export default function RedeemPage() {
     } else {
       alert(data?.message || "Gagal menukar poin");
     }
-    
+
     setRedeeming(false);
     setSelectedReward(null);
   };
@@ -119,9 +138,10 @@ export default function RedeemPage() {
     { value: "donation", label: "Donasi", icon: Heart },
   ];
 
-  const filteredRewards = selectedCategory === "all" 
-    ? rewards 
-    : rewards.filter(r => r.category === selectedCategory);
+  const filteredRewards =
+    selectedCategory === "all"
+      ? rewards
+      : rewards.filter((r) => r.category === selectedCategory);
 
   if (loading) {
     return (
@@ -139,20 +159,23 @@ export default function RedeemPage() {
           <h1 className="text-xl font-bold text-gray-800">Tukar Poin</h1>
           <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full">
             <Coins className="w-5 h-5 text-green-600" />
-            <span className="font-bold text-green-700">{userPoints.toLocaleString()}</span>
+            <span className="font-bold text-green-700">
+              {userPoints.toLocaleString()}
+            </span>
             <span className="text-xs text-green-600">poin</span>
           </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-6">
-        
         {/* Banner Progress */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-5 mb-6 text-white">
+        <div className="bg-linear-to-r from-green-500 to-green-600 rounded-xl p-5 mb-6 text-white">
           <div className="flex justify-between items-start mb-3">
             <div>
               <p className="text-green-100 text-sm">Poin Anda</p>
-              <p className="text-3xl font-bold">{userPoints.toLocaleString()}</p>
+              <p className="text-3xl font-bold">
+                {userPoints.toLocaleString()}
+              </p>
             </div>
             <Sparkles className="w-8 h-8 opacity-50" />
           </div>
@@ -196,8 +219,9 @@ export default function RedeemPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {filteredRewards.map((reward) => {
               const isEnough = userPoints >= reward.points_required;
-              const isOutOfStock = reward.category === "product" && reward.stock <= 0;
-              
+              const isOutOfStock =
+                reward.category === "product" && reward.stock <= 0;
+
               return (
                 <div
                   key={reward.id}
@@ -214,18 +238,22 @@ export default function RedeemPage() {
                       fill
                       className="object-cover"
                     />
-                    {reward.category === "product" && reward.stock <= 10 && reward.stock > 0 && (
-                      <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
-                        Sisa {reward.stock}
-                      </span>
-                    )}
+                    {reward.category === "product" &&
+                      reward.stock <= 10 &&
+                      reward.stock > 0 && (
+                        <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                          Sisa {reward.stock}
+                        </span>
+                      )}
                     {isOutOfStock && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="bg-white text-gray-700 text-xs px-2 py-1 rounded-full">Stok Habis</span>
+                        <span className="bg-white text-gray-700 text-xs px-2 py-1 rounded-full">
+                          Stok Habis
+                        </span>
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Info */}
                   <div className="p-3">
                     <h3 className="font-semibold text-gray-800 text-sm line-clamp-1">
@@ -255,9 +283,11 @@ export default function RedeemPage() {
                       }`}
                       disabled={!isEnough || isOutOfStock}
                     >
-                      {isOutOfStock ? "Stok Habis" : 
-                       isEnough ? "Tukar Sekarang" : 
-                       `Kurang ${(reward.points_required - userPoints).toLocaleString()} poin`}
+                      {isOutOfStock
+                        ? "Stok Habis"
+                        : isEnough
+                          ? "Tukar Sekarang"
+                          : `Kurang ${(reward.points_required - userPoints).toLocaleString()} poin`}
                     </button>
                   </div>
                 </div>
@@ -267,14 +297,17 @@ export default function RedeemPage() {
         )}
 
         {/* Tips Card */}
-        <div className="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+        <div className="mt-8 bg-linear-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-green-600 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-green-800">Tips Mengumpulkan Poin</p>
+              <p className="text-sm font-semibold text-green-800">
+                Tips Mengumpulkan Poin
+              </p>
               <p className="text-xs text-green-700 mt-1">
-                Jual sampahmu ke agen terdekat! Setiap kg sampah bisa menghasilkan 100-1000 poin. 
-                Kumpulkan sebanyak-banyaknya dan tukarkan dengan hadiah menarik!
+                Jual sampahmu ke agen terdekat! Setiap kg sampah bisa
+                menghasilkan 100-1000 poin. Kumpulkan sebanyak-banyaknya dan
+                tukarkan dengan hadiah menarik!
               </p>
             </div>
           </div>
@@ -300,14 +333,18 @@ export default function RedeemPage() {
                 ✕
               </button>
             </div>
-            
+
             {/* Content */}
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-800">{selectedReward.name}</h2>
+              <h2 className="text-xl font-bold text-gray-800">
+                {selectedReward.name}
+              </h2>
               <div className="flex items-center gap-2 mt-2">
                 <div className="flex items-center gap-1 bg-green-50 px-3 py-1 rounded-full">
                   <Coins className="w-4 h-4 text-green-600" />
-                  <span className="font-bold text-green-700">{selectedReward.points_required.toLocaleString()} poin</span>
+                  <span className="font-bold text-green-700">
+                    {selectedReward.points_required.toLocaleString()} poin
+                  </span>
                 </div>
                 {selectedReward.cash_value > 0 && (
                   <span className="text-sm text-gray-500">
@@ -315,26 +352,29 @@ export default function RedeemPage() {
                   </span>
                 )}
               </div>
-              
+
               <p className="text-gray-600 text-sm mt-4 leading-relaxed">
                 {selectedReward.description}
               </p>
-              
+
               {selectedReward.category === "product" && (
                 <p className="text-sm text-gray-500 mt-3">
                   📦 Stok tersisa: {selectedReward.stock}
                 </p>
               )}
-              
+
               {selectedReward.category === "cash" && (
                 <div className="mt-4 p-3 bg-gray-50 rounded-xl">
-                  <p className="text-sm font-medium text-gray-700">Informasi Pencairan</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    Informasi Pencairan
+                  </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Dana akan ditransfer ke rekening Anda dalam 1x24 jam setelah verifikasi.
+                    Dana akan ditransfer ke rekening Anda dalam 1x24 jam setelah
+                    verifikasi.
                   </p>
                 </div>
               )}
-              
+
               <button
                 onClick={confirmRedeem}
                 disabled={redeeming}

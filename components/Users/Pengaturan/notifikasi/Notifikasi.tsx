@@ -39,7 +39,6 @@ export default function Notifikasi() {
     <div className="max-w-3xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Notifikasi</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Atur notifikasi yang ingin Anda terima
         </p>
