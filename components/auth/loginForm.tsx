@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 
-interface LoginFormProps extends Omit<React.ComponentProps<"form">, "onSubmit"> {
+interface LoginFormProps
+  extends Omit<React.ComponentProps<"form">, "onSubmit"> {
   onRegisterClick?: () => void;
 }
 
@@ -23,28 +23,34 @@ export function LoginForm({
   onRegisterClick,
   ...props
 }: LoginFormProps) {
-  const router = useRouter();
   const supabase = createClientSupabaseClient();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setLoading(true);
     setError("");
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     if (signInError) {
       setError(signInError.message);
       setLoading(false);
       return;
     }
+
+    // refresh session biar middleware kebaca
+    await supabase.auth.refreshSession();
 
     if (data.user) {
       await handleUserRedirect(data.user);
@@ -55,15 +61,17 @@ export function LoginForm({
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
-          prompt: 'select_account', // ← MEMAKSA PILIH AKUN
+          prompt: "select_account",
         },
       },
     });
+
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -81,13 +89,16 @@ export function LoginForm({
 
     switch (role) {
       case "admin":
-        router.push("/admin");
+        window.location.href = "/admin";
         break;
+
       case "agent":
-        router.push("/agent");
+        window.location.href = "/agent";
         break;
+
       default:
-        router.push("/user/home");
+        // GANTI INI: dari "/user" jadi "/user/home"
+        window.location.href = "/user/home";
         break;
     }
   };
@@ -103,6 +114,7 @@ export function LoginForm({
           <h1 className="text-2xl font-semibold text-foreground">
             Selamat Datang
           </h1>
+
           <p className="text-sm text-muted-foreground">
             Masuk dengan email dan password
           </p>
@@ -112,6 +124,7 @@ export function LoginForm({
           <FieldLabel htmlFor="email" className="text-foreground">
             Email
           </FieldLabel>
+
           <Input
             id="email"
             type="email"
@@ -127,6 +140,7 @@ export function LoginForm({
           <FieldLabel htmlFor="password" className="text-foreground">
             Password
           </FieldLabel>
+
           <Input
             id="password"
             type="password"
@@ -138,13 +152,23 @@ export function LoginForm({
           />
         </Field>
 
-        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+        {error && (
+          <p className="text-sm text-red-500 text-center">
+            {error}
+          </p>
+        )}
 
-        <Button type="submit" className="w-full mt-2" disabled={loading}>
+        <Button
+          type="submit"
+          className="w-full mt-2"
+          disabled={loading}
+        >
           {loading ? "Memproses..." : "Masuk"}
         </Button>
 
-        <FieldSeparator className="text-muted-foreground">Atau</FieldSeparator>
+        <FieldSeparator className="text-muted-foreground">
+          Atau
+        </FieldSeparator>
 
         <Button
           variant="outline"
@@ -171,6 +195,7 @@ export function LoginForm({
               fill="#EA4335"
             />
           </svg>
+
           Masuk dengan Google
         </Button>
 

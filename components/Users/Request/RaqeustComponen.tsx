@@ -95,7 +95,7 @@ export default function RequestPickupPage() {
 
   useEffect(() => {
     if (!agentId) {
-      router.push("/user/home");
+      console.warn("Client-side redirect suppressed; missing agentId param");
       return;
     }
     fetchData();
@@ -107,7 +107,8 @@ export default function RequestPickupPage() {
     // Ambil data user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      router.push("/login");
+      console.warn("Client-side login redirect suppressed; middleware enforces auth");
+      setLoading(false);
       return;
     }
 
@@ -131,7 +132,8 @@ export default function RequestPickupPage() {
 
     if (agentError || !agentData) {
       toast.error("Agent tidak ditemukan");
-      router.push("/user/home");
+      console.warn("Client-side redirect suppressed; agent not found");
+      setLoading(false);
       return;
     }
 

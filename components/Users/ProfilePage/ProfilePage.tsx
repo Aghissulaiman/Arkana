@@ -65,7 +65,8 @@ export default function ProfilePage() {
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        router.push("/login");
+        console.warn("Client-side login redirect suppressed; middleware enforces auth");
+        setLoading(false);
         return;
       }
 

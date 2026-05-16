@@ -74,7 +74,8 @@ export default function PickupRequestForm() {
 
       if (userError || !user) {
         console.error("User not logged in");
-        router.push("/login");
+        console.warn("Client-side login redirect suppressed; middleware enforces auth");
+        setLoading(false);
         return;
       }
       setUserId(user.id);
@@ -203,7 +204,8 @@ export default function PickupRequestForm() {
     // Validasi
     if (!userId) {
       alert("User tidak ditemukan. Silakan login ulang.");
-      router.push("/login");
+      console.warn("Client-side login redirect suppressed; middleware enforces auth");
+      setIsSubmitting(false);
       return;
     }
 

@@ -79,7 +79,11 @@ export default function AgentVerificationList() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        if (isMounted) router.push("/login");
+        if (isMounted) {
+          console.warn("Client-side login redirect suppressed; middleware enforces auth");
+          setIsAdmin(false);
+          setLoading(false);
+        }
         return;
       }
 

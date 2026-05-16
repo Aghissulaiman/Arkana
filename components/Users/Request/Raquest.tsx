@@ -150,7 +150,8 @@ export default function RequestPickupPage({ params }: PageProps) {
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      router.push("/login");
+      console.warn("Client-side login redirect suppressed; middleware enforces auth");
+      setLoading(false);
       return;
     }
 
@@ -173,7 +174,8 @@ export default function RequestPickupPage({ params }: PageProps) {
 
     if (agentError || !agentData) {
       toast.error("Agent tidak ditemukan");
-      router.push("/user/home");
+      console.warn("Client-side redirect suppressed; agent not found");
+      setLoading(false);
       return;
     }
 

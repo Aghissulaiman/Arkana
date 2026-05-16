@@ -81,7 +81,8 @@ export default function AgentTasksPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        router.push("/login");
+        console.warn("Client-side login redirect suppressed; middleware enforces auth");
+        setLoading(false);
         return;
       }
 

@@ -53,7 +53,8 @@ export default function UserTable() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      router.push("/login");
+      console.warn("Client-side login redirect suppressed; middleware enforces auth");
+      setLoading(false);
       return;
     }
 
@@ -64,7 +65,9 @@ export default function UserTable() {
       .single();
 
     if (userData?.role !== "admin") {
-      router.push("/user/home");
+      console.warn("Client-side unauthorized redirect suppressed; middleware enforces role checks");
+      setIsAdmin(false);
+      setLoading(false);
       return;
     }
 

@@ -1,124 +1,155 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+// import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+// import { NextResponse } from 'next/server'
+// import type { NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
-  const { data: { session } } = await supabase.auth.getSession()
+// export async function middleware(req: NextRequest) {
+//   const res = NextResponse.next()
 
-  const pathname = req.nextUrl.pathname
+//   const supabase = createMiddlewareClient({
+//     req,
+//     res,
+//   })
 
-  // ============================================
-  // 1. CEK SESSION (BELUM LOGIN)
-  // ============================================
-  
-  // Halaman yang membutuhkan login
-  const protectedRoutes = ['/dashboard', '/profil', '/jual-sampah', '/riwayat', '/tukar-poin', '/user', '/agent', '/admin']
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
-  
-  // Halaman auth (login/register) - redirect ke dashboard jika sudah login
-  const authRoutes = ['/login', '/register']
-  const isAuthRoute = authRoutes.includes(pathname)
+//   const {
+//     data: { session },
+//   } = await supabase.auth.getSession()
 
-  if (isProtectedRoute && !session) {
-    const redirectUrl = new URL('/login', req.url)
-    return NextResponse.redirect(redirectUrl)
-  }
+//   const pathname = req.nextUrl.pathname
 
-  if (session && isAuthRoute) {
-    const redirectUrl = new URL('/dashboard', req.url)
-    return NextResponse.redirect(redirectUrl)
-  }
+//   // =========================================
+//   // PUBLIC ROUTES
+//   // =========================================
+//   const publicRoutes = [
+//     '/',
+//     '/login',
+//     '/register',
+//     '/404',
+//     '/tidakAdaAkses',
+//   ]
 
-  // Jika tidak ada session, lanjutkan
-  if (!session) {
-    return res
-  }
+//   const isPublicRoute = publicRoutes.includes(pathname)
 
-  // ============================================
-  // 2. AMBIL ROLE USER DARI DATABASE
-  // ============================================
-  
-  const { data: userData, error: userError } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', session.user.id)
-    .single()
+//   // =========================================
+//   // JIKA BELUM LOGIN
+//   // =========================================
+//   if (!session) {
+//     // Kalau buka halaman private → redirect
+//     if (!isPublicRoute) {
+//       return NextResponse.redirect(new URL('/404', req.url))
+//       // atau:
+//       // return NextResponse.redirect(new URL('/tidakAdaAkses', req.url))
+//     }
 
-  const role = userData?.role || 'user'
+//     return res
+//   }
 
-  // ============================================
-  // 3. ROLE-BASED REDIRECT
-  // ============================================
-  
-  // 3a. USER (masyarakat) - tidak bisa akses /admin/* dan /agent/*
-  if (role === 'user') {
-    if (pathname.startsWith('/admin') || pathname.startsWith('/agent')) {
-      const redirectUrl = new URL('/user/home', req.url)
-      return NextResponse.redirect(redirectUrl)
-    }
-  }
+//   // =========================================
+//   // AMBIL ROLE USER
+//   // =========================================
+//   const { data: userData } = await supabase
+//     .from('users')
+//     .select('role')
+//     .eq('id', session.user.id)
+//     .single()
 
-  // 3b. AGENT - tidak bisa akses /admin/*
-  if (role === 'agent') {
-    if (pathname.startsWith('/admin')) {
-      const redirectUrl = new URL('/agent/dashboard', req.url)
-      return NextResponse.redirect(redirectUrl)
-    }
-    
-    // ============================================
-    // 4. CEK SUBSCRIPTION AGENT (KECUALI DI HALAMAN SUBSCRIPTION)
-    // ============================================
-    const isSubscriptionPage = pathname.startsWith('/agent/subscription')
-    const isSubscriptionCompletePage = pathname.startsWith('/agent/subscription/complete')
-    
-    if (!isSubscriptionPage && !isSubscriptionCompletePage) {
-      // Ambil agent_id
-      const { data: agentData } = await supabase
-        .from('agents')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .single()
-      
-      if (agentData) {
-        // Cek status subscription
-        const { data: statusData } = await supabase
-          .rpc('check_agent_subscription_status', { p_agent_id: agentData.id })
-        
-        const isActive = statusData?.is_active === true
-        
-        // Jika subscription tidak aktif, redirect ke halaman subscription
-        if (!isActive) {
-          const redirectUrl = new URL('/agent/subscription', req.url)
-          return NextResponse.redirect(redirectUrl)
-        }
-      }
-    }
-  }
+//   const role = userData?.role
 
-  // 3c. ADMIN - bisa akses semua (tidak perlu redirect)
+//   // =========================================
+//   // JIKA SUDAH LOGIN TAPI KE LOGIN/REGISTER
+//   // =========================================
+//   if (pathname === '/login' || pathname === '/register') {
+//     if (role === 'admin') {
+//       return NextResponse.redirect(new URL('/admin', req.url))
+//     }
 
-  // ============================================
-  // 5. DEFAULT REDIRECT BERDASARKAN ROLE (Untuk root /dashboard)
-  // ============================================
-  
-  if (pathname === '/dashboard') {
-    if (role === 'admin') {
-      const redirectUrl = new URL('/admin/dashboard', req.url)
-      return NextResponse.redirect(redirectUrl)
-    } else if (role === 'agent') {
-      const redirectUrl = new URL('/agent/dashboard', req.url)
-      return NextResponse.redirect(redirectUrl)
-    } else {
-      const redirectUrl = new URL('/user/home', req.url)
-      return NextResponse.redirect(redirectUrl)
-    }
-  }
+//     if (role === 'agent') {
+//       return NextResponse.redirect(new URL('/agent', req.url))
+//     }
 
-  return res
-}
+//     return NextResponse.redirect(new URL('/user', req.url))
+//   }
 
-export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|auth/callback).*)'],
-}
+//   // =========================================
+//   // ROLE ACCESS CONTROL
+//   // =========================================
+
+//   // USER
+//   if (role === 'user') {
+//     // user tidak boleh ke admin/agent
+//     if (
+//       pathname.startsWith('/admin') ||
+//       pathname.startsWith('/agent')
+//     ) {
+//       return NextResponse.redirect(
+//         new URL('/tidakAdaAkses', req.url)
+//       )
+//     }
+
+//     // selain /user juga tidak boleh
+//     if (
+//       !pathname.startsWith('/user') &&
+//       pathname !== '/'
+//     ) {
+//       return NextResponse.redirect(
+//         new URL('/tidakAdaAkses', req.url)
+//       )
+//     }
+//   }
+
+//   // AGENT
+//   if (role === 'agent') {
+//     // agent tidak boleh ke admin/user
+//     if (
+//       pathname.startsWith('/admin') ||
+//       pathname.startsWith('/user')
+//     ) {
+//       return NextResponse.redirect(
+//         new URL('/tidakAdaAkses', req.url)
+//       )
+//     }
+
+//     // selain /agent juga tidak boleh
+//     if (
+//       !pathname.startsWith('/agent') &&
+//       pathname !== '/'
+//     ) {
+//       return NextResponse.redirect(
+//         new URL('/tidakAdaAkses', req.url)
+//       )
+//     }
+//   }
+
+//   // ADMIN
+//   if (role === 'admin') {
+//     // admin cuma boleh admin
+//     if (
+//       pathname.startsWith('/user') ||
+//       pathname.startsWith('/agent')
+//     ) {
+//       return NextResponse.redirect(
+//         new URL('/tidakAdaAkses', req.url)
+//       )
+//     }
+//   }
+
+//   // =========================================
+//   // ROOT REDIRECT
+//   // =========================================
+//   if (pathname === '/') {
+//     if (role === 'admin') {
+//       return NextResponse.redirect(new URL('/admin', req.url))
+//     }
+
+//     if (role === 'agent') {
+//       return NextResponse.redirect(new URL('/agent', req.url))
+//     }
+
+//     return NextResponse.redirect(new URL('/user', req.url))
+//   }
+
+//   return res
+// }
+
+// export const config = {
+//   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+// }
