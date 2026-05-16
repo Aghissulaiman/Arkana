@@ -56,7 +56,9 @@ export default function JadwalPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Silakan login terlebih dahulu");
         return;
@@ -82,17 +84,19 @@ export default function JadwalPage() {
         .eq("agent_id", agentData.id);
 
       // Inisialisasi semua hari
-      const initialSchedules: Schedule[] = DAYS.map(day => {
-        const existing = scheduleData?.find(s => s.day_of_week === day.value);
-        return existing || {
-          day_of_week: day.value,
-          is_open: true,
-          open_time: DEFAULT_OPEN,
-          close_time: DEFAULT_CLOSE,
-          break_start: null,
-          break_end: null,
-          notes: null,
-        };
+      const initialSchedules: Schedule[] = DAYS.map((day) => {
+        const existing = scheduleData?.find((s) => s.day_of_week === day.value);
+        return (
+          existing || {
+            day_of_week: day.value,
+            is_open: true,
+            open_time: DEFAULT_OPEN,
+            close_time: DEFAULT_CLOSE,
+            break_start: null,
+            break_end: null,
+            notes: null,
+          }
+        );
       });
 
       setSchedules(initialSchedules);
@@ -105,8 +109,8 @@ export default function JadwalPage() {
   };
 
   const updateSchedule = (day: number, field: keyof Schedule, value: any) => {
-    setSchedules(prev =>
-      prev.map(s => s.day_of_week === day ? { ...s, [field]: value } : s)
+    setSchedules((prev) =>
+      prev.map((s) => (s.day_of_week === day ? { ...s, [field]: value } : s)),
     );
   };
 
@@ -139,18 +143,16 @@ export default function JadwalPage() {
             .eq("id", existing.id);
         } else {
           // Insert
-          await supabase
-            .from("agent_schedules")
-            .insert({
-              agent_id: agentId,
-              day_of_week: schedule.day_of_week,
-              is_open: schedule.is_open,
-              open_time: schedule.open_time,
-              close_time: schedule.close_time,
-              break_start: schedule.break_start,
-              break_end: schedule.break_end,
-              notes: schedule.notes,
-            });
+          await supabase.from("agent_schedules").insert({
+            agent_id: agentId,
+            day_of_week: schedule.day_of_week,
+            is_open: schedule.is_open,
+            open_time: schedule.open_time,
+            close_time: schedule.close_time,
+            break_start: schedule.break_start,
+            break_end: schedule.break_end,
+            notes: schedule.notes,
+          });
         }
       }
 
@@ -174,11 +176,11 @@ export default function JadwalPage() {
       return;
     }
 
-    const sourceSchedule = schedules.find(s => s.day_of_week === copyFromDay);
+    const sourceSchedule = schedules.find((s) => s.day_of_week === copyFromDay);
     if (!sourceSchedule) return;
 
-    setSchedules(prev =>
-      prev.map(s => {
+    setSchedules((prev) =>
+      prev.map((s) => {
         if (copyToDays.includes(s.day_of_week)) {
           return {
             ...s,
@@ -190,7 +192,7 @@ export default function JadwalPage() {
           };
         }
         return s;
-      })
+      }),
     );
 
     toast.success(`Jadwal disalin ke ${copyToDays.length} hari`);
@@ -199,8 +201,8 @@ export default function JadwalPage() {
   };
 
   const toggleCopyDay = (day: number) => {
-    setCopyToDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    setCopyToDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
     );
   };
 
@@ -213,14 +215,16 @@ export default function JadwalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Toaster position="top-right" richColors />
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-5xl mx-auto  space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Jadwal Operasional</h1>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Jadwal Operasional
+            </h1>
             <p className="text-sm text-gray-500 mt-1">
               Atur jam buka dan hari libur untuk penjemputan sampah
             </p>
@@ -238,20 +242,26 @@ export default function JadwalPage() {
               disabled={saving}
               className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
               Simpan Semua
             </button>
           </div>
         </div>
 
         {/* Info Banner */}
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-start gap-3 bg-white">
           <Info className="w-5 h-5 text-primary mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-medium text-primary">Informasi Jadwal</p>
+            <p className="text-sm font-medium text-primary ">
+              Informasi Jadwal
+            </p>
             <p className="text-xs text-primary/70 mt-1">
-              User hanya bisa mengajukan penjemputan saat Anda buka.
-              Anda bisa mengatur jam operasional per hari dan jam istirahat.
+              User hanya bisa mengajukan penjemputan saat Anda buka. Anda bisa
+              mengatur jam operasional per hari dan jam istirahat.
             </p>
           </div>
         </div>
@@ -269,20 +279,23 @@ export default function JadwalPage() {
               className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
             >
               <option value="">Pilih Hari Sumber</option>
-              {DAYS.map(day => (
-                <option key={day.value} value={day.value}>{day.label}</option>
+              {DAYS.map((day) => (
+                <option key={day.value} value={day.value}>
+                  {day.label}
+                </option>
               ))}
             </select>
             <span className="text-gray-400">→</span>
             <div className="flex flex-wrap gap-2">
-              {DAYS.map(day => (
+              {DAYS.map((day) => (
                 <button
                   key={day.value}
                   onClick={() => toggleCopyDay(day.value)}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-all ${copyToDays.includes(day.value)
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                    copyToDays.includes(day.value)
                       ? "bg-primary text-white"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                  }`}
                 >
                   {day.short}
                 </button>
@@ -304,36 +317,66 @@ export default function JadwalPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Hari</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">Status</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">Jam Buka</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">Jam Tutup</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">Istirahat</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Catatan</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">
+                    Hari
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">
+                    Jam Buka
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">
+                    Jam Tutup
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500">
+                    Istirahat
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">
+                    Catatan
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {schedules.map((schedule) => {
-                  const day = DAYS.find(d => d.value === schedule.day_of_week)!;
+                  const day = DAYS.find(
+                    (d) => d.value === schedule.day_of_week,
+                  )!;
                   const isActive = schedule.is_open;
 
                   return (
-                    <tr key={schedule.day_of_week} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={schedule.day_of_week}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-4 py-3">
-                        <span className="font-medium text-gray-800">{day.label}</span>
+                        <span className="font-medium text-gray-800">
+                          {day.label}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <button
-                          onClick={() => updateSchedule(schedule.day_of_week, "is_open", !schedule.is_open)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${isActive
+                          onClick={() =>
+                            updateSchedule(
+                              schedule.day_of_week,
+                              "is_open",
+                              !schedule.is_open,
+                            )
+                          }
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                            isActive
                               ? "bg-green-100 text-green-700 hover:bg-green-200"
                               : "bg-red-100 text-red-700 hover:bg-red-200"
-                            }`}
+                          }`}
                         >
                           {isActive ? (
-                            <><CheckCircle className="w-3 h-3" /> Buka</>
+                            <>
+                              <CheckCircle className="w-3 h-3" /> Buka
+                            </>
                           ) : (
-                            <><XCircle className="w-3 h-3" /> Tutup</>
+                            <>
+                              <XCircle className="w-3 h-3" /> Tutup
+                            </>
                           )}
                         </button>
                       </td>
@@ -342,7 +385,13 @@ export default function JadwalPage() {
                           <input
                             type="time"
                             value={schedule.open_time}
-                            onChange={(e) => updateSchedule(schedule.day_of_week, "open_time", e.target.value)}
+                            onChange={(e) =>
+                              updateSchedule(
+                                schedule.day_of_week,
+                                "open_time",
+                                e.target.value,
+                              )
+                            }
                             disabled={!isActive}
                             className="w-28 px-2 py-1.5 text-sm border border-gray-200 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:text-gray-400"
                           />
@@ -353,7 +402,13 @@ export default function JadwalPage() {
                           <input
                             type="time"
                             value={schedule.close_time}
-                            onChange={(e) => updateSchedule(schedule.day_of_week, "close_time", e.target.value)}
+                            onChange={(e) =>
+                              updateSchedule(
+                                schedule.day_of_week,
+                                "close_time",
+                                e.target.value,
+                              )
+                            }
                             disabled={!isActive}
                             className="w-28 px-2 py-1.5 text-sm border border-gray-200 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:text-gray-400"
                           />
@@ -364,7 +419,13 @@ export default function JadwalPage() {
                           <input
                             type="time"
                             value={schedule.break_start || ""}
-                            onChange={(e) => updateSchedule(schedule.day_of_week, "break_start", e.target.value || null)}
+                            onChange={(e) =>
+                              updateSchedule(
+                                schedule.day_of_week,
+                                "break_start",
+                                e.target.value || null,
+                              )
+                            }
                             disabled={!isActive}
                             placeholder="-"
                             className="w-24 px-2 py-1.5 text-sm border border-gray-200 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-100"
@@ -373,7 +434,13 @@ export default function JadwalPage() {
                           <input
                             type="time"
                             value={schedule.break_end || ""}
-                            onChange={(e) => updateSchedule(schedule.day_of_week, "break_end", e.target.value || null)}
+                            onChange={(e) =>
+                              updateSchedule(
+                                schedule.day_of_week,
+                                "break_end",
+                                e.target.value || null,
+                              )
+                            }
                             disabled={!isActive}
                             placeholder="-"
                             className="w-24 px-2 py-1.5 text-sm border border-gray-200 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-100"
@@ -384,7 +451,13 @@ export default function JadwalPage() {
                         <input
                           type="text"
                           value={schedule.notes || ""}
-                          onChange={(e) => updateSchedule(schedule.day_of_week, "notes", e.target.value)}
+                          onChange={(e) =>
+                            updateSchedule(
+                              schedule.day_of_week,
+                              "notes",
+                              e.target.value,
+                            )
+                          }
                           disabled={!isActive}
                           placeholder="Catatan..."
                           className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-100"
@@ -399,27 +472,29 @@ export default function JadwalPage() {
         </div>
 
         {/* Summary Card */}
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4">
+        <div className="bg-white from-primary/10 to-primary/5 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-primary" />
             <div>
-              <p className="text-sm font-semibold text-gray-800">Ringkasan Jadwal</p>
+              <p className="text-sm font-semibold text-gray-800">
+                Ringkasan Jadwal
+              </p>
               <p className="text-xs text-gray-600">
-                {schedules.filter(s => s.is_open).length} hari buka •
-                Rata-rata jam operasional: {
-                  (() => {
-                    const openHours = schedules.filter(s => s.is_open);
-                    if (openHours.length === 0) return "Tidak buka";
-                    const avgOpen = openHours.reduce((sum, s) => {
+                {schedules.filter((s) => s.is_open).length} hari buka •
+                Rata-rata jam operasional:{" "}
+                {(() => {
+                  const openHours = schedules.filter((s) => s.is_open);
+                  if (openHours.length === 0) return "Tidak buka";
+                  const avgOpen =
+                    openHours.reduce((sum, s) => {
                       const open = s.open_time.split(":").map(Number);
                       const close = s.close_time.split(":").map(Number);
                       let hours = close[0] - open[0];
                       if (hours < 0) hours += 24;
                       return sum + hours;
                     }, 0) / openHours.length;
-                    return `${Math.round(avgOpen)} jam/hari`;
-                  })()
-                }
+                  return `${Math.round(avgOpen)} jam/hari`;
+                })()}
               </p>
             </div>
           </div>

@@ -1,9 +1,9 @@
-import NotificationsPage from "@/components/Users/HomePage/notification";
+import AdminNotificationsPage from "@/components/Admin/notifications/notifpage";
 
 export default function Profile() {
   return (
     <>
-      <NotificationsPage />
+      <AdminNotificationsPage />
     </>
   );
 }

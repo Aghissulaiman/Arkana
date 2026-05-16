@@ -1,4 +1,4 @@
-    "use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -76,15 +76,19 @@ export default function AgentProfilePage() {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
       if (userError || !user) {
         router.push("/login");
         return;
       }
 
       // Ambil avatar dari Google (user_metadata)
-      const userAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+      const userAvatar =
+        user.user_metadata?.avatar_url || user.user_metadata?.picture;
       setAvatarUrl(userAvatar || null);
 
       // Ambil data dari tabel users
@@ -114,14 +118,22 @@ export default function AgentProfilePage() {
         .select("estimated_weight, total_points, status")
         .eq("agent_id", agentData?.id);
 
-      const completedPickups = pickups?.filter(p => p.status === "completed") || [];
-      const totalWeight = completedPickups.reduce((sum, p) => sum + (p.estimated_weight || 0), 0);
-      const totalPoints = completedPickups.reduce((sum, p) => sum + (p.total_points || 0), 0);
+      const completedPickups =
+        pickups?.filter((p) => p.status === "completed") || [];
+      const totalWeight = completedPickups.reduce(
+        (sum, p) => sum + (p.estimated_weight || 0),
+        0,
+      );
+      const totalPoints = completedPickups.reduce(
+        (sum, p) => sum + (p.total_points || 0),
+        0,
+      );
 
       setProfile({
         id: user.id,
         email: user.email || "",
-        full_name: profileData?.full_name || user.user_metadata?.full_name || "",
+        full_name:
+          profileData?.full_name || user.user_metadata?.full_name || "",
         phone: profileData?.phone || "",
         address: profileData?.address || "",
         agent_name: agentData?.agent_name || "",
@@ -129,11 +141,13 @@ export default function AgentProfilePage() {
         waste_categories: agentData?.waste_categories || [],
         balance_income: agentData?.balance_income || 0,
         is_active: agentData?.is_active || false,
-        joined_date: userData?.created_at ? new Date(userData.created_at).toLocaleDateString("id-ID", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }) : "-",
+        joined_date: userData?.created_at
+          ? new Date(userData.created_at).toLocaleDateString("id-ID", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "-",
         total_pickups: completedPickups.length,
         total_weight: totalWeight,
         total_points_given: totalPoints,
@@ -141,13 +155,13 @@ export default function AgentProfilePage() {
       });
 
       setEditForm({
-        full_name: profileData?.full_name || user.user_metadata?.full_name || "",
+        full_name:
+          profileData?.full_name || user.user_metadata?.full_name || "",
         phone: profileData?.phone || "",
         address: profileData?.address || "",
         agent_name: agentData?.agent_name || "",
         service_area: agentData?.service_area || "",
       });
-
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Gagal memuat profil");
@@ -159,7 +173,9 @@ export default function AgentProfilePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // Update profiles
@@ -222,10 +238,10 @@ export default function AgentProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       <Toaster position="top-right" richColors />
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-5xl mx-auto  space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -268,7 +284,11 @@ export default function AgentProfilePage() {
                   disabled={saving}
                   className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors"
                 >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {saving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
                   Simpan
                 </button>
               </>
@@ -300,9 +320,11 @@ export default function AgentProfilePage() {
                 </div>
               </div>
 
-              <h2 className="text-xl font-bold text-gray-800">{profile.full_name || profile.agent_name}</h2>
+              <h2 className="text-xl font-bold text-gray-800">
+                {profile.full_name || profile.agent_name}
+              </h2>
               <p className="text-sm text-gray-500">{profile.email}</p>
-              
+
               <div className="mt-3 inline-flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
                 <CheckCircle className="w-3 h-3 text-green-600" />
                 <span className="text-xs font-medium text-green-700">
@@ -318,7 +340,9 @@ export default function AgentProfilePage() {
                 <div className="flex items-center justify-between text-sm mt-2">
                   <span className="text-gray-500">Rating</span>
                   <span className="font-medium text-amber-600">
-                    {profile.avg_rating > 0 ? `${profile.avg_rating.toFixed(1)} ★` : "Belum ada rating"}
+                    {profile.avg_rating > 0
+                      ? `${profile.avg_rating.toFixed(1)} ★`
+                      : "Belum ada rating"}
                   </span>
                 </div>
               </div>
@@ -332,16 +356,28 @@ export default function AgentProfilePage() {
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-500">Total Penjemputan</span>
-                  <span className="font-bold text-gray-800">{profile.total_pickups}</span>
+                  <span className="text-sm text-gray-500">
+                    Total Penjemputan
+                  </span>
+                  <span className="font-bold text-gray-800">
+                    {profile.total_pickups}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-500">Total Berat Sampah</span>
-                  <span className="font-bold text-gray-800">{profile.total_weight.toFixed(1)} kg</span>
+                  <span className="text-sm text-gray-500">
+                    Total Berat Sampah
+                  </span>
+                  <span className="font-bold text-gray-800">
+                    {profile.total_weight.toFixed(1)} kg
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Total Poin Diberikan</span>
-                  <span className="font-bold text-primary">{profile.total_points_given.toLocaleString()}</span>
+                  <span className="text-sm text-gray-500">
+                    Total Poin Diberikan
+                  </span>
+                  <span className="font-bold text-primary">
+                    {profile.total_points_given.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -363,18 +399,22 @@ export default function AgentProfilePage() {
                     <p className="font-medium">{profile.email}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-xs text-gray-400">Nomor Telepon</p>
                     {!isEditing ? (
-                      <p className="font-medium">{profile.phone || "Belum diisi"}</p>
+                      <p className="font-medium">
+                        {profile.phone || "Belum diisi"}
+                      </p>
                     ) : (
                       <input
                         type="tel"
                         value={editForm.phone}
-                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, phone: e.target.value })
+                        }
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="08123456789"
                       />
@@ -387,11 +427,15 @@ export default function AgentProfilePage() {
                   <div className="flex-1">
                     <p className="text-xs text-gray-400">Alamat</p>
                     {!isEditing ? (
-                      <p className="font-medium">{profile.address || "Belum diisi"}</p>
+                      <p className="font-medium">
+                        {profile.address || "Belum diisi"}
+                      </p>
                     ) : (
                       <textarea
                         value={editForm.address}
-                        onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, address: e.target.value })
+                        }
                         rows={2}
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="Jl. Contoh No. 123"
@@ -414,12 +458,19 @@ export default function AgentProfilePage() {
                   <div className="flex-1">
                     <p className="text-xs text-gray-400">Nama Agen</p>
                     {!isEditing ? (
-                      <p className="font-medium">{profile.agent_name || "Belum diisi"}</p>
+                      <p className="font-medium">
+                        {profile.agent_name || "Belum diisi"}
+                      </p>
                     ) : (
                       <input
                         type="text"
                         value={editForm.agent_name}
-                        onChange={(e) => setEditForm({ ...editForm, agent_name: e.target.value })}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            agent_name: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="Nama Agen"
                       />
@@ -432,12 +483,19 @@ export default function AgentProfilePage() {
                   <div className="flex-1">
                     <p className="text-xs text-gray-400">Wilayah Layanan</p>
                     {!isEditing ? (
-                      <p className="font-medium">{profile.service_area || "Belum diisi"}</p>
+                      <p className="font-medium">
+                        {profile.service_area || "Belum diisi"}
+                      </p>
                     ) : (
                       <input
                         type="text"
                         value={editForm.service_area}
-                        onChange={(e) => setEditForm({ ...editForm, service_area: e.target.value })}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            service_area: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="Contoh: Depok, Jakarta Selatan"
                       />
@@ -448,7 +506,9 @@ export default function AgentProfilePage() {
                 <div className="flex items-start gap-3">
                   <Package className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div className="flex-1">
-                    <p className="text-xs text-gray-400">Jenis Sampah Diterima</p>
+                    <p className="text-xs text-gray-400">
+                      Jenis Sampah Diterima
+                    </p>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {profile.waste_categories.map((w) => (
                         <span
@@ -491,8 +551,19 @@ export default function AgentProfilePage() {
 // Wallet icon component
 function Wallet(props: any) {
   return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+      />
     </svg>
   );
 }

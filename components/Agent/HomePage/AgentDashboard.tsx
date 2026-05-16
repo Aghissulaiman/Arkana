@@ -4,7 +4,16 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Navigation, Clock, CheckCircle2, Loader2, Truck, Eye, ChevronRight } from "lucide-react";
+import {
+  MapPin,
+  Navigation,
+  Clock,
+  CheckCircle2,
+  Loader2,
+  Truck,
+  Eye,
+  ChevronRight,
+} from "lucide-react";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import Link from "next/link";
 
@@ -17,7 +26,9 @@ export default function AgentDashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
         setLoading(false);
@@ -45,20 +56,27 @@ export default function AgentDashboard() {
 
       if (requests && requests.length > 0) {
         // Ambil nama customer
-        const userIds = [...new Set(requests.map(r => r.user_id))];
+        const userIds = [...new Set(requests.map((r) => r.user_id))];
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, full_name")
           .in("user_id", userIds);
 
         const profileMap = new Map();
-        profiles?.forEach(p => profileMap.set(p.user_id, p.full_name));
+        profiles?.forEach((p) => profileMap.set(p.user_id, p.full_name));
 
-        const formattedRequests = requests.map(req => {
+        const formattedRequests = requests.map((req) => {
           const totalWeight = req.estimated_weight || 0;
           const date = new Date(req.created_at);
-          const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-          const dateStr = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+          const timeStr = date.toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          const dateStr = date.toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          });
 
           return {
             id: `REQ-${req.id.slice(0, 8)}`,
@@ -75,10 +93,14 @@ export default function AgentDashboard() {
         });
 
         // Ambil tugas yang pending/accepted
-        const allActiveTasks = formattedRequests.filter(r => ["pending", "accepted"].includes(r.status));
+        const allActiveTasks = formattedRequests.filter((r) =>
+          ["pending", "accepted"].includes(r.status),
+        );
         // Hanya ambil 3 tugas teratas untuk dashboard
         setActiveTasks(allActiveTasks.slice(0, 3));
-        setRecentPickups(formattedRequests.filter(r => r.status === "completed").slice(0, 5));
+        setRecentPickups(
+          formattedRequests.filter((r) => r.status === "completed").slice(0, 5),
+        );
       } else {
         setActiveTasks([]);
         setRecentPickups([]);
@@ -105,32 +127,51 @@ export default function AgentDashboard() {
   const totalActiveTasksCount = activeTasks.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl">
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Tugas Aktif Section */}
         <Card className="lg:col-span-2 border-0 shadow-sm bg-background">
           <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 pb-4">
-            <CardTitle className="text-lg font-bold text-foreground">Tugas Penjemputan</CardTitle>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-bold">
+            <CardTitle className="text-lg font-bold text-foreground">
+              Tugas Penjemputan
+            </CardTitle>
+            <Badge
+              variant="outline"
+              className="bg-primary/10 text-primary border-primary/20 font-bold"
+            >
               {activeTasks.length} Tugas Aktif
             </Badge>
           </CardHeader>
           <CardContent className="space-y-4 pt-6">
             {activeTasks.map((task) => (
-              <div key={task.id} className={`p-5 rounded-xl border transition-all duration-300 ${task.status === 'accepted' ? 'border-primary shadow-sm bg-primary/5' : 'border-border/60 bg-card hover:bg-muted/30'}`}>
+              <div
+                key={task.id}
+                className={`p-5 rounded-xl border transition-all duration-300 ${task.status === "accepted" ? "border-primary shadow-sm bg-primary/5" : "border-border/60 bg-card hover:bg-muted/30"}`}
+              >
                 <div className="flex flex-col sm:flex-row justify-between gap-5">
                   <div className="space-y-3 flex-1">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-[10px] font-bold text-muted-foreground bg-muted/50 border-border px-2 py-0.5">{task.id}</Badge>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] font-bold text-muted-foreground bg-muted/50 border-border px-2 py-0.5"
+                      >
+                        {task.id}
+                      </Badge>
                       {task.status === "accepted" && (
-                        <Badge className="bg-primary/20 text-primary border-none text-[10px]">Sedang Berjalan</Badge>
+                        <Badge className="bg-primary/20 text-primary border-none text-[10px]">
+                          Sedang Berjalan
+                        </Badge>
                       )}
                       {task.status === "pending" && (
-                        <Badge className="bg-yellow-500/20 text-yellow-700 border-none text-[10px]">Menunggu</Badge>
+                        <Badge className="bg-yellow-500/20 text-yellow-700 border-none text-[10px]">
+                          Menunggu
+                        </Badge>
                       )}
                     </div>
                     <div>
-                      <h3 className="font-bold text-foreground text-lg leading-tight">{task.customer}</h3>
+                      <h3 className="font-bold text-foreground text-lg leading-tight">
+                        {task.customer}
+                      </h3>
                       <div className="flex items-start gap-2 text-sm text-muted-foreground mt-1.5">
                         <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-primary/70" />
                         <span className="leading-relaxed">{task.address}</span>
@@ -148,21 +189,26 @@ export default function AgentDashboard() {
                     </div>
                   </div>
                   <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36 justify-center">
-                    <Button 
-                      size="sm" 
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm" 
-                      onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(task.address)}`, '_blank')}
+                    <Button
+                      size="sm"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
+                      onClick={() =>
+                        window.open(
+                          `https://maps.google.com/?q=${encodeURIComponent(task.address)}`,
+                          "_blank",
+                        )
+                      }
                     >
                       <MapPin className="w-4 h-4 mr-2" />
                       Navigasi
                     </Button>
                     <Link href={`/agent/tasks/${task.dbId}`} className="w-full">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        size="sm"
+                        variant="outline"
                         className={`w-full font-bold ${
-                          task.status === "accepted" 
-                            ? "border-green-500 text-green-600 hover:bg-green-50" 
+                          task.status === "accepted"
+                            ? "border-green-500 text-green-600 hover:bg-green-50"
                             : "border-blue-500 text-blue-600 hover:bg-blue-50"
                         }`}
                       >
@@ -177,16 +223,23 @@ export default function AgentDashboard() {
             {activeTasks.length === 0 && (
               <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border">
                 <CheckCircle2 className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="font-medium">Tidak ada tugas penjemputan saat ini</p>
-                <p className="text-sm text-muted-foreground mt-1">Tunggu permintaan dari user</p>
+                <p className="font-medium">
+                  Tidak ada tugas penjemputan saat ini
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Tunggu permintaan dari user
+                </p>
               </div>
             )}
-            
+
             {/* Tombol Lihat Semua Tugas */}
             {activeTasks.length > 0 && (
               <div className="pt-4 border-t border-border/50">
                 <Link href="/agent/tasks">
-                  <Button variant="ghost" className="w-full text-primary hover:text-primary hover:bg-primary/10 gap-2">
+                  <Button
+                    variant="ghost"
+                    className="w-full text-primary hover:text-primary hover:bg-primary/10 gap-2"
+                  >
                     Lihat Semua Tugas
                     <ChevronRight className="w-4 h-4" />
                   </Button>
@@ -199,22 +252,36 @@ export default function AgentDashboard() {
         {/* Riwayat Terbaru Section */}
         <Card className="border-0 shadow-sm bg-background">
           <CardHeader className="border-b border-border/50 pb-4">
-            <CardTitle className="text-lg font-bold text-foreground">Riwayat Terbaru</CardTitle>
+            <CardTitle className="text-lg font-bold text-foreground">
+              Riwayat Terbaru
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 pt-6">
             {recentPickups.map((pickup) => (
-              <div key={pickup.id} className="flex items-start gap-4 pb-4 border-b border-border/50 last:border-0 last:pb-0">
+              <div
+                key={pickup.id}
+                className="flex items-start gap-4 pb-4 border-b border-border/50 last:border-0 last:pb-0"
+              >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
                   <Truck className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-foreground truncate">{pickup.customer}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{pickup.date}, {pickup.time}</p>
+                  <p className="font-bold text-sm text-foreground truncate">
+                    {pickup.customer}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {pickup.date}, {pickup.time}
+                  </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="secondary" className="text-[10px] font-bold bg-muted/50 border-border/50">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] font-bold bg-muted/50 border-border/50"
+                    >
                       {pickup.weight}
                     </Badge>
-                    <span className="text-xs font-bold text-primary">{pickup.points} pts</span>
+                    <span className="text-xs font-bold text-primary">
+                      {pickup.points} pts
+                    </span>
                   </div>
                 </div>
               </div>
@@ -226,7 +293,10 @@ export default function AgentDashboard() {
             )}
             {recentPickups.length > 0 && (
               <Link href="/agent/history">
-                <Button variant="ghost" className="w-full text-xs font-bold text-primary hover:text-primary hover:bg-primary/10 mt-2">
+                <Button
+                  variant="ghost"
+                  className="w-full text-xs font-bold text-primary hover:text-primary hover:bg-primary/10 mt-2"
+                >
                   Lihat Semua Riwayat
                 </Button>
               </Link>

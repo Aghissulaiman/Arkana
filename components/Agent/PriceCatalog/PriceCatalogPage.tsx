@@ -5,13 +5,11 @@ import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import { Toaster, toast } from "sonner";
 import {
   Loader2,
-  Plus,
   Edit2,
   Trash2,
   Save,
   X,
   DollarSign,
-  Package,
   TrendingUp,
   RefreshCw,
   Info,
@@ -21,16 +19,47 @@ import {
 } from "lucide-react";
 
 // Mapping untuk tampilan
-const WASTE_INFO: Record<string, { label: string; emoji: string; color: string }> = {
-  plastic: { label: "Plastik", emoji: "♻️", color: "bg-blue-100 text-blue-700" },
-  paper: { label: "Kertas", emoji: "📄", color: "bg-yellow-100 text-yellow-700" },
-  cardboard: { label: "Kardus", emoji: "📦", color: "bg-amber-100 text-amber-700" },
+const WASTE_INFO: Record<
+  string,
+  { label: string; emoji: string; color: string }
+> = {
+  plastic: {
+    label: "Plastik",
+    emoji: "♻️",
+    color: "bg-blue-100 text-blue-700",
+  },
+  paper: {
+    label: "Kertas",
+    emoji: "📄",
+    color: "bg-yellow-100 text-yellow-700",
+  },
+  cardboard: {
+    label: "Kardus",
+    emoji: "📦",
+    color: "bg-amber-100 text-amber-700",
+  },
   glass: { label: "Kaca", emoji: "🫙", color: "bg-cyan-100 text-cyan-700" },
-  aluminium: { label: "Aluminium", emoji: "🥫", color: "bg-gray-100 text-gray-700" },
+  aluminium: {
+    label: "Aluminium",
+    emoji: "🥫",
+    color: "bg-gray-100 text-gray-700",
+  },
   metal: { label: "Logam", emoji: "⚙️", color: "bg-slate-100 text-slate-700" },
-  electronic: { label: "Elektronik", emoji: "💻", color: "bg-purple-100 text-purple-700" },
-  organik: { label: "Organik", emoji: "🍃", color: "bg-emerald-100 text-emerald-700" },
-  mixed: { label: "Campuran", emoji: "🗑️", color: "bg-orange-100 text-orange-700" },
+  electronic: {
+    label: "Elektronik",
+    emoji: "💻",
+    color: "bg-purple-100 text-purple-700",
+  },
+  organik: {
+    label: "Organik",
+    emoji: "🍃",
+    color: "bg-emerald-100 text-emerald-700",
+  },
+  mixed: {
+    label: "Campuran",
+    emoji: "🗑️",
+    color: "bg-orange-100 text-orange-700",
+  },
 };
 
 type PriceEntry = {
@@ -47,7 +76,9 @@ export default function AgentPriceCatalogPage() {
   const [loading, setLoading] = useState(true);
   const [agentId, setAgentId] = useState<string | null>(null);
   const [agentWasteTypes, setAgentWasteTypes] = useState<string[]>([]);
-  const [globalPrices, setGlobalPrices] = useState<Map<string, number>>(new Map());
+  const [globalPrices, setGlobalPrices] = useState<Map<string, number>>(
+    new Map(),
+  );
   const [prices, setPrices] = useState<PriceEntry[]>([]);
   const [editingType, setEditingType] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
@@ -60,7 +91,9 @@ export default function AgentPriceCatalogPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // Ambil data agent (termasuk waste_categories yang dipilih)
@@ -81,7 +114,9 @@ export default function AgentPriceCatalogPage() {
       setAgentWasteTypes(wasteTypes);
 
       if (wasteTypes.length === 0) {
-        toast.warning("Anda belum memilih jenis sampah yang diterima. Silakan hubungi admin.");
+        toast.warning(
+          "Anda belum memilih jenis sampah yang diterima. Silakan hubungi admin.",
+        );
         setLoading(false);
         return;
       }
@@ -111,13 +146,21 @@ export default function AgentPriceCatalogPage() {
       // Merge: agent prices override global
       const merged: PriceEntry[] = [];
       wasteTypes.forEach((wasteType: string) => {
-        const agentPrice = agentPrices?.find((p: any) => p.waste_type === wasteType);
-        const globalPrice = globalData?.find((p: any) => p.waste_type === wasteType);
-        
+        const agentPrice = agentPrices?.find(
+          (p: any) => p.waste_type === wasteType,
+        );
+        const globalPrice = globalData?.find(
+          (p: any) => p.waste_type === wasteType,
+        );
+
         if (agentPrice) {
           merged.push({ ...agentPrice, is_custom: true });
         } else if (globalPrice) {
-          merged.push({ ...globalPrice, is_custom: false, agent_id: undefined });
+          merged.push({
+            ...globalPrice,
+            is_custom: false,
+            agent_id: undefined,
+          });
         } else {
           // No price at all
           merged.push({
@@ -188,7 +231,12 @@ export default function AgentPriceCatalogPage() {
     const existing = getPriceForType(wasteType);
     if (!existing?.id || !existing?.is_custom) return;
 
-    if (!confirm("Hapus harga khusus agent? Harga akan kembali menggunakan harga global.")) return;
+    if (
+      !confirm(
+        "Hapus harga khusus agent? Harga akan kembali menggunakan harga global.",
+      )
+    )
+      return;
 
     setSaving(true);
     try {
@@ -209,7 +257,7 @@ export default function AgentPriceCatalogPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="flex justify-center items-center min-h-100">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -217,17 +265,20 @@ export default function AgentPriceCatalogPage() {
 
   if (agentWasteTypes.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md mx-auto p-6 text-center">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center">
           <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-10 h-10 text-yellow-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Belum Ada Jenis Sampah</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            Belum Ada Jenis Sampah
+          </h2>
           <p className="text-gray-500 mb-4">
-            Anda belum memilih jenis sampah yang diterima. Silakan hubungi admin untuk mengatur jenis sampah.
+            Anda belum memilih jenis sampah yang diterima. Silakan hubungi admin
+            untuk mengatur jenis sampah.
           </p>
           <button
-            onClick={() => window.location.href = "/agent/dashboard"}
+            onClick={() => (window.location.href = "/agent/dashboard")}
             className="px-6 py-2 bg-primary text-white rounded-lg"
           >
             Kembali ke Dashboard
@@ -241,16 +292,17 @@ export default function AgentPriceCatalogPage() {
   const customPrices = prices.filter((p) => p.is_custom);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Toaster position="top-right" richColors />
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Harga Sampah</h1>
             <p className="text-sm text-gray-500 mt-1">
-              Atur harga pembelian sampah untuk {agentWasteTypes.length} jenis yang Anda terima
+              Atur harga pembelian sampah untuk {agentWasteTypes.length} jenis
+              yang Anda terima
             </p>
           </div>
           <button
@@ -266,11 +318,15 @@ export default function AgentPriceCatalogPage() {
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
           <Info className="w-5 h-5 text-primary mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-medium text-primary">Jenis Sampah yang Anda Terima</p>
+            <p className="text-sm font-medium text-primary">
+              Jenis Sampah yang Anda Terima
+            </p>
             <p className="text-xs text-primary/70 mt-1">
-              Anda menerima <strong>{agentWasteTypes.length} jenis sampah</strong>:{" "}
-              {agentWasteTypes.map(w => WASTE_INFO[w]?.label || w).join(", ")}.
-              Harga yang Anda set akan digunakan saat user jual sampah ke Anda.
+              Anda menerima{" "}
+              <strong>{agentWasteTypes.length} jenis sampah</strong>:{" "}
+              {agentWasteTypes.map((w) => WASTE_INFO[w]?.label || w).join(", ")}
+              . Harga yang Anda set akan digunakan saat user jual sampah ke
+              Anda.
             </p>
           </div>
         </div>
@@ -279,11 +335,15 @@ export default function AgentPriceCatalogPage() {
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white rounded-xl p-4 border border-gray-100 text-center">
             <p className="text-xs text-gray-400 mb-1">Jenis Diterima</p>
-            <p className="text-2xl font-bold text-primary">{agentWasteTypes.length}</p>
+            <p className="text-2xl font-bold text-primary">
+              {agentWasteTypes.length}
+            </p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-100 text-center">
             <p className="text-xs text-gray-400 mb-1">Harga Khusus Agent</p>
-            <p className="text-2xl font-bold text-blue-600">{customPrices.length}</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {customPrices.length}
+            </p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-100 text-center">
             <p className="text-xs text-gray-400 mb-1">Mengikuti Harga Global</p>
@@ -304,7 +364,7 @@ export default function AgentPriceCatalogPage() {
             {prices.map((priceData) => {
               const wasteInfo = WASTE_INFO[priceData.waste_type];
               if (!wasteInfo) return null;
-              
+
               const isEditing = editingType === priceData.waste_type;
               const isCustom = priceData.is_custom;
               const globalPrice = globalPrices.get(priceData.waste_type) || 0;
@@ -313,7 +373,9 @@ export default function AgentPriceCatalogPage() {
                 <div
                   key={priceData.waste_type}
                   className={`bg-white rounded-xl p-4 border transition-all ${
-                    isCustom ? "border-blue-200 bg-blue-50/30" : "border-gray-100"
+                    isCustom
+                      ? "border-blue-200 bg-blue-50/30"
+                      : "border-gray-100"
                   } hover:shadow-sm`}
                 >
                   <div className="flex items-center gap-4">
@@ -325,7 +387,9 @@ export default function AgentPriceCatalogPage() {
 
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-gray-800">{wasteInfo.label}</p>
+                        <p className="font-semibold text-gray-800">
+                          {wasteInfo.label}
+                        </p>
                         {isCustom ? (
                           <span className="inline-flex items-center gap-1 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
                             <User className="w-2.5 h-2.5" />
@@ -338,7 +402,7 @@ export default function AgentPriceCatalogPage() {
                           </span>
                         )}
                       </div>
-                      
+
                       {!isEditing ? (
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <DollarSign className="w-3.5 h-3.5 text-primary" />
@@ -429,8 +493,9 @@ export default function AgentPriceCatalogPage() {
         <div className="bg-gray-100 rounded-xl p-4 text-center">
           <TrendingUp className="w-6 h-6 text-gray-400 mx-auto mb-2" />
           <p className="text-xs text-gray-500">
-            Harga yang kompetitif akan menarik lebih banyak pengguna untuk menjual sampah ke Anda.
-            Anda bisa mengatur harga khusus untuk setiap jenis sampah yang Anda terima.
+            Harga yang kompetitif akan menarik lebih banyak pengguna untuk
+            menjual sampah ke Anda. Anda bisa mengatur harga khusus untuk setiap
+            jenis sampah yang Anda terima.
           </p>
         </div>
       </div>

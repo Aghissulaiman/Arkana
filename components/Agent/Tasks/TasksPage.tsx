@@ -106,8 +106,8 @@ export default function AgentTasksPage() {
         .order("created_at", { ascending: false });
 
       // 2. Fetch Redeem Requests (Product Orders)
-      // Note: We'll include these as "orders" if there's no specific agent_id in redeem_requests, 
-      // but usually agents only manage their own products if they exist. 
+      // Note: We'll include these as "orders" if there's no specific agent_id in redeem_requests,
+      // but usually agents only manage their own products if they exist.
       // For now, we'll fetch all pending redeems as "Product Orders" for the agent.
       const { data: redeemRequests } = await supabase
         .from("redeem_requests")
@@ -116,9 +116,9 @@ export default function AgentTasksPage() {
 
       const userIds = [
         ...new Set([
-          ...(pickupRequests || []).map(r => r.user_id),
-          ...(redeemRequests || []).map(r => r.user_id)
-        ])
+          ...(pickupRequests || []).map((r) => r.user_id),
+          ...(redeemRequests || []).map((r) => r.user_id),
+        ]),
       ];
 
       const { data: profiles } = await supabase
@@ -127,7 +127,9 @@ export default function AgentTasksPage() {
         .in("user_id", userIds);
 
       const profileMap = new Map();
-      profiles?.forEach(p => profileMap.set(p.user_id, { name: p.full_name, phone: p.phone }));
+      profiles?.forEach((p) =>
+        profileMap.set(p.user_id, { name: p.full_name, phone: p.phone }),
+      );
 
       // Format Pickup Tasks
       const formattedPickups: Task[] = (pickupRequests || []).map((req) => {
@@ -137,11 +139,19 @@ export default function AgentTasksPage() {
           id: req.id.slice(0, 8),
           dbId: req.id,
           type: "pickup",
-          customer: profile?.name || req.users?.email?.split("@")[0] || "Pengguna",
+          customer:
+            profile?.name || req.users?.email?.split("@")[0] || "Pengguna",
           phone: profile?.phone || "-",
           address: req.pickup_address,
-          date: date.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }),
-          time: date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+          date: date.toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          }),
+          time: date.toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
           status: req.status,
           weight: `${req.estimated_weight} kg`,
           waste_type: WASTE_LABELS[req.waste_type] || req.waste_type,
@@ -156,11 +166,19 @@ export default function AgentTasksPage() {
           id: req.id.slice(0, 8),
           dbId: req.id,
           type: "order",
-          customer: profile?.name || req.users?.email?.split("@")[0] || "Pengguna",
+          customer:
+            profile?.name || req.users?.email?.split("@")[0] || "Pengguna",
           phone: profile?.phone || "-",
           address: "Ambil di Lokasi Agen / Kirim",
-          date: date.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }),
-          time: date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+          date: date.toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          }),
+          time: date.toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
           status: req.status, // pending, completed, rejected
           weight: req.reward_name, // Gunakan field weight untuk nama produk
           waste_type: "Pesanan Produk",
@@ -323,10 +341,10 @@ export default function AgentTasksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Toaster position="top-right" richColors />
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -464,8 +482,7 @@ export default function AgentTasksPage() {
               {activeTab === "accepted" && "Semua tugas sudah diproses"}
               {activeTab === "completed" &&
                 "Riwayat akan muncul setelah tugas selesai"}
-              {activeTab === "rejected" &&
-                "Semua permintaan berhasil diterima"}
+              {activeTab === "rejected" && "Semua permintaan berhasil diterima"}
             </p>
           </div>
         ) : (
@@ -573,9 +590,7 @@ export default function AgentTasksPage() {
                       </Badge>
                     )}
                     {task.status === "rejected" && (
-                      <Badge className="bg-red-100 text-red-700">
-                        Ditolak
-                      </Badge>
+                      <Badge className="bg-red-100 text-red-700">Ditolak</Badge>
                     )}
                   </div>
                 </CardContent>

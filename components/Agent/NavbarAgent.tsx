@@ -49,12 +49,15 @@ export default function AgentSidebar({
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         // Ambil data dari auth.users untuk avatar Google
         const { data: authUser } = await supabase.auth.getUser();
-        const googleAvatar = authUser?.user?.user_metadata?.avatar_url || 
-                             authUser?.user?.user_metadata?.picture;
+        const googleAvatar =
+          authUser?.user?.user_metadata?.avatar_url ||
+          authUser?.user?.user_metadata?.picture;
         setAvatarUrl(googleAvatar || null);
 
         // Ambil data profile
@@ -63,7 +66,7 @@ export default function AgentSidebar({
           .select("full_name, user_id, avatar_url, email")
           .eq("user_id", session.user.id)
           .single();
-        
+
         // Prioritaskan avatar dari profile, fallback ke Google avatar
         if (profile?.avatar_url) {
           setAvatarUrl(profile.avatar_url);
@@ -123,15 +126,17 @@ export default function AgentSidebar({
       group: "Operasional",
       items: [
         { name: "Permintaan & Pesanan", href: "/agent/tasks", icon: MapPin },
-        { name: "Harga Sampah", href: "/agent/price-catalog", icon: ClipboardList },
+        {
+          name: "Harga Sampah",
+          href: "/agent/price-catalog",
+          icon: ClipboardList,
+        },
         { name: "Riwayat Transaksi", href: "/agent/history", icon: History },
       ],
     },
     {
       group: "Katalog",
-      items: [
-        { name: "Daftar Produk", href: "/agent/reward", icon: Package },
-      ],
+      items: [{ name: "Daftar Produk", href: "/agent/reward", icon: Package }],
     },
   ];
 
@@ -150,7 +155,14 @@ export default function AgentSidebar({
         className={`fixed inset-y-0 left-0 flex flex-col h-full border-r border-slate-200 bg-white z-[80] transition-all duration-300 ease-in-out lg:static
           ${isSidebarOpen ? "translate-x-0 w-[280px]" : "-translate-x-full lg:translate-x-0"}
         `}
-        style={{ width: (typeof window !== 'undefined' && window.innerWidth < 1024) ? (isSidebarOpen ? 280 : 0) : sidebarWidth }}
+        style={{
+          width:
+            typeof window !== "undefined" && window.innerWidth < 1024
+              ? isSidebarOpen
+                ? 280
+                : 0
+              : sidebarWidth,
+        }}
       >
         {/* Brand Section - Logo TrashFlow (SAME AS NAVBAR USER) */}
         <div className="h-20 flex items-center px-6 shrink-0">
@@ -262,10 +274,12 @@ export default function AgentSidebar({
               </div>
             )}
 
-            <button className="p-2 text-slate-400 hover:text-emerald-500 transition-colors relative">
-              <Bell size={25} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-            </button>
+            <Link href="/agent/notifications">
+              <button className="p-2 text-slate-400 hover:text-emerald-500 transition-colors relative">
+                <Bell size={25} />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+              </button>
+            </Link>
 
             <div className="w-px h-6 bg-slate-200 mx-1" />
 
@@ -286,8 +300,9 @@ export default function AgentSidebar({
                     />
                   ) : (
                     <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                      {userData?.full_name?.substring(0, 1) || 
-                       userData?.email?.substring(0, 1) || "A"}
+                      {userData?.full_name?.substring(0, 1) ||
+                        userData?.email?.substring(0, 1) ||
+                        "A"}
                     </div>
                   )}
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
@@ -319,7 +334,9 @@ export default function AgentSidebar({
                     <div className="flex items-center justify-between mt-2 pt-1">
                       <div className="flex items-center gap-1">
                         <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-xs text-slate-500">Pendapatan</span>
+                        <span className="text-xs text-slate-500">
+                          Pendapatan
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Coins className="w-4 h-4 text-amber-500" />
