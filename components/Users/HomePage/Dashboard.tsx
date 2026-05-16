@@ -3,23 +3,16 @@
 import React, { useState, Suspense, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   MapPin,
   Star,
-  ChevronRight,
   Search,
   Loader2,
-  Package,
-  Leaf,
   ArrowRight,
   Navigation,
-  Recycle,
-  Globe,
   Clock,
   Coffee,
   XCircle,
-  Filter,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -45,15 +38,6 @@ type Agent = {
 type PriceCatalog = {
   waste_type: string;
   price_per_kg: number;
-};
-
-type AgentSchedule = {
-  day_of_week: number;
-  is_open: boolean;
-  open_time: string;
-  close_time: string;
-  break_start: string | null;
-  break_end: string | null;
 };
 
 const WASTE_CHIPS = [
@@ -87,72 +71,6 @@ function getRandomRating() {
   return +(4 + Math.random() * 0.9).toFixed(1);
 }
 
-function checkAgentOpenStatus(schedules: AgentSchedule[]): {
-  is_open: boolean;
-  status: "open" | "closed" | "break";
-  message: string;
-} {
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=Minggu, 1=Senin, ...
-  // Konversi ke 0=Senin, 6=Minggu
-  const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-  const todaySchedule = schedules.find((s) => s.day_of_week === dayIndex);
-
-  if (!todaySchedule || !todaySchedule.is_open) {
-    return {
-      is_open: false,
-      status: "closed",
-      message: "Tutup hari ini",
-    };
-  }
-
-  const currentTime = now.getHours() * 60 + now.getMinutes();
-  const openTime = parseTimeToMinutes(todaySchedule.open_time);
-  const closeTime = parseTimeToMinutes(todaySchedule.close_time);
-
-  if (currentTime < openTime) {
-    return {
-      is_open: false,
-      status: "closed",
-      message: `Buka pukul ${todaySchedule.open_time}`,
-    };
-  }
-
-  if (currentTime > closeTime) {
-    return {
-      is_open: false,
-      status: "closed",
-      message: `Tutup pukul ${todaySchedule.close_time}`,
-    };
-  }
-
-  // Cek jam istirahat
-  if (todaySchedule.break_start && todaySchedule.break_end) {
-    const breakStart = parseTimeToMinutes(todaySchedule.break_start);
-    const breakEnd = parseTimeToMinutes(todaySchedule.break_end);
-
-    if (currentTime >= breakStart && currentTime <= breakEnd) {
-      return {
-        is_open: false,
-        status: "break",
-        message: `Istirahat ${todaySchedule.break_start} - ${todaySchedule.break_end}`,
-      };
-    }
-  }
-
-  return {
-    is_open: true,
-    status: "open",
-    message: "Buka",
-  };
-}
-
-function parseTimeToMinutes(timeStr: string): number {
-  const [hours, minutes] = timeStr.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
 function DashboardContent() {
   const searchParams = useSearchParams();
   const supabase = createClientSupabaseClient();
@@ -171,10 +89,8 @@ function DashboardContent() {
       } else {
         params.delete("q");
       }
-      // Mengupdate URL tanpa reload halaman
       window.history.replaceState(null, "", `?${params.toString()}`);
-    }, 300); // Tunggu 300ms setelah user berhenti mengetik
-
+    }, 300);
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
@@ -189,7 +105,6 @@ function DashboardContent() {
           .select("address")
           .eq("user_id", user.id)
           .single();
-
         if (profile?.address) {
           const city =
             profile.address.split(",").slice(-2)[0]?.trim() || "Lokasi Anda";
@@ -204,39 +119,17 @@ function DashboardContent() {
     const fetchData = async () => {
       setLoading(true);
 
-      // Ambil agent
       const { data: agentsData } = await supabase
         .from("agents")
         .select("*")
         .eq("is_active", true);
 
-      // Ambil harga
       const { data: priceData } = await supabase
         .from("price_catalog")
         .select("waste_type, price_per_kg")
-        .is("agent_id", null); // Ambil harga global
+        .is("agent_id", null);
 
-      // Ambil jadwal untuk semua agent
-      const agentIds = agentsData?.map((a) => a.id) || [];
-      const { data: schedulesData } = await supabase
-        .from("agent_schedules")
-        .select("*")
-        .in("agent_id", agentIds);
-
-      // Group schedules by agent_id
-      const schedulesByAgent = new Map<string, AgentSchedule[]>();
-      schedulesData?.forEach((s) => {
-        if (!schedulesByAgent.has(s.agent_id)) {
-          schedulesByAgent.set(s.agent_id, []);
-        }
-        schedulesByAgent.get(s.agent_id)!.push(s);
-      });
-
-      // Proses agent
       const processedAgents = (agentsData || []).map((agent) => {
-        const schedules = schedulesByAgent.get(agent.id) || [];
-        const openStatus = checkAgentOpenStatus(schedules);
-
         return {
           ...agent,
           rating: getRandomRating(),
@@ -245,14 +138,15 @@ function DashboardContent() {
             ? priceData?.find((p) => p.waste_type === agent.waste_categories[0])
                 ?.price_per_kg || 500
             : 500,
-          is_open: openStatus.is_open,
-          open_status: openStatus.status,
-          open_message: openStatus.message,
+          // 🔥 SEMUA AGENT DIANGGAP BUKA
+          is_open: true,
+          open_status: "open" as const,
+          open_message: "Buka",
         };
       });
 
       processedAgents.sort(
-        (a, b) => (a.distance_km || 999) - (b.distance_km || 999),
+        (a, b) => (a.distance_km || 999) - (b.distance_km || 999)
       );
       setAgents(processedAgents);
       setLoading(false);
@@ -271,7 +165,7 @@ function DashboardContent() {
       activeChip === "Semua" ||
       activeChip === "Terdekat" ||
       agent.waste_categories?.some(
-        (w) => w.toLowerCase() === activeChip.toLowerCase(),
+        (w) => w.toLowerCase() === activeChip.toLowerCase()
       );
 
     return matchSearch && matchChip;
@@ -282,7 +176,7 @@ function DashboardContent() {
       <div className="flex flex-col justify-center items-center h-[60vh] gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
         <p className="text-[10px] font-bold tracking-widest text-emerald-800/40 uppercase">
-          Memuat Agen Arkana...
+          Memuat Agen...
         </p>
       </div>
     );
@@ -351,15 +245,10 @@ function DashboardContent() {
             {filteredAgents.map((agent) => (
               <Link
                 key={agent.id}
-                href={agent.is_open ? `/user/request/${agent.id}` : "#"}
-                className={`group ${!agent.is_open ? "cursor-not-allowed opacity-70" : ""}`}
-                onClick={(e) => {
-                  if (!agent.is_open) {
-                    e.preventDefault();
-                  }
-                }}
+                href={`/user/request/${agent.id}`}
+                className="group"
               >
-                <Card className="h-full overflow-hidden rounded-[1.5rem] border border-slate-100 bg-white shadow-sm group-hover:shadow-md group-hover:border-emerald-100 transition-all duration-300 flex flex-col">
+                <Card className="h-full overflow-hidden rounded-[1.5rem] border border-slate-100 bg-white shadow-sm group-hover:shadow-md group-hover:border-emerald-100 transition-all duration-300 flex flex-col cursor-pointer">
                   {/* Gambar Toko / Agent */}
                   <div className="relative h-40 w-full bg-slate-100 overflow-hidden">
                     <img
@@ -368,26 +257,12 @@ function DashboardContent() {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
 
-                    {/* Status Badge (Open/Closed/Break) */}
+                    {/* Status Badge - SELALU BUKA */}
                     <div className="absolute top-3 left-3 flex gap-2">
-                      {agent.open_status === "open" && (
-                        <Badge className="bg-green-500 text-white text-[9px] border-none px-2 py-0.5">
-                          <Clock className="w-2.5 h-2.5 mr-1" />
-                          Buka
-                        </Badge>
-                      )}
-                      {agent.open_status === "closed" && (
-                        <Badge className="bg-red-500 text-white text-[9px] border-none px-2 py-0.5">
-                          <XCircle className="w-2.5 h-2.5 mr-1" />
-                          Tutup
-                        </Badge>
-                      )}
-                      {agent.open_status === "break" && (
-                        <Badge className="bg-amber-500 text-white text-[9px] border-none px-2 py-0.5">
-                          <Coffee className="w-2.5 h-2.5 mr-1" />
-                          Istirahat
-                        </Badge>
-                      )}
+                      <Badge className="bg-green-500 text-white text-[9px] border-none px-2 py-0.5">
+                        <Clock className="w-2.5 h-2.5 mr-1" />
+                        Buka
+                      </Badge>
 
                       {agent.rating && agent.rating >= 4.8 && (
                         <Badge className="bg-amber-400 text-white text-[9px] border-none px-2 py-0.5">
@@ -404,17 +279,6 @@ function DashboardContent() {
                         </p>
                       </div>
                     </div>
-
-                    {/* Overlay if closed */}
-                    {!agent.is_open && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 text-center">
-                          <p className="text-[10px] font-bold text-red-600">
-                            {agent.open_message}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <CardContent className="p-5 flex flex-col flex-grow">
@@ -453,23 +317,10 @@ function DashboardContent() {
                           </span>
                         </p>
                       </div>
-                      <div
-                        className={`p-2 rounded-lg transition-all duration-300 ${
-                          agent.is_open
-                            ? "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white"
-                            : "bg-gray-100 text-gray-400"
-                        }`}
-                      >
+                      <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
                         <ArrowRight className="w-4 h-4" />
                       </div>
                     </div>
-
-                    {/* Info jadwal jika tutup */}
-                    {!agent.is_open && agent.open_message && (
-                      <p className="text-[9px] text-red-500 mt-2 text-center">
-                        {agent.open_message}
-                      </p>
-                    )}
                   </CardContent>
                 </Card>
               </Link>
