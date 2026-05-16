@@ -39,6 +39,7 @@ type Reward = {
   image_url: string;
   is_active: boolean;
   created_at: string;
+  agent_id?: string;
 };
 
 type FormData = {
@@ -68,6 +69,7 @@ export default function AgentRewardsPage() {
   const [filteredRewards, setFilteredRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAgent, setIsAgent] = useState(false);
+  const [agentId, setAgentId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -122,15 +124,30 @@ export default function AgentRewardsPage() {
     }
 
     setIsAgent(true);
-    await fetchRewards();
+
+    const { data: agentData } = await supabase
+      .from("agents")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (agentData) {
+      setAgentId(agentData.id);
+    }
+
+    await fetchRewards(agentData?.id);
   };
 
-  const fetchRewards = async () => {
+  const fetchRewards = async (agentIdParam?: string) => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("rewards")
-      .select("*")
-      .order("created_at", { ascending: false });
+    
+    let query = supabase.from("rewards").select("*");
+    
+    if (agentIdParam) {
+      query = query.eq("agent_id", agentIdParam);
+    }
+    
+    const { data, error } = await query.order("created_at", { ascending: false });
     
     if (error) {
       toast.error("Gagal memuat data reward");
@@ -224,8 +241,6 @@ export default function AgentRewardsPage() {
       }
     }
 
-    let error = null;
-    
     if (editingId) {
       const { error: updateError } = await supabase
         .from("rewards")
@@ -241,8 +256,12 @@ export default function AgentRewardsPage() {
           updated_at: new Date().toISOString(),
         })
         .eq("id", editingId);
-      error = updateError;
-      if (!error) toast.success("Reward berhasil diupdate");
+      
+      if (updateError) {
+        toast.error("Gagal update reward: " + updateError.message);
+      } else {
+        toast.success("Reward berhasil diupdate");
+      }
     } else {
       const { error: insertError } = await supabase.from("rewards").insert({
         name: formData.name,
@@ -253,18 +272,18 @@ export default function AgentRewardsPage() {
         stock: formData.stock,
         image_url: imageUrl,
         is_active: formData.is_active,
+        agent_id: agentId,
       });
-      error = insertError;
-      if (!error) toast.success("Reward berhasil ditambahkan");
+      
+      if (insertError) {
+        toast.error("Gagal tambah reward: " + insertError.message);
+      } else {
+        toast.success("Reward berhasil ditambahkan");
+      }
     }
 
-    if (error) {
-      toast.error("Gagal menyimpan reward: " + error.message);
-    } else {
-      resetForm();
-      await fetchRewards();
-    }
-    
+    resetForm();
+    await fetchRewards(agentId || undefined);
     setUploading(false);
   };
 
@@ -300,7 +319,7 @@ export default function AgentRewardsPage() {
       toast.error("Gagal menghapus reward");
     } else {
       toast.success("Reward berhasil dihapus");
-      await fetchRewards();
+      await fetchRewards(agentId || undefined);
       setSelectedIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(id);
@@ -319,11 +338,10 @@ export default function AgentRewardsPage() {
       toast.error("Gagal mengubah status");
     } else {
       toast.success(`Reward ${!currentStatus ? "diaktifkan" : "dinonaktifkan"}`);
-      await fetchRewards();
+      await fetchRewards(agentId || undefined);
     }
   };
 
-  // Bulk Actions
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
       const newSet = new Set(prev);
@@ -349,7 +367,7 @@ export default function AgentRewardsPage() {
   };
 
   const bulkDelete = async () => {
-    if (!confirm(`⚠️ Peringatan! Anda akan menghapus ${selectedIds.size} reward secara permanen. Tindakan ini tidak dapat dibatalkan. Lanjutkan?`)) return;
+    if (!confirm(`⚠️ Hapus ${selectedIds.size} reward?`)) return;
     
     setBulkLoading(true);
     
@@ -372,7 +390,7 @@ export default function AgentRewardsPage() {
       toast.error("Gagal menghapus reward terpilih");
     } else {
       toast.success(`${selectedIds.size} reward berhasil dihapus`);
-      await fetchRewards();
+      await fetchRewards(agentId || undefined);
       setSelectedIds(new Set());
       setShowBulkActions(false);
     }
@@ -392,7 +410,7 @@ export default function AgentRewardsPage() {
       toast.error("Gagal mengubah status reward");
     } else {
       toast.success(`${selectedIds.size} reward berhasil ${active ? "diaktifkan" : "dinonaktifkan"}`);
-      await fetchRewards();
+      await fetchRewards(agentId || undefined);
       setSelectedIds(new Set());
       setShowBulkActions(false);
     }
@@ -439,7 +457,6 @@ export default function AgentRewardsPage() {
       Nilai_Tunai: r.cash_value ? `Rp${r.cash_value.toLocaleString()}` : "-",
       Stok: r.category === "product" ? r.stock : "∞",
       Status: r.is_active ? "Aktif" : "Nonaktif",
-      Dibuat: new Date(r.created_at).toLocaleDateString("id-ID"),
     }));
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -479,21 +496,20 @@ export default function AgentRewardsPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Kelola Reward</h1>
             <p className="text-sm text-gray-500 mt-1">Tambah/edit produk yang bisa ditukar dengan poin</p>
+            <p className="text-xs text-gray-400 mt-0.5">Menampilkan {rewards.length} produk milik Anda</p>
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => fetchRewards()}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+              onClick={() => fetchRewards(agentId || undefined)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50"
             >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
+              <RefreshCw className="w-4 h-4" /> Refresh
             </button>
             <button
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700"
             >
-              <Plus className="w-4 h-4" />
-              Tambah Reward
+              <Plus className="w-4 h-4" /> Tambah Reward
             </button>
           </div>
         </div>
@@ -537,7 +553,7 @@ export default function AgentRewardsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="px-4 py-2 border border-gray-200 rounded-lg"
             >
               {categories.map(cat => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -547,7 +563,7 @@ export default function AgentRewardsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="px-4 py-2 border border-gray-200 rounded-lg"
             >
               <option value="all">Semua Status</option>
               <option value="active">Aktif</option>
@@ -556,10 +572,9 @@ export default function AgentRewardsPage() {
             
             <button
               onClick={exportData}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
             >
-              <Download className="w-4 h-4" />
-              Export
+              <Download className="w-4 h-4" /> Export
             </button>
           </div>
         </div>
@@ -569,34 +584,17 @@ export default function AgentRewardsPage() {
           <div className="bg-blue-50 rounded-xl p-3 mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <CheckSquare className="w-5 h-5 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700">
-                {selectedIds.size} reward dipilih
-              </span>
+              <span className="text-sm font-medium text-blue-700">{selectedIds.size} reward dipilih</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => bulkToggleActive(true)}
-                disabled={bulkLoading}
-                className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
-              >
-                <Power className="w-3.5 h-3.5" />
-                Aktifkan
+              <button onClick={() => bulkToggleActive(true)} disabled={bulkLoading} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">
+                <Power className="w-3.5 h-3.5" /> Aktifkan
               </button>
-              <button
-                onClick={() => bulkToggleActive(false)}
-                disabled={bulkLoading}
-                className="flex items-center gap-1 px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 disabled:opacity-50"
-              >
-                <EyeOff className="w-3.5 h-3.5" />
-                Nonaktifkan
+              <button onClick={() => bulkToggleActive(false)} disabled={bulkLoading} className="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm">
+                <EyeOff className="w-3.5 h-3.5" /> Nonaktifkan
               </button>
-              <button
-                onClick={bulkDelete}
-                disabled={bulkLoading}
-                className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
-              >
-                <Trash className="w-3.5 h-3.5" />
-                Hapus
+              <button onClick={bulkDelete} disabled={bulkLoading} className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm">
+                <Trash className="w-3.5 h-3.5" /> Hapus
               </button>
             </div>
           </div>
@@ -609,11 +607,7 @@ export default function AgentRewardsPage() {
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
                   <th className="px-4 py-3 w-10">
-                    <button 
-                      onClick={toggleSelectAll} 
-                      className="text-gray-500 hover:text-gray-700 transition-colors"
-                      disabled={filteredRewards.length === 0}
-                    >
+                    <button onClick={toggleSelectAll} disabled={filteredRewards.length === 0}>
                       {selectedIds.size === filteredRewards.length && filteredRewards.length > 0 ? (
                         <CheckSquare className="w-4 h-4" />
                       ) : (
@@ -664,17 +658,13 @@ export default function AgentRewardsPage() {
                               loading="lazy"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                              No img
-                            </div>
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>
                           )}
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-800 text-sm line-clamp-1">{reward.name}</p>
-                        {reward.description && (
-                          <p className="text-xs text-gray-400 line-clamp-1">{reward.description}</p>
-                        )}
+                        {reward.description && <p className="text-xs text-gray-400 line-clamp-1">{reward.description}</p>}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs text-white ${getCategoryColor(reward.category)}`}>
@@ -699,35 +689,16 @@ export default function AgentRewardsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => toggleActive(reward.id, reward.is_active)}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                            reward.is_active
-                              ? "bg-green-100 text-green-700 hover:bg-green-200"
-                              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                          }`}
-                        >
-                          {reward.is_active ? (
-                            <><Eye className="w-3 h-3" /> Aktif</>
-                          ) : (
-                            <><EyeOff className="w-3 h-3" /> Nonaktif</>
-                          )}
+                        <button onClick={() => toggleActive(reward.id, reward.is_active)} className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${reward.is_active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                          {reward.is_active ? <><Eye className="w-3 h-3" /> Aktif</> : <><EyeOff className="w-3 h-3" /> Nonaktif</>}
                         </button>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEdit(reward)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit"
-                          >
+                          <button onClick={() => handleEdit(reward)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Edit">
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDelete(reward.id, reward.image_url)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Hapus"
-                          >
+                          <button onClick={() => handleDelete(reward.id, reward.image_url)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="Hapus">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -749,7 +720,7 @@ export default function AgentRewardsPage() {
               <h2 className="text-xl font-bold text-gray-800">
                 {editingId ? "Edit Reward" : "Tambah Reward Baru"}
               </h2>
-              <button onClick={resetForm} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+              <button onClick={resetForm} className="p-1 hover:bg-gray-100 rounded-lg">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
@@ -763,15 +734,12 @@ export default function AgentRewardsPage() {
                     {imagePreview ? (
                       <Image src={imagePreview} alt="Preview" width={96} height={96} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs text-center p-2">
-                        Preview
-                      </div>
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs text-center p-2">Preview</div>
                     )}
                   </div>
                   <div className="flex-1">
-                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-fit">
-                      <Upload className="w-4 h-4" />
-                      <span className="text-sm">Pilih Gambar</span>
+                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 w-fit">
+                      <Upload className="w-4 h-4" /> <span className="text-sm">Pilih Gambar</span>
                       <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                     </label>
                     <p className="text-xs text-gray-400 mt-2">Format: JPG, PNG. Maks 2MB</p>
@@ -781,101 +749,44 @@ export default function AgentRewardsPage() {
 
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nama Reward <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Contoh: Tumbler Stainless"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nama Reward <span className="text-red-500">*</span></label>
+                <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Contoh: Tumbler Stainless" />
               </div>
 
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Deskripsi produk..."
-                />
+                <textarea rows={3} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Deskripsi produk..." />
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Kategori <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  {categories.filter(c => c.value !== "all").map((cat) => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kategori <span className="text-red-500">*</span></label>
+                <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                  {categories.filter(c => c.value !== "all").map((cat) => (<option key={cat.value} value={cat.value}>{cat.label}</option>))}
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {/* Points Required */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Poin yang Dibutuhkan <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    value={formData.points_required || ""}
-                    onChange={(e) => setFormData({ ...formData, points_required: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="1000"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Poin yang Dibutuhkan <span className="text-red-500">*</span></label>
+                  <input type="number" required min="1" value={formData.points_required || ""} onChange={(e) => setFormData({ ...formData, points_required: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="1000" />
                 </div>
-
-                {/* Cash Value */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nilai Tunai (Rp)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.cash_value || ""}
-                    onChange={(e) => setFormData({ ...formData, cash_value: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="25000"
-                  />
+                  <input type="number" min="0" value={formData.cash_value || ""} onChange={(e) => setFormData({ ...formData, cash_value: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="25000" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {/* Stock */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Stok</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.stock || ""}
-                    onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="50"
-                  />
+                  <input type="number" min="0" value={formData.stock || ""} onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="50" />
                   <p className="text-xs text-gray-400 mt-1">Khusus kategori Produk</p>
                 </div>
-
-                {/* Status */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    value={formData.is_active ? "active" : "inactive"}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.value === "active" })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
+                  <select value={formData.is_active ? "active" : "inactive"} onChange={(e) => setFormData({ ...formData, is_active: e.target.value === "active" })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                     <option value="active">Aktif</option>
                     <option value="inactive">Nonaktif</option>
                   </select>
@@ -883,24 +794,9 @@ export default function AgentRewardsPage() {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={uploading}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {uploading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Menyimpan...
-                    </span>
-                  ) : (editingId ? "Update" : "Simpan")}
+                <button type="button" onClick={resetForm} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                <button type="submit" disabled={uploading} className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingId ? "Update" : "Simpan")}
                 </button>
               </div>
             </form>

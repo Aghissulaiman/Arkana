@@ -60,10 +60,11 @@ export default function AgentSidebar({
         // Ambil data profile
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name, user_id, avatar_url")
+          .select("full_name, user_id, avatar_url, email")
           .eq("user_id", session.user.id)
           .single();
         
+        // Prioritaskan avatar dari profile, fallback ke Google avatar
         if (profile?.avatar_url) {
           setAvatarUrl(profile.avatar_url);
         }
@@ -76,7 +77,10 @@ export default function AgentSidebar({
           .single();
 
         setAgentData(agent);
-        setUserData(profile);
+        setUserData({
+          ...profile,
+          email: session.user.email || profile?.email,
+        });
       }
       setLoading(false);
     };
@@ -148,18 +152,18 @@ export default function AgentSidebar({
         `}
         style={{ width: (typeof window !== 'undefined' && window.innerWidth < 1024) ? (isSidebarOpen ? 280 : 0) : sidebarWidth }}
       >
-        {/* Brand Section */}
+        {/* Brand Section - Logo TrashFlow (SAME AS NAVBAR USER) */}
         <div className="h-20 flex items-center px-6 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center shadow-sm shrink-0">
-              <Leaf className="w-5 h-5 text-white" />
+          <Link href="/agent" className="flex items-center gap-3 group">
+            <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 group-hover:bg-primary/20 shadow-sm shrink-0">
+              <Leaf className="w-5 h-5 text-primary" />
             </div>
             {(!isCollapsed || isSidebarOpen) && (
-              <span className="font-bold text-slate-800 text-lg tracking-tight">
-                Arkana <span className="text-emerald-500">Agent</span>
+              <span className="font-black text-xl tracking-tight text-slate-900">
+                TrashFlow
               </span>
             )}
-          </div>
+          </Link>
         </div>
 
         {/* Navigation */}
@@ -282,7 +286,8 @@ export default function AgentSidebar({
                     />
                   ) : (
                     <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                      {userData?.full_name?.substring(0, 1) || "A"}
+                      {userData?.full_name?.substring(0, 1) || 
+                       userData?.email?.substring(0, 1) || "A"}
                     </div>
                   )}
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
@@ -308,7 +313,7 @@ export default function AgentSidebar({
                       Terautentikasi sebagai
                     </p>
                     <p className="text-sm font-semibold text-slate-700 truncate">
-                      {userData?.users?.email || "Loading..."}
+                      {userData?.email || "Loading..."}
                     </p>
                     {/* Points di dropdown */}
                     <div className="flex items-center justify-between mt-2 pt-1">
