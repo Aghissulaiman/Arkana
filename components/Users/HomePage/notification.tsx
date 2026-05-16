@@ -38,47 +38,49 @@ type Notification = {
 
 const getNotificationStyle = (type: string) => {
   const styles: Record<string, any> = {
-    pickup_accepted: { 
-      icon: Truck, 
-      bg: "bg-blue-500", 
+    pickup_accepted: {
+      icon: Truck,
+      bg: "bg-blue-500",
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
       border: "border-blue-200",
-      dot: "bg-blue-500"
+      dot: "bg-blue-500",
     },
-    pickup_rejected: { 
-      icon: XCircle, 
-      bg: "bg-red-500", 
+    pickup_rejected: {
+      icon: XCircle,
+      bg: "bg-red-500",
       iconBg: "bg-red-100",
       iconColor: "text-red-600",
       border: "border-red-200",
-      dot: "bg-red-500"
+      dot: "bg-red-500",
     },
-    pickup_completed: { 
-      icon: CheckCircle, 
-      bg: "bg-green-500", 
+    pickup_completed: {
+      icon: CheckCircle,
+      bg: "bg-green-500",
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
       border: "border-green-200",
-      dot: "bg-green-500"
+      dot: "bg-green-500",
     },
-    points_earned: { 
-      icon: Star, 
-      bg: "bg-amber-500", 
+    points_earned: {
+      icon: Star,
+      bg: "bg-amber-500",
       iconBg: "bg-amber-100",
       iconColor: "text-amber-600",
       border: "border-amber-200",
-      dot: "bg-amber-500"
+      dot: "bg-amber-500",
     },
   };
-  return styles[type] || { 
-    icon: Bell, 
-    bg: "bg-gray-500", 
-    iconBg: "bg-gray-100",
-    iconColor: "text-gray-600",
-    border: "border-gray-200",
-    dot: "bg-gray-500"
-  };
+  return (
+    styles[type] || {
+      icon: Bell,
+      bg: "bg-gray-500",
+      iconBg: "bg-gray-100",
+      iconColor: "text-gray-600",
+      border: "border-gray-200",
+      dot: "bg-gray-500",
+    }
+  );
 };
 
 const formatRelativeTime = (dateString: string): string => {
@@ -108,7 +110,9 @@ export default function NotificationsPage() {
   // MEMOIZATION: Membungkus fetch dengan useCallback agar dependency array di useEffect aman dari infinite loop
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
     const { data } = await supabase
@@ -138,7 +142,7 @@ export default function NotificationsPage() {
               <p className="text-xs text-gray-500">{newNotif.message}</p>
             </div>
           ));
-        }
+        },
       )
       .subscribe();
 
@@ -149,20 +153,28 @@ export default function NotificationsPage() {
 
   const markAsRead = async (id: string) => {
     await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)),
+    );
   };
 
   const markAllAsRead = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("user_id", user.id)
+      .eq("is_read", false);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     toast.success("Semua notifikasi ditandai sudah dibaca");
   };
 
   const deleteNotification = async (id: string) => {
     await supabase.from("notifications").delete().eq("id", id);
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
     toast.success("Notifikasi dihapus");
   };
 
@@ -174,8 +186,10 @@ export default function NotificationsPage() {
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
-  const filteredNotifications = notifications.filter(n => filter === "all" || !n.is_read);
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const filteredNotifications = notifications.filter(
+    (n) => filter === "all" || !n.is_read,
+  );
 
   if (loading) {
     return (
@@ -186,16 +200,15 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Toaster position="top-right" richColors />
-      
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        
+
+      <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200">
+              <div className="w-10 h-10 bg-linear-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200">
                 <Bell className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-gray-800">Notifikasi</h1>
@@ -206,12 +219,17 @@ export default function NotificationsPage() {
                   {unreadCount} baru
                 </span>
               )}
-              <button onClick={fetchNotifications} className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+              <button
+                onClick={fetchNotifications}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
                 <RefreshCw className="w-4 h-4" />
               </button>
             </div>
           </div>
-          <p className="text-sm text-gray-500">Pemberitahuan terbaru untuk Anda</p>
+          <p className="text-sm text-gray-500">
+            Pemberitahuan terbaru untuk Anda
+          </p>
         </div>
 
         {/* Filter Tabs */}
@@ -250,7 +268,9 @@ export default function NotificationsPage() {
               <Bell className="w-10 h-10 text-gray-300" />
             </div>
             <p className="text-gray-500 font-medium">
-              {filter === "unread" ? "Tidak ada notifikasi belum dibaca" : "Belum ada notifikasi"}
+              {filter === "unread"
+                ? "Tidak ada notifikasi belum dibaca"
+                : "Belum ada notifikasi"}
             </p>
             <p className="text-sm text-gray-400 mt-1">
               Notifikasi akan muncul di sini saat ada aktivitas
@@ -263,33 +283,46 @@ export default function NotificationsPage() {
               const Icon = style.icon;
               const isUnread = !notif.is_read;
               const time = formatRelativeTime(notif.created_at);
-              
+
               return (
                 <div
                   key={notif.id}
                   className={`group bg-white rounded-xl transition-all duration-200 hover:shadow-md ${
-                    isUnread ? "border-l-4 border-l-green-500" : "border border-gray-100"
+                    isUnread
+                      ? "border-l-4 border-l-green-500"
+                      : "border border-gray-100"
                   }`}
                 >
                   <div className="p-4 flex items-start gap-3">
                     {/* Icon */}
-                    <div className={`w-10 h-10 rounded-xl ${style.iconBg} flex items-center justify-center shrink-0`}>
+                    <div
+                      className={`w-10 h-10 rounded-xl ${style.iconBg} flex items-center justify-center shrink-0`}
+                    >
                       <Icon className={`w-5 h-5 ${style.iconColor}`} />
                     </div>
 
                     {/* Content */}
                     {/* FIX: onClick diganti ke handleNotificationClick agar status 'is_read' terupdate otomatis saat buka modal */}
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleNotificationClick(notif)}>
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => handleNotificationClick(notif)}
+                    >
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className={`text-sm font-semibold ${isUnread ? "text-gray-900" : "text-gray-600"}`}>
+                        <h3
+                          className={`text-sm font-semibold ${isUnread ? "text-gray-900" : "text-gray-600"}`}
+                        >
                           {notif.title}
                         </h3>
                         {isUnread && (
                           <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                         )}
-                        <span className="text-xs text-gray-400 ml-auto">{time}</span>
+                        <span className="text-xs text-gray-400 ml-auto">
+                          {time}
+                        </span>
                       </div>
-                      <p className="text-xs text-gray-500 line-clamp-2">{notif.message}</p>
+                      <p className="text-xs text-gray-500 line-clamp-2">
+                        {notif.message}
+                      </p>
                     </div>
 
                     {/* Actions */}
@@ -334,12 +367,23 @@ export default function NotificationsPage() {
 
       {/* Detail Modal */}
       {selectedNotif && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedNotif(null)}>
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedNotif(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-md w-full max-h-[85vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
             <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-gray-800">Detail Notifikasi</h2>
-              <button onClick={() => setSelectedNotif(null)} className="p-1 rounded-lg hover:bg-gray-100">
+              <h2 className="text-lg font-bold text-gray-800">
+                Detail Notifikasi
+              </h2>
+              <button
+                onClick={() => setSelectedNotif(null)}
+                className="p-1 rounded-lg hover:bg-gray-100"
+              >
                 <X className="w-5 h-5 text-gray-400" />
               </button>
             </div>
@@ -347,37 +391,60 @@ export default function NotificationsPage() {
             {/* Content */}
             <div className="p-5 overflow-y-auto max-h-[60vh]">
               <div className="flex items-start gap-4 mb-4">
-                <div className={`w-12 h-12 rounded-xl ${getNotificationStyle(selectedNotif.type).iconBg} flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 rounded-xl ${getNotificationStyle(selectedNotif.type).iconBg} flex items-center justify-center`}
+                >
                   {(() => {
                     const Icon = getNotificationStyle(selectedNotif.type).icon;
-                    const color = getNotificationStyle(selectedNotif.type).iconColor;
+                    const color = getNotificationStyle(
+                      selectedNotif.type,
+                    ).iconColor;
                     return <Icon className={`w-6 h-6 ${color}`} />;
                   })()}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-800">{selectedNotif.title}</h3>
+                  <h3 className="font-bold text-gray-800">
+                    {selectedNotif.title}
+                  </h3>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {new Date(selectedNotif.created_at).toLocaleString("id-ID", {
-                      day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
-                    })}
+                    {new Date(selectedNotif.created_at).toLocaleString(
+                      "id-ID",
+                      {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )}
                   </p>
                 </div>
               </div>
 
               <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <p className="text-sm text-gray-700 leading-relaxed">{selectedNotif.message}</p>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {selectedNotif.message}
+                </p>
               </div>
 
               {selectedNotif.metadata && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-500">Informasi Tambahan</p>
+                  <p className="text-xs font-semibold text-gray-500">
+                    Informasi Tambahan
+                  </p>
                   <div className="bg-gray-50 rounded-xl p-3 space-y-2 text-sm">
-                    {Object.entries(selectedNotif.metadata).map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span className="text-gray-500 capitalize">{key.replace(/_/g, " ")}</span>
-                        <span className="font-medium text-gray-700">{String(value)}</span>
-                      </div>
-                    ))}
+                    {Object.entries(selectedNotif.metadata).map(
+                      ([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span className="text-gray-500 capitalize">
+                            {key.replace(/_/g, " ")}
+                          </span>
+                          <span className="font-medium text-gray-700">
+                            {String(value)}
+                          </span>
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
               )}

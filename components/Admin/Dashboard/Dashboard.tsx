@@ -166,9 +166,23 @@ export default function AdminDashboard() {
 
       // 2. Ambil recent activities (Pickup, Redeem, Topup)
       const [pickupRes, redeemRes, topupRes] = await Promise.all([
-        supabase.from("pickup_requests").select(`*, users!pickup_requests_user_id_fkey (email), agents!pickup_requests_agent_id_fkey (agent_name)`).order("created_at", { ascending: false }).limit(10),
-        supabase.from("redeem_requests").select(`*, users!redeem_requests_user_id_fkey (email)`).order("created_at", { ascending: false }).limit(5),
-        supabase.from("topup_requests").select(`*, users!topup_requests_user_id_fkey (email)`).order("created_at", { ascending: false }).limit(5)
+        supabase
+          .from("pickup_requests")
+          .select(
+            `*, users!pickup_requests_user_id_fkey (email), agents!pickup_requests_agent_id_fkey (agent_name)`,
+          )
+          .order("created_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("redeem_requests")
+          .select(`*, users!redeem_requests_user_id_fkey (email)`)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("topup_requests")
+          .select(`*, users!topup_requests_user_id_fkey (email)`)
+          .order("created_at", { ascending: false })
+          .limit(5),
       ]);
 
       const mergedActivities = [
@@ -204,8 +218,13 @@ export default function AdminDashboard() {
           status: t.status,
           type: "topup",
           created_at: t.created_at,
-        }))
-      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 15);
+        })),
+      ]
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        )
+        .slice(0, 15);
 
       setPickups(mergedActivities);
 
@@ -231,10 +250,13 @@ export default function AdminDashboard() {
           };
         }),
       );
-      
+
       // Sort manually by pickups, then rating
       const sortedAgents = topAgentsWithStats
-        .sort((a, b) => b.total_pickups - a.total_pickups || b.avg_rating - a.avg_rating)
+        .sort(
+          (a, b) =>
+            b.total_pickups - a.total_pickups || b.avg_rating - a.avg_rating,
+        )
         .slice(0, 3);
 
       setTopAgents(sortedAgents);
@@ -244,15 +266,22 @@ export default function AdminDashboard() {
         .from("agents")
         .select("*", { count: "exact", head: true });
 
-      const [totalPickupRes, totalRedeemRes, totalTopupRes] = await Promise.all([
-        supabase.from("pickup_requests").select("status, total_points"),
-        supabase.from("redeem_requests").select("points_spent"),
-        supabase.from("topup_requests").select("amount")
-      ]);
+      const [totalPickupRes, totalRedeemRes, totalTopupRes] = await Promise.all(
+        [
+          supabase.from("pickup_requests").select("status, total_points"),
+          supabase.from("redeem_requests").select("points_spent"),
+          supabase.from("topup_requests").select("amount"),
+        ],
+      );
 
       const totalPickups = totalPickupRes.data?.length || 0;
-      const totalPointsGiven = totalPickupRes.data?.reduce((sum, p) => sum + (p.total_points || 0), 0) || 0;
-      const pendingPickups = totalPickupRes.data?.filter((p) => p.status === "pending").length || 0;
+      const totalPointsGiven =
+        totalPickupRes.data?.reduce(
+          (sum, p) => sum + (p.total_points || 0),
+          0,
+        ) || 0;
+      const pendingPickups =
+        totalPickupRes.data?.filter((p) => p.status === "pending").length || 0;
 
       setStats({
         totalAgents: totalAgents || 0,
@@ -306,7 +335,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl space-y-3 mx-auto  min-h-screen font-sans">
+    <div className="max-w-6xl space-y-6 mx-auto min-h-screen font-sans">
       <Toaster position="top-right" richColors />
 
       {/* HEADER */}

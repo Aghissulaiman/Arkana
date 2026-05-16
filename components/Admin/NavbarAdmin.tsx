@@ -57,8 +57,9 @@ export default function AdminSidebar({
       if (session) {
         // Ambil data dari auth.users untuk avatar Google
         const { data: authUser } = await supabase.auth.getUser();
-        const googleAvatar = authUser?.user?.user_metadata?.avatar_url || 
-                             authUser?.user?.user_metadata?.picture;
+        const googleAvatar =
+          authUser?.user?.user_metadata?.avatar_url ||
+          authUser?.user?.user_metadata?.picture;
         setAvatarUrl(googleAvatar || null);
 
         const { data: profile } = await supabase
@@ -66,19 +67,19 @@ export default function AdminSidebar({
           .select("full_name, user_id, avatar_url, email")
           .eq("user_id", session.user.id)
           .single();
-        
+
         // Prioritaskan avatar dari profile, fallback ke Google avatar
         if (profile?.avatar_url) {
           setAvatarUrl(profile.avatar_url);
         }
-        
+
         // Ambil data user dengan email dari auth
         const { data: userData } = await supabase
           .from("users")
           .select("email, role")
           .eq("id", session.user.id)
           .single();
-        
+
         setUserData({
           ...profile,
           email: session.user.email || userData?.email || profile?.email,
@@ -148,7 +149,14 @@ export default function AdminSidebar({
         className={`fixed inset-y-0 left-0 flex flex-col h-full border-r border-slate-200 bg-white z-[80] transition-all duration-300 ease-in-out lg:static
           ${isSidebarOpen ? "translate-x-0 w-[280px]" : "-translate-x-full lg:translate-x-0"}
         `}
-        style={{ width: (typeof window !== 'undefined' && window.innerWidth < 1024) ? (isSidebarOpen ? 280 : 0) : sidebarWidth }}
+        style={{
+          width:
+            typeof window !== "undefined" && window.innerWidth < 1024
+              ? isSidebarOpen
+                ? 280
+                : 0
+              : sidebarWidth,
+        }}
       >
         {/* Brand Section - Logo TrashFlow (SAME AS NAVBAR USER) */}
         <div className="h-20 flex items-center px-6 shrink-0">
@@ -234,15 +242,6 @@ export default function AdminSidebar({
             >
               <Menu size={22} />
             </button>
-
-            <div className="hidden md:flex items-center gap-2 bg-slate-100/50 px-3 py-1.5 rounded-full border border-slate-200/50 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-              <Search size={15} className="text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="bg-transparent border-none text-xs focus:outline-none w-xs font-medium"
-              />
-            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -272,8 +271,9 @@ export default function AdminSidebar({
                     />
                   ) : (
                     <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                      {userData?.full_name?.substring(0, 1) || 
-                       userData?.email?.substring(0, 1) || "A"}
+                      {userData?.full_name?.substring(0, 1) ||
+                        userData?.email?.substring(0, 1) ||
+                        "A"}
                     </div>
                   )}
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
