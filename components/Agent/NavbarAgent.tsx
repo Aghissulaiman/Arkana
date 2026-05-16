@@ -25,6 +25,7 @@ import {
   Coins,
   Wallet,
   TrendingUp,
+  PlusCircle, // Tambah icon untuk topup
 } from "lucide-react";
 
 export default function AgentSidebar({
@@ -347,6 +348,15 @@ export default function AgentSidebar({
                       </div>
                     </div>
                   </div>
+                  
+                  {/* 🔥 TAMBAH MENU TOP UP DI SINI 🔥 */}
+                  <Link href="/agent/topup">
+                    <button className="flex items-center gap-3 w-full px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+                      <PlusCircle size={16} className="text-emerald-500" /> 
+                      Top Up Balance
+                    </button>
+                  </Link>
+                  
                   <Link href="/agent/profile">
                     <button className="flex items-center gap-3 w-full px-3 py-2 text-[13px] text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
                       <User size={16} /> Profil Saya
