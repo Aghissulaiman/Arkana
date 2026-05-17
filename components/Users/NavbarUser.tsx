@@ -85,7 +85,7 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
     { name: "Profil Saya", href: "/user/profile", icon: User },
     { name: "Riwayat", href: "/user/history", icon: History },
     { name: "Top Up Poin", href: "/user/topup", icon: Wallet },
-    { name: "Tukar Poin", href: "/user/rewards", icon: Gift },
+    { name: "Tukar Poin", href: "/user/home", icon: Gift },
     { name: "Pengaturan", href: "/user/settings", icon: Settings },
     { name: "Bantuan", href: "/user/help", icon: HelpCircle },
   ];
