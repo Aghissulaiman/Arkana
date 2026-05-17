@@ -57,7 +57,7 @@ export default function MitraSection() {
       y: 0,
       opacity: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 12,
         stiffness: 100,
       },
@@ -72,7 +72,7 @@ export default function MitraSection() {
       scale: 1,
       transition: {
         delay: index * 0.1,
-        type: "spring",
+        type: "spring" as const,
         damping: 15,
         stiffness: 80,
       },
@@ -80,7 +80,7 @@ export default function MitraSection() {
     hover: {
       y: -5,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
         damping: 20,
       },
@@ -129,7 +129,7 @@ export default function MitraSection() {
           <motion.div variants={itemVariants} className="lg:col-span-5">
             <motion.div
               whileHover={{ y: -5 }}
-              transition={{ type: "spring", stiffness: 300 }}
+              transition={{ type: "spring" as const, stiffness: 300 }}
               className="rounded-2xl sm:rounded-3xl border border-border bg-card p-5 sm:p-6 md:p-8 h-full flex flex-col justify-between"
             >
               <div>
