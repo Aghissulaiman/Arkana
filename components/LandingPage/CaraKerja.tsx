@@ -31,7 +31,7 @@ export default function CaraKerjaSection() {
       title: "Dijemput Agen",
       desc: "Sampah yang telah dijadwalkan akan langsung dijemput oleh agen TrashFlow langsung dari lokasi Anda.",
       image:
-        "https://images.unsplash.com/photo-1774977867718-e926bedc8740?q=80&w=800&auto=format&fit=crop", // Ilustrasi kurir/logistik penjemputan lokal yang bersih
+        "https://images.unsplash.com/photo-1774977867718-e926bedc8740?q=80&w=800&auto=format&fit=crop",
     },
     {
       icon: Recycle,
@@ -45,7 +45,7 @@ export default function CaraKerjaSection() {
       title: "Nilai Masuk ke Akun",
       desc: "Hasil transaksi tercatat transparan dan saldo pengguna bertambah sesuai nilai sampah.",
       image:
-        "https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?q=80&w=800&auto=format&fit=crop", // Tautan Unsplash koin digital & pertumbuhan dana yang Anda berikan
+        "https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?q=80&w=800&auto=format&fit=crop",
     },
   ];
 
@@ -66,7 +66,7 @@ export default function CaraKerjaSection() {
       y: 0,
       opacity: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 12,
         stiffness: 100,
       },
@@ -79,7 +79,7 @@ export default function CaraKerjaSection() {
       x: 0,
       opacity: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 15,
         stiffness: 80,
       },
@@ -88,7 +88,7 @@ export default function CaraKerjaSection() {
       y: -5,
       boxShadow: "0 20px 25px -12px rgba(0, 0, 0, 0.1)",
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
         damping: 20,
       },
@@ -102,7 +102,7 @@ export default function CaraKerjaSection() {
       opacity: 1,
       scale: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 15,
         stiffness: 80,
         delay: 0.1,
@@ -111,7 +111,7 @@ export default function CaraKerjaSection() {
     hover: {
       scale: 1.02,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
       },
     },
@@ -289,7 +289,7 @@ export default function CaraKerjaSection() {
                   >
                     <motion.div
                       whileHover={{ y: -3 }}
-                      transition={{ type: "spring", stiffness: 300 }}
+                      transition={{ type: "spring" as const, stiffness: 300 }}
                     >
                       <Card className="p-4 sm:p-5 rounded-2xl border border-border bg-card">
                         <div className="mb-3 sm:mb-4 overflow-hidden rounded-xl">
