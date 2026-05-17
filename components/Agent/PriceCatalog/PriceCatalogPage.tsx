@@ -217,6 +217,9 @@ export default function AgentPriceCatalogPage() {
     );
   }
 
+  const activePrices = prices.filter((p) => p.price_per_kg > 0);
+  const customPrices = prices.filter((p) => p.is_custom);
+
   return (
     <div className="min-h-screen">
       <Toaster position="top-right" richColors />
@@ -248,7 +251,7 @@ export default function AgentPriceCatalogPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl p-4 border border-gray-100 text-center">
             <p className="text-xs text-gray-400 mb-1">Jenis Diterima</p>
             <p className="text-2xl font-bold text-primary">
