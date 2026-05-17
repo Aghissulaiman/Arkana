@@ -19,22 +19,33 @@ export default function AgentMap() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const mapElRef = useRef<HTMLDivElement>(null);
   const supabase = createClientSupabaseClient();
 
   // Hitung jarak
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number => {
     const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
 
@@ -56,7 +67,7 @@ export default function AgentMap() {
         (error) => {
           console.error("Location error:", error);
           setUserLocation({ lat: -6.3948, lng: 106.8229 }); // Default Depok
-        }
+        },
       );
     } else {
       setUserLocation({ lat: -6.3948, lng: 106.8229 });
@@ -67,12 +78,12 @@ export default function AgentMap() {
   useEffect(() => {
     const fetchAgents = async () => {
       if (!userLocation) return;
-      
+
       setLoading(true);
       setError(null);
-      
+
       console.log("Fetching agents...");
-      
+
       // Query sederhana dulu untuk test
       const { data: agentsData, error } = await supabase
         .from("agents")
@@ -90,7 +101,9 @@ export default function AgentMap() {
 
       if (!agentsData || agentsData.length === 0) {
         console.log("No agents found");
-        setError("Belum ada agent terdaftar. Silahkan daftar sebagai agent terlebih dahulu.");
+        setError(
+          "Belum ada agent terdaftar. Silahkan daftar sebagai agent terlebih dahulu.",
+        );
         setLoading(false);
         return;
       }
@@ -103,9 +116,9 @@ export default function AgentMap() {
           userLocation.lat,
           userLocation.lng,
           agent.lat || -6.3948,
-          agent.lng || 106.8229
+          agent.lng || 106.8229,
         );
-        
+
         return {
           id: agent.id,
           name: agent.agent_name || "Agent",
@@ -119,8 +132,10 @@ export default function AgentMap() {
       });
 
       // Urutkan berdasarkan jarak terdekat
-      agentsList.sort((a: any, b: any) => (a.rawDistance || 999) - (b.rawDistance || 999));
-      
+      agentsList.sort(
+        (a: any, b: any) => (a.rawDistance || 999) - (b.rawDistance || 999),
+      );
+
       setAgents(agentsList);
       setLoading(false);
     };
@@ -138,14 +153,14 @@ export default function AgentMap() {
 
     const initMap = () => {
       const L = (window as any).L;
-      
+
       const centerLat = userLocation?.lat || agents[0]?.lat || -6.3948;
       const centerLng = userLocation?.lng || agents[0]?.lng || 106.8229;
 
       const map = L.map(mapElRef.current).setView([centerLat, centerLng], 13);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '© OpenStreetMap',
+        attribution: "© OpenStreetMap",
         maxZoom: 19,
       }).addTo(map);
 
@@ -156,11 +171,13 @@ export default function AgentMap() {
           html: `<div style="width:12px;height:12px;background:#16a34a;border:2px solid #fff;border-radius:50%;cursor:pointer;"></div>`,
           iconAnchor: [6, 6],
         });
-        
+
         const marker = L.marker([agent.lat, agent.lng], { icon })
           .addTo(map)
-          .bindPopup(`<b>${agent.name}</b><br/>${agent.address}<br/><small>${agent.distance}</small>`);
-        
+          .bindPopup(
+            `<b>${agent.name}</b><br/>${agent.address}<br/><small>${agent.distance}</small>`,
+          );
+
         marker.on("click", () => setSelected(agent));
         markersRef.current.push(marker);
       });
@@ -221,7 +238,7 @@ export default function AgentMap() {
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
             <MapPin className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
             <p className="text-gray-600">{error}</p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg text-sm"
             >
@@ -240,7 +257,9 @@ export default function AgentMap() {
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
             <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
             <p className="text-gray-500">Belum ada agen terdaftar di sistem.</p>
-            <p className="text-sm text-gray-400 mt-1">Silahkan daftar sebagai agent terlebih dahulu.</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Silahkan daftar sebagai agent terlebih dahulu.
+            </p>
           </div>
         </div>
       </section>
@@ -261,7 +280,10 @@ export default function AgentMap() {
 
         <div className="grid lg:grid-cols-12 gap-6 items-start">
           {/* List Agen */}
-          <div className="lg:col-span-4 flex flex-col gap-3 overflow-y-auto" style={{ maxHeight: "480px" }}>
+          <div
+            className="lg:col-span-4 flex flex-col gap-3 overflow-y-auto"
+            style={{ maxHeight: "480px" }}
+          >
             {agents.map((agent) => (
               <button
                 key={agent.id}
@@ -273,15 +295,23 @@ export default function AgentMap() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                    selected?.id === agent.id ? "bg-green-600 text-white" : "bg-green-100 text-green-600"
-                  }`}>
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                      selected?.id === agent.id
+                        ? "bg-green-600 text-white"
+                        : "bg-green-100 text-green-600"
+                    }`}
+                  >
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-gray-900 truncate">{agent.name}</p>
+                    <p className="text-sm font-bold text-gray-900 truncate">
+                      {agent.name}
+                    </p>
                     <div className="flex items-center justify-between mt-0.5">
-                      <p className="text-[11px] text-gray-500 truncate">{agent.address.split(",")[0]}</p>
+                      <p className="text-[11px] text-gray-500 truncate">
+                        {agent.address.split(",")[0]}
+                      </p>
                       <span className="text-[10px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded ml-2 shrink-0">
                         {agent.distance}
                       </span>
@@ -293,15 +323,19 @@ export default function AgentMap() {
           </div>
 
           {/* Peta */}
-          <div className="lg:col-span-8 rounded-2xl border border-gray-100 overflow-hidden shadow-sm bg-white">
+          <div className="lg:col-span-8 z-10 rounded-2xl border border-gray-100 overflow-hidden shadow-sm bg-white">
             <div ref={mapElRef} className="h-[400px] w-full bg-gray-50" />
 
             <div className="px-5 py-4 flex items-center justify-between gap-4 bg-white">
               {selected ? (
                 <>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">{selected.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{selected.address}</p>
+                    <p className="text-sm font-bold text-gray-900 truncate">
+                      {selected.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {selected.address}
+                    </p>
                   </div>
                   <a
                     href={`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`}
@@ -314,7 +348,9 @@ export default function AgentMap() {
                   </a>
                 </>
               ) : (
-                <p className="text-xs text-gray-400 italic">Pilih agen dari daftar...</p>
+                <p className="text-xs text-gray-400 italic">
+                  Pilih agen dari daftar...
+                </p>
               )}
             </div>
           </div>
