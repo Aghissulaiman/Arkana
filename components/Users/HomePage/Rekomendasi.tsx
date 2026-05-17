@@ -18,6 +18,7 @@ import {
   ChevronRight,
   X,
   Zap,
+  Package,
 } from "lucide-react";
 
 type Reward = {
