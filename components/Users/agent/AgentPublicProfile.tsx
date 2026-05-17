@@ -29,6 +29,12 @@ const WASTE_LABELS: Record<string, string> = {
   mixed: "Campuran",
 };
 
+type PriceItem = {
+  waste_type: string;
+  price_per_kg: number;
+  agent_id?: string;
+};
+
 export default function AgentPublicProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -42,7 +48,7 @@ export default function AgentPublicProfilePage() {
     totalKg: 0,
     responseTime: "< 1 jam",
   });
-  const [priceCatalog, setPriceCatalog] = useState<any[]>([]);
+  const [priceCatalog, setPriceCatalog] = useState<PriceItem[]>([]);
 
   const agentId = params?.agentId as string;
 
@@ -114,9 +120,9 @@ export default function AgentPublicProfilePage() {
 
       if (prices) {
         // Deduplicate - prefer agent-specific prices
-        const merged: Record<string, any> = {};
-        prices.forEach((p) => {
-          if (!merged[p.waste_type] || p.agent_id) {
+        const merged: Record<string, PriceItem> = {};
+        prices.forEach((p: PriceItem) => {
+          if (!merged[p.waste_type]) {
             merged[p.waste_type] = p;
           }
         });
@@ -154,7 +160,7 @@ export default function AgentPublicProfilePage() {
   const displayName =
     agent.agent_name || agentProfile?.full_name || "Agen";
   const phone = agentProfile?.phone || agent.phone || "-";
-  const area = agent.area_operational || agentProfile?.address || "Area tidak diset";
+  const area = agent.service_area || agentProfile?.address || "Area tidak diset";
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
@@ -244,19 +250,6 @@ export default function AgentPublicProfilePage() {
               <p className="text-sm font-semibold text-gray-800">{area}</p>
             </div>
           </div>
-          {agent.vehicle_plate && (
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center">
-                <Truck className="w-4 h-4 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">Plat Kendaraan</p>
-                <p className="text-sm font-semibold text-gray-800">
-                  {agent.vehicle_plate}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

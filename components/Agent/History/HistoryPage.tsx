@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,6 +21,7 @@ import { createClientSupabaseClient } from "@/lib/supabaseClient";
 
 type HistoryItem = {
   id: string;
+  actual_id: string;
   customer: string;
   address: string;
   date: string;
@@ -66,7 +67,6 @@ export default function AgentHistoryPage() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Ambil data agent
       const { data: agentData } = await supabase
         .from("agents")
         .select("id")
@@ -78,7 +78,6 @@ export default function AgentHistoryPage() {
         return;
       }
 
-      // Ambil semua pickup requests yang sudah completed
       const { data: requests, error } = await supabase
         .from("pickup_requests")
         .select(
@@ -92,7 +91,7 @@ export default function AgentHistoryPage() {
           updated_at,
           status,
           user_id
-        `,
+        `
         )
         .eq("agent_id", agentData.id)
         .eq("status", "completed")
@@ -104,7 +103,6 @@ export default function AgentHistoryPage() {
       }
 
       if (requests && requests.length > 0) {
-        // Ambil nama customer
         const userIds = [...new Set(requests.map((r) => r.user_id))];
         const { data: profiles } = await supabase
           .from("profiles")
@@ -126,6 +124,7 @@ export default function AgentHistoryPage() {
           totalPoints += points;
 
           return {
+            actual_id: req.id,
             id: req.id.slice(0, 8),
             customer: profileMap.get(req.user_id) || "Pengguna",
             address: req.pickup_address,
@@ -167,7 +166,7 @@ export default function AgentHistoryPage() {
         (item) =>
           item.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.address.toLowerCase().includes(searchQuery.toLowerCase()),
+          item.address.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -185,7 +184,6 @@ export default function AgentHistoryPage() {
   return (
     <div className="min-h-screen ">
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -206,7 +204,6 @@ export default function AgentHistoryPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
@@ -249,7 +246,6 @@ export default function AgentHistoryPage() {
           </div>
         </div>
 
-        {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -261,7 +257,6 @@ export default function AgentHistoryPage() {
           />
         </div>
 
-        {/* History List */}
         {filteredHistory.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -277,75 +272,67 @@ export default function AgentHistoryPage() {
         ) : (
           <div className="space-y-3">
             {filteredHistory.map((item) => (
-              <Card
-                key={item.id}
-                className="overflow-hidden border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
-              >
-                <CardContent className="p-5">
-                  <div className="flex flex-col md:flex-row gap-4 md:items-center">
-                    {/* Icon */}
-                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-6 h-6 text-green-600" />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-gray-800">
-                          {item.customer}
-                        </h3>
-                        <Badge className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5">
-                          Selesai
-                        </Badge>
-                        <span className="text-xs text-gray-400 font-mono">
-                          #{item.id}
-                        </span>
+              <Link href={`/agent/history/${item.actual_id}`} key={item.actual_id}>
+                <Card className="overflow-hidden border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
+                  <CardContent className="p-5">
+                    <div className="flex flex-col md:flex-row gap-4 md:items-center">
+                      <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-6 h-6 text-green-600" />
                       </div>
 
-                      <div className="flex items-start gap-1 text-sm text-gray-500">
-                        <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-                        <span className="line-clamp-1">{item.address}</span>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {item.date}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {item.time}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Weight className="w-3.5 h-3.5 text-green-600" />
-                          <span className="font-medium text-gray-700">
-                            {item.weight}
+                      <div className="flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold text-gray-800">
+                            {item.customer}
+                          </h3>
+                          <Badge className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5">
+                            Selesai
+                          </Badge>
+                          <span className="text-xs text-gray-400 font-mono">
+                            #{item.id}
                           </span>
-                        </span>
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] bg-gray-50"
-                        >
-                          {item.waste_type}
-                        </Badge>
+                        </div>
+
+                        <div className="flex items-start gap-1 text-sm text-gray-500">
+                          <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                          <span className="line-clamp-1">{item.address}</span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {item.date}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {item.time}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Weight className="w-3.5 h-3.5 text-green-600" />
+                            <span className="font-medium text-gray-700">
+                              {item.weight}
+                            </span>
+                          </span>
+                          <Badge variant="outline" className="text-[10px] bg-gray-50">
+                            {item.waste_type}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <p className="text-xs text-gray-400">Poin diberikan</p>
+                        <p className="text-xl font-bold text-green-600">
+                          +{item.points.toLocaleString()}
+                        </p>
                       </div>
                     </div>
-
-                    {/* Points */}
-                    <div className="text-right shrink-0">
-                      <p className="text-xs text-gray-400">Poin diberikan</p>
-                      <p className="text-xl font-bold text-green-600">
-                        +{item.points.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
 
-        {/* Footer Note */}
         {history.length > 0 && (
           <div className="text-center text-xs text-gray-400 pt-4 border-t border-gray-100">
             Menampilkan {filteredHistory.length} dari {history.length} riwayat

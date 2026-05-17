@@ -57,7 +57,7 @@ export default function Hero() {
       y: 0,
       opacity: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 14,
         stiffness: 100,
       },
@@ -208,7 +208,7 @@ export default function Hero() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                transition={{ type: "spring" as const, stiffness: 400, damping: 17 }}
               >
                 <Button
                   size="lg"
@@ -234,7 +234,7 @@ export default function Hero() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                transition={{ type: "spring" as const, stiffness: 400, damping: 17 }}
               >
                 <Button
                   size="lg"

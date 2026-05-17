@@ -106,7 +106,7 @@ export default function KontakSection() {
       y: 0,
       opacity: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 12,
         stiffness: 100,
       },
@@ -120,7 +120,7 @@ export default function KontakSection() {
       opacity: 1,
       transition: {
         delay: index * 0.1,
-        type: "spring",
+        type: "spring" as const,
         damping: 15,
         stiffness: 80,
       },
@@ -128,7 +128,7 @@ export default function KontakSection() {
     hover: {
       x: 5,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
         damping: 20,
       },
@@ -141,7 +141,7 @@ export default function KontakSection() {
       x: 0,
       opacity: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         damping: 15,
         stiffness: 80,
         delay: 0.3,
@@ -224,7 +224,7 @@ export default function KontakSection() {
                   key={idx}
                   initial={{ scale: 0 }}
                   animate={isInView ? { scale: 1 } : {}}
-                  transition={{ delay: 0.8 + idx * 0.1, type: "spring" }}
+                  transition={{ delay: 0.8 + idx * 0.1, type: "spring" as const }}
                   className="flex items-center gap-1.5"
                 >
                   <div className={`w-1.5 h-1.5 ${item.color || 'bg-green-500'} rounded-full`} />
@@ -242,7 +242,7 @@ export default function KontakSection() {
           >
             <motion.div 
               whileHover={{ y: -5 }}
-              transition={{ type: "spring", stiffness: 300 }}
+              transition={{ type: "spring" as const, stiffness: 300 }}
               className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm"
             >
               <motion.div 
