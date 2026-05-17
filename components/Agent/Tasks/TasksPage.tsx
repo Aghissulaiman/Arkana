@@ -392,11 +392,10 @@ export default function AgentTasksPage() {
         <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
           <button
             onClick={() => setActiveTab("pending")}
-            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${
-              activeTab === "pending"
+            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${activeTab === "pending"
                 ? "text-yellow-600 border-b-2 border-yellow-500"
                 : "text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             Menunggu
             {stats.pending > 0 && (
@@ -407,11 +406,10 @@ export default function AgentTasksPage() {
           </button>
           <button
             onClick={() => setActiveTab("accepted")}
-            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${
-              activeTab === "accepted"
+            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${activeTab === "accepted"
                 ? "text-blue-600 border-b-2 border-blue-500"
                 : "text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             Diproses
             {stats.accepted > 0 && (
@@ -422,11 +420,10 @@ export default function AgentTasksPage() {
           </button>
           <button
             onClick={() => setActiveTab("completed")}
-            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${
-              activeTab === "completed"
+            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${activeTab === "completed"
                 ? "text-green-600 border-b-2 border-green-500"
                 : "text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             Selesai
             {stats.completed > 0 && (
@@ -437,11 +434,10 @@ export default function AgentTasksPage() {
           </button>
           <button
             onClick={() => setActiveTab("rejected")}
-            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${
-              activeTab === "rejected"
+            className={`px-4 py-2 text-sm font-medium transition-all shrink-0 ${activeTab === "rejected"
                 ? "text-red-600 border-b-2 border-red-500"
                 : "text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             Ditolak
             {stats.rejected > 0 && (
@@ -495,15 +491,14 @@ export default function AgentTasksPage() {
                 <CardContent className="p-4">
                   <div className="flex flex-col md:flex-row gap-4 md:items-center">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
-                        task.status === "pending"
+                      className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${task.status === "pending"
                           ? "bg-yellow-100"
                           : task.status === "accepted"
                             ? "bg-blue-100"
                             : task.status === "rejected"
                               ? "bg-red-100"
                               : "bg-green-100"
-                      }`}
+                        }`}
                     >
                       {task.status === "pending" && (
                         <Clock className="w-6 h-6 text-yellow-600" />
@@ -683,11 +678,10 @@ export default function AgentTasksPage() {
                   {REJECTION_REASONS.map((reason) => (
                     <label
                       key={reason.value}
-                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${
-                        rejectionReason === reason.value
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${rejectionReason === reason.value
                           ? "border-green-500 bg-green-50"
                           : "border-gray-200 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
