@@ -81,7 +81,7 @@ export default function NavbarUser({ children }: { children: React.ReactNode }) 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const profileMenu = [
-    { name: "Dashboard", href: "/user", icon: Home },
+    { name: "Dashboard", href: "/user/home", icon: Home },
     { name: "Profil Saya", href: "/user/profile", icon: User },
     { name: "Riwayat", href: "/user/history", icon: History },
     { name: "Top Up Poin", href: "/user/topup", icon: Wallet },
