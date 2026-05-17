@@ -15,11 +15,16 @@ import {
   Loader2,
   AlertCircle,
   Filter,
-  Eye
+  Eye,
+  Star,
+  MessageCircle,
+  Send,
+  X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
+import { Button } from "@/components/ui/button";
 
 type PickupRequest = {
   id: string;
@@ -32,6 +37,7 @@ type PickupRequest = {
   created_at: string;
   updated_at: string;
   agent_name?: string;
+  agent_id?: string;
 };
 
 type RedeemRequest = {
@@ -40,6 +46,12 @@ type RedeemRequest = {
   points_spent: number;
   status: string;
   created_at: string;
+};
+
+type Review = {
+  id: string;
+  rating: number;
+  comment: string;
 };
 
 const WASTE_LABELS: Record<string, string> = {
@@ -102,6 +114,14 @@ export default function RiwayatPage() {
   const [pickups, setPickups] = useState<PickupRequest[]>([]);
   const [redeems, setRedeems] = useState<RedeemRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // State untuk review
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedPickup, setSelectedPickup] = useState<PickupRequest | null>(null);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [existingReviews, setExistingReviews] = useState<Record<string, Review>>({});
 
   useEffect(() => {
     fetchData();
@@ -112,14 +132,16 @@ export default function RiwayatPage() {
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
+      setLoading(false);
       return;
     }
 
+    // Ambil pickup requests user
     const { data: pickupData, error: pickupError } = await supabase
       .from("pickup_requests")
       .select(`
         *,
-        agents (agent_name)
+        agents (id, agent_name)
       `)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
@@ -127,12 +149,34 @@ export default function RiwayatPage() {
     if (!pickupError) {
       const formattedPickups = (pickupData || []).map((p: any) => ({
         ...p,
+        agent_id: p.agents?.id,
         agent_name: p.agents?.agent_name,
         points_earned: p.points_earned || 0,
       }));
       setPickups(formattedPickups);
+      
+      // Ambil review yang sudah ada untuk pickup ini
+      const pickupIds = formattedPickups.map(p => p.id);
+      if (pickupIds.length > 0) {
+        const { data: reviewsData } = await supabase
+          .from("reviews")
+          .select("pickup_request_id, rating, comment")
+          .in("pickup_request_id", pickupIds)
+          .eq("user_id", user.id);
+        
+        const reviewsMap: Record<string, Review> = {};
+        reviewsData?.forEach((r: any) => {
+          reviewsMap[r.pickup_request_id] = {
+            id: r.id,
+            rating: r.rating,
+            comment: r.comment,
+          };
+        });
+        setExistingReviews(reviewsMap);
+      }
     }
 
+    // Ambil redeem requests user
     const { data: redeemData } = await supabase
       .from("redeem_requests")
       .select("*")
@@ -141,6 +185,64 @@ export default function RiwayatPage() {
 
     setRedeems(redeemData || []);
     setLoading(false);
+  };
+
+  const openReviewModal = (pickup: PickupRequest) => {
+    if (existingReviews[pickup.id]) {
+      toast.info("Anda sudah memberikan ulasan untuk transaksi ini");
+      return;
+    }
+    setSelectedPickup(pickup);
+    setReviewRating(0);
+    setReviewComment("");
+    setShowReviewModal(true);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!selectedPickup) return;
+    if (reviewRating === 0) {
+      toast.error("Pilih rating terlebih dahulu");
+      return;
+    }
+    
+    setSubmittingReview(true);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Anda harus login");
+      setSubmittingReview(false);
+      return;
+    }
+    
+    const { error } = await supabase.from("reviews").insert({
+      user_id: user.id,
+      agent_id: selectedPickup.agent_id,
+      pickup_request_id: selectedPickup.id,
+      rating: reviewRating,
+      comment: reviewComment,
+      is_approved: true,
+    });
+    
+    if (error) {
+      toast.error("Gagal mengirim ulasan: " + error.message);
+    } else {
+      toast.success("Terima kasih atas ulasannya!");
+      setShowReviewModal(false);
+      setSelectedPickup(null);
+      // Update existing reviews
+      setExistingReviews(prev => ({
+        ...prev,
+        [selectedPickup.id]: {
+          id: "new",
+          rating: reviewRating,
+          comment: reviewComment,
+        }
+      }));
+      // Refresh data untuk update rating agent
+      fetchData();
+    }
+    
+    setSubmittingReview(false);
   };
 
   const getAllTransactions = () => {
@@ -156,6 +258,8 @@ export default function RiwayatPage() {
       status: p.status,
       code: p.request_code || p.id.slice(0, 8),
       isEarn: true,
+      agent_id: p.agent_id,
+      hasReviewed: !!existingReviews[p.id],
     }));
 
     const redeemTransactions = redeems.map(r => ({
@@ -170,6 +274,7 @@ export default function RiwayatPage() {
       status: r.status === "pending" ? "processed" : r.status,
       code: r.id.slice(0, 8),
       isEarn: false,
+      hasReviewed: false,
     }));
 
     return [...pickupTransactions, ...redeemTransactions].sort(
@@ -186,12 +291,6 @@ export default function RiwayatPage() {
     return true;
   });
 
-  const groupedTransactions = {
-    pending: filteredTransactions.filter(t => t.status === "pending" || t.status === "accepted" || t.status === "picked_up"),
-    completed: filteredTransactions.filter(t => t.status === "completed"),
-    cancelled: filteredTransactions.filter(t => t.status === "cancelled"),
-  };
-
   const tabs = [
     { id: "semua", label: "Semua", icon: Clock, count: transactions.length },
     { id: "penjemputan", label: "Penjemputan", icon: Truck, count: pickups.length },
@@ -201,10 +300,26 @@ export default function RiwayatPage() {
   const statusOptions = [
     { value: "semua", label: "Semua Status" },
     { value: "pending", label: "Menunggu" },
-    { value: "accepted", label: "Diproses" },
+    {value: "accepted", label: "Diproses" },
     { value: "completed", label: "Selesai" },
     { value: "cancelled", label: "Dibatalkan" },
   ];
+
+  const renderStars = (rating: number) => {
+    return (
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-5 h-5 cursor-pointer transition-all ${
+              star <= rating ? "fill-amber-400 text-amber-400" : "text-gray-300"
+            }`}
+            onClick={() => setReviewRating(star)}
+          />
+        ))}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -218,7 +333,7 @@ export default function RiwayatPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Toaster position="top-right" richColors />
       
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto px-4 py-6">
         
         {/* Header */}
         <div className="mb-6">
@@ -301,7 +416,7 @@ export default function RiwayatPage() {
           })}
         </div>
 
-        {/* Grouped Transactions - TABLE VIEW */}
+        {/* Transactions List */}
         {filteredTransactions.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -317,70 +432,75 @@ export default function RiwayatPage() {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-gray-50/50 border-b border-gray-100">
-                  <tr>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Transaksi</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Detail</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tanggal</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Poin</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {filteredTransactions.map((item) => {
-                    const statusStyle = STATUS_STYLES[item.status] || STATUS_STYLES.pending;
-                    const StatusIcon = statusStyle.icon;
-                    const date = new Date(item.date);
-                    
-                    return (
-                      <tr 
-                        key={`${item.type}-${item.id}`}
-                        className="hover:bg-gray-50/50 transition-colors cursor-pointer group"
-                        onClick={() => router.push(`/user/history/${item.id}`)}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${item.type === "penjemputan" ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"}`}>
-                              {item.type === "penjemputan" ? <Truck className="w-4 h-4" /> : <Gift className="w-4 h-4" />}
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-gray-800">{item.title}</p>
-                              <p className="text-[10px] text-gray-400 font-mono">#{item.code}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <p className="text-xs text-gray-600">{item.subtitle}</p>
-                          {item.details && <p className="text-[10px] text-gray-400">{item.details}</p>}
-                        </td>
-                        <td className="px-6 py-4">
-                          <p className="text-xs text-gray-700">
-                            {date.toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
-                          </p>
-                          <p className="text-[10px] text-gray-400">
-                            {date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-                          </p>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${statusStyle.bg} ${statusStyle.text}`}>
-                            <StatusIcon className="w-3 h-3" />
-                            {statusStyle.label}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <p className={`text-sm font-black ${item.isEarn ? "text-green-600" : "text-orange-600"}`}>
-                            {item.points || "0"}
-                          </p>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          <div className="space-y-3">
+            {filteredTransactions.map((item) => {
+              const statusStyle = STATUS_STYLES[item.status] || STATUS_STYLES.pending;
+              const StatusIcon = statusStyle.icon;
+              const date = new Date(item.date);
+              const isCompletedPickup = item.type === "penjemputan" && item.status === "completed";
+              
+              return (
+                <div key={`${item.type}-${item.id}`} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                  <div className="flex items-start justify-between flex-wrap gap-3">
+                    {/* Left side */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <div className={`p-2 rounded-lg ${item.type === "penjemputan" ? "bg-green-100" : "bg-orange-100"}`}>
+                          {item.type === "penjemputan" ? <Truck className="w-4 h-4 text-green-600" /> : <Gift className="w-4 h-4 text-orange-600" />}
+                        </div>
+                        <span className="text-sm font-semibold text-gray-800">
+                          {item.title}
+                        </span>
+                        <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${statusStyle.bg} ${statusStyle.text}`}>
+                          <StatusIcon className="w-3 h-3" />
+                          {statusStyle.label}
+                        </span>
+                      </div>
+                      
+                      <p className="text-xs text-gray-500 mb-1">{item.subtitle}</p>
+                      {item.details && <p className="text-xs text-gray-400">{item.details}</p>}
+                      
+                      <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400">
+                        <span>{date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
+                        <span>•</span>
+                        <span>{date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
+                        <span className="font-mono">#{item.code}</span>
+                      </div>
+                    </div>
+
+                    {/* Right side */}
+                    <div className="text-right flex flex-col items-end gap-2">
+                      {item.points && (
+                        <p className={`text-lg font-bold ${item.isEarn ? "text-green-600" : "text-orange-600"}`}>
+                          {item.points}
+                        </p>
+                      )}
+                      
+                      {/* 🔥 TOMBOL BERI ULASAN - HANYA UNTUK TRANSAKSI PENJEMPUTAN YANG SUDAH SELESAI */}
+                      {isCompletedPickup && !item.hasReviewed && (
+                        <button
+                          onClick={() => {
+                            const pickup = pickups.find(p => p.id === item.id);
+                            if (pickup) openReviewModal(pickup);
+                          }}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                        >
+                          <Star className="w-3 h-3" />
+                          Beri Ulasan
+                        </button>
+                      )}
+                      
+                      {isCompletedPickup && item.hasReviewed && (
+                        <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-400 rounded-lg">
+                          <CheckCircle className="w-3 h-3" />
+                          Sudah Dinilai
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -407,63 +527,75 @@ export default function RiwayatPage() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
 
-// Komponen Card Transaksi
-function TransactionCard({ item }: { item: any }) {
-  const statusStyle = STATUS_STYLES[item.status] || STATUS_STYLES.pending;
-  const StatusIcon = statusStyle.icon;
-  const date = new Date(item.date);
-
-  return (
-    <Link href={`/user/history/${item.id}`} className="block">
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md hover:border-primary/20 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            {/* Header with status badge */}
-            <div className="flex items-center gap-2 flex-wrap mb-2">
-              <span className="text-sm font-semibold text-gray-800">
-                {item.title}
-              </span>
-              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${statusStyle.bg} ${statusStyle.text}`}>
-                <StatusIcon className="w-3 h-3" />
-                {statusStyle.label}
-              </span>
+      {/* 🔥 MODAL REVIEW */}
+      {showReviewModal && selectedPickup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Beri Ulasan</h3>
+              <button 
+                onClick={() => setShowReviewModal(false)} 
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
             
-            {/* Subtitle */}
-            <p className="text-xs text-gray-500 mb-1">{item.subtitle}</p>
-            
-            {/* Details */}
-            {item.details && (
-              <p className="text-xs text-gray-400">{item.details}</p>
-            )}
-            
-            {/* Date & Code */}
-            <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-              <span>{date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
-              <span>•</span>
-              <span>{date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
-              <span className="font-mono">#{item.code}</span>
+            <div className="space-y-5">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Agen: <span className="font-semibold">{selectedPickup.agent_name}</span></p>
+                <p className="text-xs text-gray-400">Sampah: {WASTE_LABELS[selectedPickup.waste_type]} • {selectedPickup.actual_weight || selectedPickup.estimated_weight} kg</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rating <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      className="focus:outline-none transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={`w-10 h-10 transition-all ${
+                          star <= reviewRating
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ulasan <span className="text-gray-400">(Opsional)</span>
+                </label>
+                <textarea
+                  rows={4}
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                  placeholder="Ceritakan pengalaman Anda dengan agen ini..."
+                />
+              </div>
+              
+              <Button
+                onClick={handleSubmitReview}
+                disabled={submittingReview || reviewRating === 0}
+                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold disabled:opacity-50"
+              >
+                {submittingReview ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Kirim Ulasan"}
+              </Button>
             </div>
-          </div>
-
-          {/* Points + chevron */}
-          <div className="text-right ml-4 flex flex-col items-end gap-2">
-            {item.points && (
-              <p className={`text-lg font-bold ${item.isEarn ? "text-green-600" : "text-orange-600"}`}>
-                {item.points}
-              </p>
-            )}
-            {item.isEarn && item.pointsValue === 0 && (
-              <p className="text-xs text-gray-400">Menunggu</p>
-            )}
-            <ChevronRight className="w-4 h-4 text-gray-300" />
           </div>
         </div>
-      </div>
-    </Link>
+      )}
+    </div>
   );
 }
