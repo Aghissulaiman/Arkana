@@ -46,8 +46,8 @@ function SuccessContent() {
         <CheckCircle className="w-10 h-10 text-green-600" />
       </div>
       <h1 className="text-2xl font-bold text-gray-800 mb-2">Top Up Berhasil!</h1>
-      <p className="text-gray-500 mb-6">Saldo agent telah ditambahkan ke akun Anda.</p>
-      <Link href="/agent/topup">
+      <p className="text-gray-500 mb-6">Poin telah ditambahkan ke akun Anda.</p>
+      <Link href="/user/topup">
         <button className="px-6 py-3 bg-primary text-white rounded-xl font-semibold">
           Top Up Lagi
         </button>
@@ -56,7 +56,7 @@ function SuccessContent() {
   );
 }
 
-export default function AgentTopUpSuccessPage() {
+export default function UserTopUpSuccessPage() {
   return (
     <Suspense fallback={
       <div className="flex justify-center items-center h-64">
