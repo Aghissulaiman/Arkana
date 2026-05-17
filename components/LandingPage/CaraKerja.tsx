@@ -24,28 +24,28 @@ export default function CaraKerjaSection() {
       title: "Sampah Dikumpulkan",
       desc: "Setelah pengguna membuat request, agen akan mengambil sampah dari lokasi dan melakukan pengecekan awal.",
       image:
-        "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=800&auto=format",
+        "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=800&auto=format&fit=crop",
     },
     {
       icon: Truck,
-      title: "Masuk ke Mitra Pengelola",
-      desc: "Sampah dikirim ke agen atau mitra resmi untuk proses pencatatan dan penimbangan.",
+      title: "Dijemput Agen",
+      desc: "Sampah yang telah dijadwalkan akan langsung dijemput oleh agen TrashFlow langsung dari lokasi Anda.",
       image:
-        "https://images.unsplash.com/photo-1604186837874-2e8e7f82c5e0?q=80&w=800&auto=format",
+        "https://images.unsplash.com/photo-1774977867718-e926bedc8740?q=80&w=800&auto=format&fit=crop", // Ilustrasi kurir/logistik penjemputan lokal yang bersih
     },
     {
       icon: Recycle,
-      title: "Dipilah & Didaur Ulang",
-      desc: "Material bernilai seperti plastik, kertas, logam, dan kardus dipisahkan lalu disalurkan kembali.",
+      title: "Dikelola Agen / Bank Sampah",
+      desc: "Material bernilai seperti plastik, kertas, dan logam dipilah serta ditimbang secara transparan di bank sampah.",
       image:
-        "https://images.unsplash.com/photo-1528323273322-d81458248d40?q=80&w=800&auto=format",
+        "https://images.unsplash.com/photo-1528323273322-d81458248d40?q=80&w=2070&auto=format&fit=crop",
     },
     {
       icon: WalletCards,
       title: "Nilai Masuk ke Akun",
       desc: "Hasil transaksi tercatat transparan dan saldo pengguna bertambah sesuai nilai sampah.",
       image:
-        "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?q=80&w=800&auto=format",
+        "https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?q=80&w=800&auto=format&fit=crop", // Tautan Unsplash koin digital & pertumbuhan dana yang Anda berikan
     },
   ];
 
@@ -173,7 +173,10 @@ export default function CaraKerjaSection() {
               const right = index % 2 !== 0;
 
               return (
-                <div key={index} className="grid md:grid-cols-2 gap-4 sm:gap-6 items-center">
+                <div
+                  key={index}
+                  className="grid md:grid-cols-2 gap-4 sm:gap-6 items-center"
+                >
                   {/* Left Side Desktop */}
                   <motion.div
                     variants={itemVariants}
@@ -347,16 +350,16 @@ export default function CaraKerjaSection() {
                 #StartContribute
               </Badge>
             </motion.div>
-            
+
             <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground mb-2 sm:mb-3">
               Setiap Sampah<span className="text-primary"> Memiliki Nilai</span>
             </h3>
-            
+
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mx-auto max-w-md">
               Dengan sistem transparan, pengguna dapat mengetahui bahwa sampah
               benar-benar dikelola dan memberi manfaat nyata.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
               <motion.a
                 href="/login"
@@ -367,7 +370,7 @@ export default function CaraKerjaSection() {
                 Mulai Kelola Sampah
                 <ArrowRight className="w-4 h-4" />
               </motion.a>
-              
+
               <motion.a
                 href="#cara-kerja"
                 whileHover={{ scale: 1.05 }}
