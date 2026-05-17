@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { createClientSupabaseClient } from "@/lib/supabaseClient";
 import { CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-export default function AgentTopUpSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
   const [loading, setLoading] = useState(true);
@@ -52,5 +53,17 @@ export default function AgentTopUpSuccessPage() {
         </button>
       </Link>
     </div>
+  );
+}
+
+export default function AgentTopUpSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
