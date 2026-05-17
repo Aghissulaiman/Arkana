@@ -312,8 +312,144 @@ export default function JadwalPage() {
         </div>
 
         {/* Schedule Table */}
+        {/* Schedule Table / Mobile View */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile View: Day Cards */}
+          <div className="block md:hidden divide-y divide-gray-100 p-4 space-y-4">
+            {schedules.map((schedule) => {
+              const day = DAYS.find((d) => d.value === schedule.day_of_week)!;
+              const isActive = schedule.is_open;
+
+              return (
+                <div key={schedule.day_of_week} className="py-4 first:pt-0 last:pb-0 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-gray-800 text-base">{day.label}</span>
+                    <button
+                      onClick={() =>
+                        updateSchedule(
+                          schedule.day_of_week,
+                          "is_open",
+                          !schedule.is_open,
+                        )
+                      }
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                        isActive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {isActive ? (
+                        <>
+                          <CheckCircle className="w-3 h-3" /> Buka
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-3 h-3" /> Tutup
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {isActive ? (
+                    <div className="space-y-3 pl-2 border-l-2 border-primary/30">
+                      {/* Jam Buka & Jam Tutup */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Jam Buka</label>
+                          <input
+                            type="time"
+                            value={schedule.open_time}
+                            onChange={(e) =>
+                              updateSchedule(
+                                schedule.day_of_week,
+                                "open_time",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Jam Tutup</label>
+                          <input
+                            type="time"
+                            value={schedule.close_time}
+                            onChange={(e) =>
+                              updateSchedule(
+                                schedule.day_of_week,
+                                "close_time",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Jam Istirahat */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                          <Coffee className="w-3 h-3 text-amber-500" /> Jam Istirahat
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="time"
+                            value={schedule.break_start || ""}
+                            onChange={(e) =>
+                              updateSchedule(
+                                schedule.day_of_week,
+                                "break_start",
+                                e.target.value || null,
+                              )
+                            }
+                            placeholder="Mulai"
+                            className="flex-1 px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-center"
+                          />
+                          <span className="text-gray-400 text-xs">-</span>
+                          <input
+                            type="time"
+                            value={schedule.break_end || ""}
+                            onChange={(e) =>
+                              updateSchedule(
+                                schedule.day_of_week,
+                                "break_end",
+                                e.target.value || null,
+                              )
+                            }
+                            placeholder="Selesai"
+                            className="flex-1 px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-center"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Catatan */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Catatan</label>
+                        <input
+                          type="text"
+                          value={schedule.notes || ""}
+                          onChange={(e) =>
+                            updateSchedule(
+                              schedule.day_of_week,
+                              "notes",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="Catatan hari ini..."
+                          className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400 pl-2">Mitra tutup pada hari ini.</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table View: Hidden on mobile */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">

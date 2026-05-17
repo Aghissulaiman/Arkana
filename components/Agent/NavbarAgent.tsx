@@ -153,17 +153,10 @@ export default function AgentSidebar({
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed inset-y-0 left-0 flex flex-col h-full border-r border-slate-200 bg-white z-[80] transition-all duration-300 ease-in-out lg:static
-          ${isSidebarOpen ? "translate-x-0 w-[280px]" : "-translate-x-full lg:translate-x-0"}
+        className={`fixed inset-y-0 left-0 flex flex-col h-full border-r border-slate-200 bg-white z-[80] transition-all duration-300 ease-in-out lg:static lg:translate-x-0
+          ${isSidebarOpen ? "translate-x-0 w-[280px]" : "-translate-x-full w-[280px] lg:w-auto"}
+          ${isCollapsed ? "lg:w-[88px]" : "lg:w-[260px]"}
         `}
-        style={{
-          width:
-            typeof window !== "undefined" && window.innerWidth < 1024
-              ? isSidebarOpen
-                ? 280
-                : 0
-              : sidebarWidth,
-        }}
       >
         {/* Brand Section - Logo TrashFlow (SAME AS NAVBAR USER) */}
         <div className="h-20 flex items-center px-6 shrink-0">
@@ -382,7 +375,7 @@ export default function AgentSidebar({
 
         {/* Content Body */}
         <main className="flex-1 overflow-y-auto no-scrollbar bg-emerald-50/50">
-          <div className="p-6 lg:p-10">
+          <div className="p-4 sm:p-6 lg:p-10">
             <div className="max-w-7xl mx-auto">{children}</div>
           </div>
         </main>

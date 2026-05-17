@@ -124,8 +124,6 @@ export default function AgentDashboard() {
     );
   }
 
-  const totalActiveTasksCount = activeTasks.length;
-
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="grid lg:grid-cols-3 gap-6">
@@ -188,7 +186,8 @@ export default function AgentDashboard() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36 justify-center">
+                  {/* Buttons Container: stacked flex-col on mobile, horizontal row flex-row on sm, and stacked flex-col on lg screen viewports for space optimization */}
+                  <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 w-full sm:w-auto lg:w-36 justify-center">
                     <Button
                       size="sm"
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"

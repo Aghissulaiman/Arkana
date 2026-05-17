@@ -367,7 +367,7 @@ export default function AgentTasksPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
             <p className="text-xs text-gray-400">Menunggu</p>
             <p className="text-xl font-bold text-yellow-600">{stats.pending}</p>
@@ -549,8 +549,8 @@ export default function AgentTasksPage() {
 
                     {/* Action Buttons */}
                     {task.status === "accepted" && (
-                      <Link href={`/agent/tasks/${task.dbId}`}>
-                        <Button size="sm" variant="outline" className="gap-2">
+                      <Link href={`/agent/tasks/${task.dbId}`} className="md:ml-auto w-full md:w-auto">
+                        <Button size="sm" variant="outline" className="gap-2 w-full md:w-auto">
                           <Eye className="w-4 h-4" />
                           Detail
                         </Button>
@@ -558,10 +558,10 @@ export default function AgentTasksPage() {
                     )}
 
                     {task.status === "pending" && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 md:ml-auto w-full md:w-auto justify-end sm:justify-start md:justify-end">
                         <Button
                           size="sm"
-                          className="gap-2 bg-yellow-500 hover:bg-yellow-600 text-white"
+                          className="gap-2 bg-yellow-500 hover:bg-yellow-600 text-white flex-1 md:flex-initial"
                           onClick={() => openPopup(task, "accept")}
                         >
                           <Check className="w-4 h-4" />
@@ -570,7 +570,7 @@ export default function AgentTasksPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="gap-2 border-red-300 text-red-600 hover:bg-red-50"
+                          className="gap-2 border-red-300 text-red-600 hover:bg-red-50 flex-1 md:flex-initial"
                           onClick={() => openPopup(task, "reject")}
                         >
                           <XCircle className="w-4 h-4" />
@@ -580,12 +580,12 @@ export default function AgentTasksPage() {
                     )}
 
                     {task.status === "completed" && (
-                      <Badge className="bg-green-100 text-green-700">
+                      <Badge className="bg-green-100 text-green-700 md:ml-auto">
                         Selesai
                       </Badge>
                     )}
                     {task.status === "rejected" && (
-                      <Badge className="bg-red-100 text-red-700">Ditolak</Badge>
+                      <Badge className="bg-red-100 text-red-700 md:ml-auto">Ditolak</Badge>
                     )}
                   </div>
                 </CardContent>

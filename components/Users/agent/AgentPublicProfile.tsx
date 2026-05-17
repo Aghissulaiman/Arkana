@@ -108,7 +108,7 @@ export default function AgentPublicProfilePage() {
       // Fetch price catalog for this agent
       const { data: prices } = await supabase
         .from("price_catalog")
-        .select("waste_type, price_per_kg")
+        .select("waste_type, price_per_kg, agent_id")
         .or(`agent_id.eq.${agentId},agent_id.is.null`)
         .order("price_per_kg", { ascending: false });
 
