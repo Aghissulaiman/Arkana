@@ -1,9 +1,14 @@
-import RequestPickupPage from "@/components/Users/Request/RaqeustComponen";
+import RequestPickupPage from "@/components/Users/Request/Raquest";
 
-export default function Reques() {
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function Reques({ params }: PageProps) {
+  const resolvedParams = await params;
   return (
     <>
-    <RequestPickupPage/>
+      <RequestPickupPage agentId={resolvedParams.id} />
     </>
-  )
+  );
 }

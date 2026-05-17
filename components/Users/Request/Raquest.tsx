@@ -114,7 +114,7 @@ const WASTE_COLORS: Record<string, string> = {
 
 const DUMMY_COVER = "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=800&auto=format";
 
-export default function RequestPickupPage({ params }: PageProps) {
+export default function RequestPickupPage({ agentId: initialAgentId }: { agentId?: string }) {
   const router = useRouter();
   const supabase = createClientSupabaseClient();
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -133,10 +133,20 @@ export default function RequestPickupPage({ params }: PageProps) {
   const [openStatusMessage, setOpenStatusMessage] = useState("");
 
   useEffect(() => {
-    params.then((resolved) => {
-      setAgentId(resolved.id);
-    });
-  }, [params]);
+    if (initialAgentId) {
+      setAgentId(initialAgentId);
+    } else {
+      // Fallback ke parameter pencarian URL (?agentId=... atau ?agent=...)
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlAgentId = searchParams.get("agentId") || searchParams.get("agent");
+      if (urlAgentId) {
+        setAgentId(urlAgentId);
+      } else {
+        toast.error("Agent ID tidak ditemukan");
+        setLoading(false);
+      }
+    }
+  }, [initialAgentId]);
 
   useEffect(() => {
     if (!agentId) return;
@@ -348,7 +358,7 @@ export default function RequestPickupPage({ params }: PageProps) {
 
     toast.success("Permintaan penjemputan berhasil dikirim!");
     setTimeout(() => {
-      router.push("/user/riwayat");
+      router.push("/user/home");
     }, 2000);
     
     setSubmitting(false);

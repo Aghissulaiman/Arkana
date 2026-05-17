@@ -290,7 +290,7 @@ export default function AgentPublicProfilePage() {
 
       {/* Action Button */}
       <button
-        onClick={() => router.push(`/user/request?agent=${agentId}`)}
+        onClick={() => router.push(`/user/request/${agentId}`)}
         className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
       >
         <Truck className="w-5 h-5" />
